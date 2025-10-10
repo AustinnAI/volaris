@@ -17,6 +17,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 async def schwab_oauth_callback(
     code: str = Query(..., description="Authorization code from Schwab"),
     code_verifier: Optional[str] = Query(None, description="PKCE code verifier"),
+    state: Optional[str] = Query(None, description="OAuth state (carries PKCE verifier)"),
 ):
     """
     Schwab OAuth callback endpoint.
@@ -37,17 +38,18 @@ async def schwab_oauth_callback(
         HTML page with success/failure message
     """
     try:
+        # Prefer explicit code_verifier; otherwise accept it from state param
+        if not code_verifier and state:
+            code_verifier = state
+
         if not code_verifier:
-            # If code_verifier not in URL, need to retrieve from session/cache
-            # For now, return error - user must provide verifier
             return HTMLResponse(
                 content="""
                 <html>
                 <head><title>Schwab OAuth - Error</title></head>
                 <body style="font-family: Arial; padding: 40px; text-align: center;">
                     <h1 style="color: #d32f2f;">❌ Error</h1>
-                    <p>Code verifier not found. Please use the authorization flow with code_verifier.</p>
-                    <p>See documentation for proper OAuth setup.</p>
+                    <p>Code verifier not found. Please start from the <a href=\"/api/v1/auth/schwab/authorize\">authorize page</a> so the verifier is passed in <code>state</code>.</p>
                 </body>
                 </html>
                 """,
