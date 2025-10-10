@@ -56,13 +56,18 @@ async def get_providers_health() -> Dict:
 
     providers_detail = {}
     for name, status in health_status.items():
+        is_configured = provider_manager.providers.get(name) is not None
         providers_detail[name] = {
-            "configured": status is not False,  # False means not configured
-            "healthy": status,
+            "configured": is_configured,
+            "healthy": status if is_configured else False,
         }
 
-    healthy_count = sum(1 for s in health_status.values() if s is True)
-    total_count = len(health_status)
+    healthy_count = sum(
+        1
+        for name, status in health_status.items()
+        if provider_manager.providers.get(name) is not None and status is True
+    )
+    total_count = len(providers_detail)
 
     return {
         "timestamp": datetime.utcnow().isoformat() + "Z",

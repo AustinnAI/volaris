@@ -3,7 +3,8 @@ Database Connection & Session Management
 Handles PostgreSQL connection using SQLAlchemy async engine.
 """
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict, Tuple
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -17,17 +18,56 @@ from app.config import settings
 
 # Convert psycopg2 URL to async driver (asyncpg)
 # Neon uses standard PostgreSQL, so we use asyncpg driver
+def _parse_ssl_from_url(url: str) -> Tuple[str, Dict]:
+    """Translate libpq-style sslmode to asyncpg-friendly settings.
+
+    - Rewrites scheme to postgresql+asyncpg
+    - Strips unsupported "sslmode" query param
+    - Returns (rewritten_url, connect_args)
+    """
+    parsed = urlparse(url)
+
+    # Normalize scheme to asyncpg
+    scheme = parsed.scheme
+    if scheme in ("postgres", "postgresql"):
+        scheme = "postgresql+asyncpg"
+
+    # Parse and adjust query params
+    query_params = dict(parse_qsl(parsed.query))
+    connect_args: Dict = {}
+
+    sslmode = query_params.pop("sslmode", None)
+    if sslmode:
+        sslmode = sslmode.lower()
+        if sslmode in ("require", "verify-ca", "verify-full"):
+            # asyncpg expects 'ssl' True or an SSLContext; True uses default context
+            connect_args["ssl"] = True
+        elif sslmode == "disable":
+            connect_args["ssl"] = False
+        else:
+            # prefer/prefer-like modes: leave to default (no explicit arg)
+            pass
+
+    rebuilt = urlunparse(
+        (
+            scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            urlencode(query_params),
+            parsed.fragment,
+        )
+    )
+    return rebuilt, connect_args
+
+
 def get_async_database_url(url: str) -> str:
-    """
-    Convert standard PostgreSQL URL to async URL.
-    postgresql:// -> postgresql+asyncpg://
-    """
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    return url
+    """Convert standard PostgreSQL URL to asyncpg URL and strip sslmode."""
+    rewritten, _ = _parse_ssl_from_url(url)
+    return rewritten
 
 
-DATABASE_URL = get_async_database_url(settings.DATABASE_URL)
+DATABASE_URL, CONNECT_ARGS = _parse_ssl_from_url(settings.DATABASE_URL)
 
 
 # Create async engine
@@ -39,6 +79,7 @@ engine = create_async_engine(
     pool_pre_ping=True,  # Verify connections before using
     # For serverless databases like Neon, consider using NullPool in production
     poolclass=NullPool if settings.is_production else None,
+    connect_args=CONNECT_ARGS or None,
 )
 
 

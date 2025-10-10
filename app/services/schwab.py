@@ -8,7 +8,7 @@ Documentation: https://developer.schwab.com/products/trader-api--individual
 import base64
 import hashlib
 import secrets
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 from urllib.parse import urlencode
 
