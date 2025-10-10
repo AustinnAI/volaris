@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Main FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: volaris-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - DATABASE_URL=${DATABASE_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - db-local
+    networks:
+      - volaris-network
+
+  # Local PostgreSQL (for development - optional, can use Neon in production)
+  db-local:
+    image: postgres:16-alpine
+    container_name: volaris-postgres
+    environment:
+      POSTGRES_USER: volaris
+      POSTGRES_PASSWORD: volaris_dev_password
+      POSTGRES_DB: volaris_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - volaris-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volaris"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (local - for development, use Upstash in production)
+  # Uncomment if you want local Redis for testing
+  # redis-local:
+  #   image: redis:7-alpine
+  #   container_name: volaris-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - volaris-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+networks:
+  volaris-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  # redis_data:
