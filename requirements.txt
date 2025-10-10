@@ -16,6 +16,9 @@ httpx==0.27.2
 # Monitoring & Logging
 sentry-sdk[fastapi]==2.17.0
 
+# Resilience & Retry
+tenacity==8.5.0
+
 # Async Support
 asyncio==3.4.3
 

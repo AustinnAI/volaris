@@ -15,9 +15,11 @@ from app.db.database import init_db, close_db
 
 
 # Initialize Sentry for error tracking
-if settings.SENTRY_DSN:
+SENTRY_DSN = (settings.SENTRY_DSN or "").strip()
+
+if SENTRY_DSN:
     sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
+        dsn=SENTRY_DSN,
         environment=settings.ENVIRONMENT,
         traces_sample_rate=1.0 if settings.ENVIRONMENT == "development" else 0.1,
         integrations=[

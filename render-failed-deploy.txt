@@ -1,250 +1,50 @@
-2025-10-10T20:16:52.967900489Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 233.2/233.2 kB 30.6 MB/s eta 0:00:00
-2025-10-10T20:16:52.971980322Z Downloading httpx-0.27.2-py3-none-any.whl (76 kB)
-2025-10-10T20:16:52.979186728Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 76.4/76.4 kB 12.6 MB/s eta 0:00:00
-2025-10-10T20:16:52.985946403Z Downloading sentry_sdk-2.17.0-py2.py3-none-any.whl (314 kB)
-2025-10-10T20:16:52.996055865Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 314.5/314.5 kB 36.3 MB/s eta 0:00:00
-2025-10-10T20:16:53.000295753Z Downloading asyncio-3.4.3-py3-none-any.whl (101 kB)
-2025-10-10T20:16:53.008529562Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 101.8/101.8 kB 13.9 MB/s eta 0:00:00
-2025-10-10T20:16:53.012694967Z Downloading python_dotenv-1.0.1-py3-none-any.whl (19 kB)
-2025-10-10T20:16:53.024168711Z Downloading python_jose-3.3.0-py2.py3-none-any.whl (33 kB)
-2025-10-10T20:16:53.036501494Z Downloading passlib-1.7.4-py2.py3-none-any.whl (525 kB)
-2025-10-10T20:16:53.050881784Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 525.6/525.6 kB 41.7 MB/s eta 0:00:00
-2025-10-10T20:16:53.057464136Z Downloading APScheduler-3.10.4-py3-none-any.whl (59 kB)
-2025-10-10T20:16:53.066925823Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 59.3/59.3 kB 6.2 MB/s eta 0:00:00
-2025-10-10T20:16:53.071465987Z Downloading pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.1 MB)
-2025-10-10T20:16:53.186433697Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.1/13.1 MB 107.2 MB/s eta 0:00:00
-2025-10-10T20:16:53.195316961Z Downloading numpy-2.1.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.3 MB)
-2025-10-10T20:16:53.331740484Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.3/16.3 MB 104.6 MB/s eta 0:00:00
-2025-10-10T20:16:53.338881368Z Downloading discord.py-2.4.0-py3-none-any.whl (1.1 MB)
-2025-10-10T20:16:53.353496363Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 87.8 MB/s eta 0:00:00
-2025-10-10T20:16:53.358115469Z Downloading pytest-8.3.3-py3-none-any.whl (342 kB)
-2025-10-10T20:16:53.367092426Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 342.3/342.3 kB 47.3 MB/s eta 0:00:00
-2025-10-10T20:16:53.37161141Z Downloading pytest_asyncio-0.24.0-py3-none-any.whl (18 kB)
-2025-10-10T20:16:53.380436372Z Downloading pytest_cov-5.0.0-py3-none-any.whl (21 kB)
-2025-10-10T20:16:53.391155808Z Downloading black-24.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
-2025-10-10T20:16:53.411292701Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 94.2 MB/s eta 0:00:00
-2025-10-10T20:16:53.420795409Z Downloading ruff-0.7.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.0 MB)
-2025-10-10T20:16:53.514124182Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.0/11.0 MB 117.5 MB/s eta 0:00:00
-2025-10-10T20:16:53.51925555Z Downloading mypy-1.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl (12.5 MB)
-2025-10-10T20:16:53.625565991Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.5/12.5 MB 112.0 MB/s eta 0:00:00
-2025-10-10T20:16:53.629968722Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
-2025-10-10T20:16:53.636542133Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 14.5 MB/s eta 0:00:00
-2025-10-10T20:16:53.641023776Z Downloading pydantic_core-2.23.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
-2025-10-10T20:16:53.662623942Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 104.8 MB/s eta 0:00:00
-2025-10-10T20:16:53.667624797Z Downloading aiohttp-3.13.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
-2025-10-10T20:16:53.690032031Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 86.8 MB/s eta 0:00:00
-2025-10-10T20:16:53.695159609Z Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
-2025-10-10T20:16:53.704588206Z Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
-2025-10-10T20:16:53.714125725Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 278.2/278.2 kB 36.9 MB/s eta 0:00:00
-2025-10-10T20:16:53.722585309Z Downloading click-8.3.0-py3-none-any.whl (107 kB)
-2025-10-10T20:16:53.729980999Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 107.3/107.3 kB 18.5 MB/s eta 0:00:00
-2025-10-10T20:16:53.735018535Z Downloading coverage-7.10.7-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (250 kB)
-2025-10-10T20:16:53.744381239Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 250.8/250.8 kB 34.3 MB/s eta 0:00:00
-2025-10-10T20:16:53.749651051Z Downloading cryptography-46.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
-2025-10-10T20:16:53.799245699Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 94.6 MB/s eta 0:00:00
-2025-10-10T20:16:53.803731182Z Downloading ecdsa-0.19.1-py2.py3-none-any.whl (150 kB)
-2025-10-10T20:16:53.811100702Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150.6/150.6 kB 26.2 MB/s eta 0:00:00
-2025-10-10T20:16:53.815476812Z Downloading greenlet-3.2.4-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (587 kB)
-2025-10-10T20:16:53.826117636Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.7/587.7 kB 68.0 MB/s eta 0:00:00
-2025-10-10T20:16:53.831236634Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
-2025-10-10T20:16:53.844015158Z Downloading httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (456 kB)
-2025-10-10T20:16:53.85459273Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 456.6/456.6 kB 53.0 MB/s eta 0:00:00
-2025-10-10T20:16:53.858994642Z Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
-2025-10-10T20:16:53.867976368Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
-2025-10-10T20:16:53.874251872Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 66.5/66.5 kB 12.4 MB/s eta 0:00:00
-2025-10-10T20:16:53.8785267Z Downloading pathspec-0.12.1-py3-none-any.whl (31 kB)
-2025-10-10T20:16:53.887704331Z Downloading platformdirs-4.5.0-py3-none-any.whl (18 kB)
-2025-10-10T20:16:53.896483642Z Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
-2025-10-10T20:16:53.905056549Z Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
-2025-10-10T20:16:53.91380917Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 229.9/229.9 kB 33.1 MB/s eta 0:00:00
-2025-10-10T20:16:53.918068008Z Downloading pytz-2025.2-py2.py3-none-any.whl (509 kB)
-2025-10-10T20:16:53.927879113Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 509.2/509.2 kB 62.5 MB/s eta 0:00:00
-2025-10-10T20:16:53.932268734Z Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
-2025-10-10T20:16:53.944125576Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 79.1 MB/s eta 0:00:00
-2025-10-10T20:16:53.948573688Z Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
-2025-10-10T20:16:53.957130505Z Downloading starlette-0.38.6-py3-none-any.whl (71 kB)
-2025-10-10T20:16:53.963933141Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 71.5/71.5 kB 12.8 MB/s eta 0:00:00
-2025-10-10T20:16:53.968065876Z Downloading anyio-4.11.0-py3-none-any.whl (109 kB)
-2025-10-10T20:16:53.974956014Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 109.1/109.1 kB 19.6 MB/s eta 0:00:00
-2025-10-10T20:16:53.979259893Z Downloading idna-3.10-py3-none-any.whl (70 kB)
-2025-10-10T20:16:53.986180592Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 70.4/70.4 kB 12.2 MB/s eta 0:00:00
-2025-10-10T20:16:53.990555632Z Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
-2025-10-10T20:16:53.999010427Z Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
-2025-10-10T20:16:54.004874981Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.6/44.6 kB 8.3 MB/s eta 0:00:00
-2025-10-10T20:16:54.009555419Z Downloading tzdata-2025.2-py2.py3-none-any.whl (347 kB)
-2025-10-10T20:16:54.018726939Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 347.8/347.8 kB 45.9 MB/s eta 0:00:00
-2025-10-10T20:16:54.024224436Z Downloading tzlocal-5.3.1-py3-none-any.whl (18 kB)
-2025-10-10T20:16:54.033374826Z Downloading urllib3-2.5.0-py3-none-any.whl (129 kB)
-2025-10-10T20:16:54.045378831Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 129.8/129.8 kB 12.8 MB/s eta 0:00:00
-2025-10-10T20:16:54.051558023Z Downloading uvloop-0.21.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.0 MB)
-2025-10-10T20:16:54.090017336Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.0/4.0 MB 109.8 MB/s eta 0:00:00
-2025-10-10T20:16:54.094882488Z Downloading watchfiles-1.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (453 kB)
-2025-10-10T20:16:54.105370909Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 453.1/453.1 kB 53.5 MB/s eta 0:00:00
-2025-10-10T20:16:54.110705782Z Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (182 kB)
-2025-10-10T20:16:54.11891698Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 182.3/182.3 kB 30.8 MB/s eta 0:00:00
-2025-10-10T20:16:54.124486078Z Downloading certifi-2025.10.5-py3-none-any.whl (163 kB)
-2025-10-10T20:16:54.132809579Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 163.3/163.3 kB 24.7 MB/s eta 0:00:00
-2025-10-10T20:16:54.137755453Z Downloading iniconfig-2.1.0-py3-none-any.whl (6.0 kB)
-2025-10-10T20:16:54.147079217Z Downloading mako-1.3.10-py3-none-any.whl (78 kB)
-2025-10-10T20:16:54.15507391Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.5/78.5 kB 12.8 MB/s eta 0:00:00
-2025-10-10T20:16:54.15984079Z Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
-2025-10-10T20:16:54.167581748Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 83.1/83.1 kB 13.6 MB/s eta 0:00:00
-2025-10-10T20:16:54.172595213Z Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
-2025-10-10T20:16:54.181645841Z Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
-2025-10-10T20:16:54.190527115Z Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
-2025-10-10T20:16:54.199995652Z Downloading attrs-25.4.0-py3-none-any.whl (67 kB)
-2025-10-10T20:16:54.207639297Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.6/67.6 kB 11.2 MB/s eta 0:00:00
-2025-10-10T20:16:54.212578181Z Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
-2025-10-10T20:16:54.221055085Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 215.6/215.6 kB 32.1 MB/s eta 0:00:00
-2025-10-10T20:16:54.225954558Z Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
-2025-10-10T20:16:54.247728168Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 231.1/231.1 kB 11.2 MB/s eta 0:00:00
-2025-10-10T20:16:54.252219271Z Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
-2025-10-10T20:16:54.310856468Z Downloading multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
-2025-10-10T20:16:54.349733151Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 246.7/246.7 kB 6.4 MB/s eta 0:00:00
-2025-10-10T20:16:54.354383867Z Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (210 kB)
-2025-10-10T20:16:54.362687508Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 210.0/210.0 kB 31.3 MB/s eta 0:00:00
-2025-10-10T20:16:54.367234602Z Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (365 kB)
-2025-10-10T20:16:54.375961693Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 365.8/365.8 kB 51.4 MB/s eta 0:00:00
-2025-10-10T20:16:54.38020631Z Downloading pycparser-2.23-py3-none-any.whl (118 kB)
-2025-10-10T20:16:54.388281346Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 118.1/118.1 kB 21.7 MB/s eta 0:00:00
-2025-10-10T20:16:54.927323454Z Installing collected packages: pytz, passlib, asyncio, websockets, uvloop, urllib3, tzlocal, tzdata, typing-extensions, sniffio, six, ruff, pyyaml, python-multipart, python-dotenv, pycparser, pyasn1, propcache, pluggy, platformdirs, pathspec, packaging, numpy, mypy-extensions, multidict, MarkupSafe, iniconfig, idna, httptools, h11, greenlet, frozenlist, coverage, click, certifi, bcrypt, attrs, asyncpg, annotated-types, aiohappyeyeballs, yarl, uvicorn, sqlalchemy, sentry-sdk, rsa, python-dateutil, pytest, pydantic-core, mypy, Mako, httpcore, ecdsa, cffi, black, apscheduler, anyio, aiosignal, watchfiles, starlette, python-jose, pytest-cov, pytest-asyncio, pydantic, pandas, httpx, cryptography, alembic, aiohttp, pydantic-settings, fastapi, discord.py
-2025-10-10T20:17:12.264067012Z Successfully installed Mako-1.3.10 MarkupSafe-3.0.3 aiohappyeyeballs-2.6.1 aiohttp-3.13.0 aiosignal-1.4.0 alembic-1.13.3 annotated-types-0.7.0 anyio-4.11.0 apscheduler-3.10.4 asyncio-3.4.3 asyncpg-0.30.0 attrs-25.4.0 bcrypt-5.0.0 black-24.10.0 certifi-2025.10.5 cffi-2.0.0 click-8.3.0 coverage-7.10.7 cryptography-46.0.2 discord.py-2.4.0 ecdsa-0.19.1 fastapi-0.115.0 frozenlist-1.8.0 greenlet-3.2.4 h11-0.16.0 httpcore-1.0.9 httptools-0.7.1 httpx-0.27.2 idna-3.10 iniconfig-2.1.0 multidict-6.7.0 mypy-1.13.0 mypy-extensions-1.1.0 numpy-2.1.2 packaging-25.0 pandas-2.2.3 passlib-1.7.4 pathspec-0.12.1 platformdirs-4.5.0 pluggy-1.6.0 propcache-0.4.1 pyasn1-0.6.1 pycparser-2.23 pydantic-2.9.2 pydantic-core-2.23.4 pydantic-settings-2.6.0 pytest-8.3.3 pytest-asyncio-0.24.0 pytest-cov-5.0.0 python-dateutil-2.9.0.post0 python-dotenv-1.0.1 python-jose-3.3.0 python-multipart-0.0.12 pytz-2025.2 pyyaml-6.0.3 rsa-4.9.1 ruff-0.7.2 sentry-sdk-2.17.0 six-1.17.0 sniffio-1.3.1 sqlalchemy-2.0.35 starlette-0.38.6 typing-extensions-4.15.0 tzdata-2025.2 tzlocal-5.3.1 urllib3-2.5.0 uvicorn-0.32.0 uvloop-0.21.0 watchfiles-1.1.0 websockets-15.0.1 yarl-1.22.0
-2025-10-10T20:17:12.474860842Z 
-2025-10-10T20:17:12.474886463Z [notice] A new release of pip is available: 24.0 -> 25.2
-2025-10-10T20:17:12.474890833Z [notice] To update, run: pip install --upgrade pip
-2025-10-10T20:17:39.147779006Z ==> Uploading build...
-2025-10-10T20:17:57.529318361Z ==> Uploaded in 13.9s. Compression took 4.5s
-2025-10-10T20:17:57.634793582Z ==> Build successful 🎉
-2025-10-10T20:18:03.064319159Z ==> Deploying...
-2025-10-10T20:18:44.978572164Z ==> Running 'uvicorn app.main:app --host 0.0.0.0 --port 10000'
-2025-10-10T20:19:04.926688317Z Traceback (most recent call last):
-2025-10-10T20:19:04.926727378Z   File "/opt/render/project/src/.venv/bin/uvicorn", line 8, in <module>
-2025-10-10T20:19:04.926732598Z     sys.exit(main())
-2025-10-10T20:19:04.926736328Z              ^^^^^^
-2025-10-10T20:19:04.926742898Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 1462, in __call__
-2025-10-10T20:19:04.926750339Z     return self.main(*args, **kwargs)
-2025-10-10T20:19:04.926754619Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.926759169Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 1383, in main
-2025-10-10T20:19:04.926763939Z     rv = self.invoke(ctx)
-2025-10-10T20:19:04.926768069Z          ^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.926772039Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 1246, in invoke
-2025-10-10T20:19:04.926776789Z     return ctx.invoke(self.callback, **ctx.params)
-2025-10-10T20:19:04.926780939Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928576855Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 814, in invoke
-2025-10-10T20:19:04.928589835Z     return callback(*args, **kwargs)
-2025-10-10T20:19:04.928594945Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928599915Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/main.py", line 412, in main
-2025-10-10T20:19:04.928604165Z     run(
-2025-10-10T20:19:04.928608425Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/main.py", line 579, in run
-2025-10-10T20:19:04.928612745Z     server.run()
-2025-10-10T20:19:04.928617376Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 65, in run
-2025-10-10T20:19:04.928621925Z     return asyncio.run(self.serve(sockets=sockets))
-2025-10-10T20:19:04.928626026Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928630276Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/asyncio/runners.py", line 190, in run
-2025-10-10T20:19:04.928634426Z     return runner.run(main)
-2025-10-10T20:19:04.928638306Z            ^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928642876Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/asyncio/runners.py", line 118, in run
-2025-10-10T20:19:04.928646956Z     return self._loop.run_until_complete(task)
-2025-10-10T20:19:04.928651266Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928655537Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
-2025-10-10T20:19:04.928659786Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
-2025-10-10T20:19:04.928663747Z     await self._serve(sockets)
-2025-10-10T20:19:04.928667937Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 76, in _serve
-2025-10-10T20:19:04.928672447Z     config.load()
-2025-10-10T20:19:04.928676777Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 434, in load
-2025-10-10T20:19:04.928680957Z     self.loaded_app = import_from_string(self.app)
-2025-10-10T20:19:04.928685037Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928690187Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 19, in import_from_string
-2025-10-10T20:19:04.928694397Z     module = importlib.import_module(module_str)
-2025-10-10T20:19:04.928699298Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928713078Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/importlib/__init__.py", line 126, in import_module
-2025-10-10T20:19:04.928716548Z     return _bootstrap._gcd_import(name[level:], package, level)
-2025-10-10T20:19:04.928719398Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928721918Z   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
-2025-10-10T20:19:04.928724538Z   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
-2025-10-10T20:19:04.928727068Z   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
-2025-10-10T20:19:04.928729568Z   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
-2025-10-10T20:19:04.928732138Z   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
-2025-10-10T20:19:04.928734938Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-2025-10-10T20:19:04.928737319Z   File "/opt/render/project/src/app/main.py", line 14, in <module>
-2025-10-10T20:19:04.928739559Z     from app.db.database import init_db, close_db
-2025-10-10T20:19:04.928741828Z   File "/opt/render/project/src/app/db/database.py", line 74, in <module>
-2025-10-10T20:19:04.928744419Z     engine = create_async_engine(
-2025-10-10T20:19:04.928747299Z              ^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928750369Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/engine.py", line 120, in create_async_engine
-2025-10-10T20:19:04.928753009Z     sync_engine = _create_engine(url, **kw)
-2025-10-10T20:19:04.928755469Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928757999Z   File "<string>", line 2, in create_engine
-2025-10-10T20:19:04.928760789Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-2025-10-10T20:19:04.928763259Z     return fn(*args, **kwargs)  # type: ignore[no-any-return]
-2025-10-10T20:19:04.928765539Z            ^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:04.928768129Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 697, in create_engine
-2025-10-10T20:19:04.928782529Z     raise TypeError(
-2025-10-10T20:19:05.017338338Z TypeError: Invalid argument(s) 'pool_size','max_overflow' sent to create_engine(), using configuration PGDialect_asyncpg/NullPool/Engine.  Please check that the keyword arguments are appropriate for this combination of components.
-2025-10-10T20:19:08.408855768Z ==> Exited with status 1
-2025-10-10T20:19:08.473693497Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
-2025-10-10T20:19:13.387873903Z ==> Running 'uvicorn app.main:app --host 0.0.0.0 --port 10000'
-2025-10-10T20:19:29.480789998Z Traceback (most recent call last):
-2025-10-10T20:19:29.480810379Z   File "/opt/render/project/src/.venv/bin/uvicorn", line 8, in <module>
-2025-10-10T20:19:29.480814899Z     sys.exit(main())
-2025-10-10T20:19:29.480818549Z              ^^^^^^
-2025-10-10T20:19:29.480824399Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 1462, in __call__
-2025-10-10T20:19:29.481006863Z     return self.main(*args, **kwargs)
-2025-10-10T20:19:29.481018474Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.481023204Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 1383, in main
-2025-10-10T20:19:29.481174357Z     rv = self.invoke(ctx)
-2025-10-10T20:19:29.481184008Z          ^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.481188868Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 1246, in invoke
-2025-10-10T20:19:29.481424004Z     return ctx.invoke(self.callback, **ctx.params)
-2025-10-10T20:19:29.481433384Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.481511866Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/click/core.py", line 814, in invoke
-2025-10-10T20:19:29.481746242Z     return callback(*args, **kwargs)
-2025-10-10T20:19:29.481824824Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.481831674Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/main.py", line 412, in main
-2025-10-10T20:19:29.481967488Z     run(
-2025-10-10T20:19:29.482808178Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/main.py", line 579, in run
-2025-10-10T20:19:29.482819329Z     server.run()
-2025-10-10T20:19:29.482824389Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 65, in run
-2025-10-10T20:19:29.482829019Z     return asyncio.run(self.serve(sockets=sockets))
-2025-10-10T20:19:29.482833069Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.482837919Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/asyncio/runners.py", line 190, in run
-2025-10-10T20:19:29.482841479Z     return runner.run(main)
-2025-10-10T20:19:29.48284423Z            ^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.48284717Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/asyncio/runners.py", line 118, in run
-2025-10-10T20:19:29.482850159Z     return self._loop.run_until_complete(task)
-2025-10-10T20:19:29.48285308Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.482856Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
-2025-10-10T20:19:29.48285884Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
-2025-10-10T20:19:29.48287457Z     await self._serve(sockets)
-2025-10-10T20:19:29.48287957Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 76, in _serve
-2025-10-10T20:19:29.482894491Z     config.load()
-2025-10-10T20:19:29.482906571Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 434, in load
-2025-10-10T20:19:29.483068785Z     self.loaded_app = import_from_string(self.app)
-2025-10-10T20:19:29.483082405Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.483115096Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 19, in import_from_string
-2025-10-10T20:19:29.483235259Z     module = importlib.import_module(module_str)
-2025-10-10T20:19:29.4832745Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.483290081Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/importlib/__init__.py", line 126, in import_module
-2025-10-10T20:19:29.483451845Z     return _bootstrap._gcd_import(name[level:], package, level)
-2025-10-10T20:19:29.483511176Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.483572778Z   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
-2025-10-10T20:19:29.483588458Z   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
-2025-10-10T20:19:29.483616829Z   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
-2025-10-10T20:19:29.484218574Z   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
-2025-10-10T20:19:29.484223694Z   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
-2025-10-10T20:19:29.484225774Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-2025-10-10T20:19:29.484242394Z   File "/opt/render/project/src/app/main.py", line 14, in <module>
-2025-10-10T20:19:29.484377238Z     from app.db.database import init_db, close_db
-2025-10-10T20:19:29.484383098Z   File "/opt/render/project/src/app/db/database.py", line 74, in <module>
-2025-10-10T20:19:29.48445498Z     engine = create_async_engine(
-2025-10-10T20:19:29.48446006Z              ^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.48446351Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/engine.py", line 120, in create_async_engine
-2025-10-10T20:19:29.574059574Z     sync_engine = _create_engine(url, **kw)
-2025-10-10T20:19:29.574071174Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.574074734Z   File "<string>", line 2, in create_engine
-2025-10-10T20:19:29.574078135Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-2025-10-10T20:19:29.574081884Z     return fn(*args, **kwargs)  # type: ignore[no-any-return]
-2025-10-10T20:19:29.574084744Z            ^^^^^^^^^^^^^^^^^^^
-2025-10-10T20:19:29.574087625Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 697, in create_engine
-2025-10-10T20:19:29.574419853Z     raise TypeError(
-2025-10-10T20:19:29.574427503Z TypeError: Invalid argument(s) 'pool_size','max_overflow' sent to create_engine(), using configuration PGDialect_asyncpg/NullPool/Engine.  Please check that the keyword arguments are appropriate for this combination of components.
+2025-10-10T20:33:57.312117944Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.312122834Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/main.py", line 412, in main
+2025-10-10T20:33:57.312242417Z     run(
+2025-10-10T20:33:57.312247497Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/main.py", line 579, in run
+2025-10-10T20:33:57.312406112Z     server.run()
+2025-10-10T20:33:57.312411541Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 65, in run
+2025-10-10T20:33:57.312490643Z     return asyncio.run(self.serve(sockets=sockets))
+2025-10-10T20:33:57.312499454Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.312502664Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/asyncio/runners.py", line 190, in run
+2025-10-10T20:33:57.400791431Z     return runner.run(main)
+2025-10-10T20:33:57.400816482Z            ^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.400821382Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/asyncio/runners.py", line 118, in run
+2025-10-10T20:33:57.400942605Z     return self._loop.run_until_complete(task)
+2025-10-10T20:33:57.400952815Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.400956365Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2025-10-10T20:33:57.40115043Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 69, in serve
+2025-10-10T20:33:57.401232472Z     await self._serve(sockets)
+2025-10-10T20:33:57.401236212Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 76, in _serve
+2025-10-10T20:33:57.401346675Z     config.load()
+2025-10-10T20:33:57.401376986Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 434, in load
+2025-10-10T20:33:57.401558101Z     self.loaded_app = import_from_string(self.app)
+2025-10-10T20:33:57.401567031Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.401570771Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 22, in import_from_string
+2025-10-10T20:33:57.401655223Z     raise exc from None
+2025-10-10T20:33:57.401659913Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2025-10-10T20:33:57.401768616Z     module = importlib.import_module(module_str)
+2025-10-10T20:33:57.401774476Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.401777526Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/importlib/__init__.py", line 126, in import_module
+2025-10-10T20:33:57.401880189Z     return _bootstrap._gcd_import(name[level:], package, level)
+2025-10-10T20:33:57.401893519Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-10T20:33:57.401897349Z   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+2025-10-10T20:33:57.401900489Z   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+2025-10-10T20:33:57.401906379Z   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+2025-10-10T20:33:57.401909089Z   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+2025-10-10T20:33:57.401911939Z   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+2025-10-10T20:33:57.401914859Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-10-10T20:33:57.40192095Z   File "/opt/render/project/src/app/main.py", line 87, in <module>
+2025-10-10T20:33:57.402047853Z     from app.api.v1.providers import router as providers_router
+2025-10-10T20:33:57.402053393Z   File "/opt/render/project/src/app/api/v1/providers.py", line 10, in <module>
+2025-10-10T20:33:57.402141675Z     from app.services.provider_manager import provider_manager, DataType
+2025-10-10T20:33:57.402165576Z   File "/opt/render/project/src/app/services/provider_manager.py", line 17, in <module>
+2025-10-10T20:33:57.402256718Z     from app.services.schwab import schwab_client
+2025-10-10T20:33:57.402260238Z   File "/opt/render/project/src/app/services/schwab.py", line 16, in <module>
+2025-10-10T20:33:57.402371351Z     from app.services.base_client import BaseAPIClient
+2025-10-10T20:33:57.402375821Z   File "/opt/render/project/src/app/services/base_client.py", line 10, in <module>
+2025-10-10T20:33:57.402479153Z     from tenacity import (
+2025-10-10T20:33:57.402483604Z ModuleNotFoundError: No module named 'tenacity'
+2025-10-10T20:34:00.756215646Z ==> Exited with status 1
+2025-10-10T20:34:00.820486795Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2025-10-10T20:34:05.981738186Z ==> Running 'uvicorn app.main:app --host 0.0.0.0 --port 10000'
