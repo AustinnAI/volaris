@@ -8,6 +8,7 @@ from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
+    AsyncEngine,
     async_sessionmaker,
 )
 from sqlalchemy.orm import DeclarativeBase
@@ -68,19 +69,34 @@ def get_async_database_url(url: str) -> str:
 
 
 DATABASE_URL, CONNECT_ARGS = _parse_ssl_from_url(settings.DATABASE_URL)
+CONNECT_ARGS = CONNECT_ARGS or None
+
+
+def _build_engine() -> AsyncEngine:
+    """Construct async engine with production-aware pooling."""
+    base_kwargs = {
+        "echo": settings.DB_ECHO,
+        "pool_pre_ping": True,
+        "connect_args": CONNECT_ARGS,
+    }
+
+    if settings.is_production:
+        return create_async_engine(
+            DATABASE_URL,
+            poolclass=NullPool,
+            **base_kwargs,
+        )
+
+    return create_async_engine(
+        DATABASE_URL,
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        **base_kwargs,
+    )
 
 
 # Create async engine
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=settings.DB_ECHO,
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_pre_ping=True,  # Verify connections before using
-    # For serverless databases like Neon, consider using NullPool in production
-    poolclass=NullPool if settings.is_production else None,
-    connect_args=CONNECT_ARGS or None,
-)
+engine = _build_engine()
 
 
 # Create async session factory
