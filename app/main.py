@@ -12,6 +12,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.config import settings
 from app.db.database import init_db, close_db
+from app.workers import create_scheduler
 
 
 # Initialize Sentry for error tracking
@@ -35,11 +36,17 @@ async def lifespan(app: FastAPI):
     Application lifespan manager.
     Handles startup and shutdown events.
     """
-    # Startup: Initialize database connection
+    scheduler = None
     await init_db()
-    yield
-    # Shutdown: Close database connection
-    await close_db()
+    try:
+        if settings.SCHEDULER_ENABLED:
+            scheduler = create_scheduler()
+            scheduler.start()
+        yield
+    finally:
+        if scheduler:
+            scheduler.shutdown(wait=False)
+        await close_db()
 
 
 # Initialize FastAPI application
@@ -88,6 +95,8 @@ async def health_check():
 # Register API routers
 from app.api.v1.providers import router as providers_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.trade_planner import router as trade_planner_router
 
 app.include_router(providers_router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+app.include_router(trade_planner_router, prefix=settings.API_V1_PREFIX)

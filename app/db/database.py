@@ -37,6 +37,9 @@ def _parse_ssl_from_url(url: str) -> Tuple[str, Dict]:
     query_params = dict(parse_qsl(parsed.query))
     connect_args: Dict = {}
 
+    # Remove parameters unsupported by asyncpg
+    query_params.pop("channel_binding", None)
+
     sslmode = query_params.pop("sslmode", None)
     if sslmode:
         sslmode = sslmode.lower()

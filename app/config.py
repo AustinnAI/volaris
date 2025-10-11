@@ -103,7 +103,7 @@ class Settings(BaseSettings):
     # Discord Integration (Phase 8)
     DISCORD_BOT_TOKEN: Optional[str] = Field(default=None, description="Discord bot token")
     DISCORD_WEBHOOK_URL: Optional[str] = Field(default=None, description="Discord webhook URL for alerts")
-    DISCORD_GUILD_ID: Optional[str] = Field(default=None, description="Discord server/guild ID")
+    DISCORD_SERVER_ID: Optional[str] = Field(default=None, description="Discord server ID")
 
     # Trading Configuration
     DEFAULT_ACCOUNT_SIZE: float = Field(default=25000.0, description="Default account size for risk calculations")
@@ -114,6 +114,48 @@ class Settings(BaseSettings):
     RATE_LIMIT_ENABLED: bool = Field(default=True, description="Enable rate limiting")
     RATE_LIMIT_REQUESTS: int = Field(default=100, description="Max requests per window")
     RATE_LIMIT_WINDOW: int = Field(default=60, description="Rate limit window in seconds")
+
+    # Scheduler
+    SCHEDULER_ENABLED: bool = Field(
+        default=False,
+        description="Enable background APScheduler jobs",
+    )
+    SCHEDULER_TIMEZONE: str = Field(
+        default="UTC",
+        description="Timezone for APScheduler jobs",
+    )
+    REALTIME_JOB_INTERVAL_SECONDS: int = Field(
+        default=60,
+        description="Interval for 1-minute price sync job",
+    )
+    FIVE_MINUTE_JOB_INTERVAL_SECONDS: int = Field(
+        default=300,
+        description="Interval for 5-minute price sync job",
+    )
+    OPTION_CHAIN_JOB_INTERVAL_MINUTES: int = Field(
+        default=15,
+        description="Interval for option chain refresh job",
+    )
+    IV_METRICS_JOB_INTERVAL_MINUTES: int = Field(
+        default=30,
+        description="Interval for IV metric calculation job",
+    )
+    EOD_SYNC_CRON_HOUR: int = Field(
+        default=22,
+        description="Hour (24h) for daily Tiingo EOD sync",
+    )
+    EOD_SYNC_CRON_MINUTE: int = Field(
+        default=15,
+        description="Minute for daily Tiingo EOD sync",
+    )
+    HISTORICAL_BACKFILL_CRON_HOUR: int = Field(
+        default=3,
+        description="Hour (24h) for historical backfill job",
+    )
+    HISTORICAL_BACKFILL_LOOKBACK_DAYS: int = Field(
+        default=30,
+        description="Lookback window (days) for historical backfill",
+    )
 
     @field_validator("ENVIRONMENT")
     @classmethod

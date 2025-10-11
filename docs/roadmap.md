@@ -27,35 +27,37 @@
 ## Phase 2: Data Layer & Market Data Pipeline (Weeks 3-4)
 
 ### 2.1 Database Models
-- [ ] Tickers & watchlist table
-- [ ] OHLC price data (minute, 5-min, daily)
-- [ ] Options chain data model
-- [ ] IV metrics (IV, IVR, skew)
-- [ ] Market structure levels (swing highs/lows, FVG, VWAP)
-- [ ] Trade plans & executions
-- [ ] Trade journal entries
+- [x] Tickers & watchlist table
+- [x] OHLC price data (minute, 5-min, daily)
+- [x] Options chain data model
+- [x] IV metrics (IV, IVR, skew)
+- [x] Market structure levels (swing highs/lows, FVG, VWAP)
+- [x] Trade plans & executions
+- [x] Trade journal entries
 
 ### 2.2 Data Fetchers
-- [ ] Real-time price fetcher (Schwab 1m/5m)
-- [ ] Historical backfill worker (Databento/Alpaca)
-- [ ] EOD data sync (Tiingo)
-- [ ] Options chain fetcher
-- [ ] IV/IVR calculator
-- [ ] APScheduler job configuration
+- [x] Real-time price fetcher (Schwab 1m/5m)
+- [x] Historical backfill worker (Databento/Alpaca)
+- [x] EOD data sync (Tiingo)
+- [x] Options chain fetcher
+- [x] IV/IVR calculator
+- [x] APScheduler job configuration
 
 ---
 
 ## Phase 3: Trade Planner & Options Strategy Engine (Weeks 5-7)
 **Priority:** 🟢 HIGH
 
-### 3.1 Strategy Calculator
-- [ ] Vertical spread calculator (bull/bear, credit/debit)
-- [ ] Long options calculator (calls/puts)
-- [ ] Breakeven computation
-- [ ] Max profit/loss calculation
-- [ ] Risk-reward ratio
-- [ ] Probability estimates (delta-based proxy)
-- [ ] Position sizing by risk (% of account or fixed $)
+> _Prerequisite_: Configure Discord bot credentials (Phase 8 setup) so trade planner features can be exercised via slash commands during development.
+
+### 3.1 Strategy Calculator ✅
+- [x] Vertical spread calculator (bull/bear, credit/debit)
+- [x] Long options calculator (calls/puts)
+- [x] Breakeven computation
+- [x] Max profit/loss calculation
+- [x] Risk-reward ratio
+- [x] Probability estimates (delta-based proxy)
+- [x] Position sizing by risk (% of account or fixed $)
 
 ### 3.2 Strike Selection Engine
 - [ ] Optimal strike/width recommendations (2-5 wide SPY/QQQ)
@@ -176,6 +178,7 @@
 - [ ] `/journal add` - Log trade thesis & screenshots
 - [ ] `/journal view` - View past trades
 - [ ] `/alerts config` - Configure alert preferences
+- [ ] `/authorize` - Initiate Schwab OAuth renewal flow and guide refresh token updates
 
 ### 8.2 Discord Bot
 - [ ] Discord bot setup & registration

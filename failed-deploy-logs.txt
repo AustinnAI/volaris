@@ -1,0 +1,50 @@
+2025-10-11T15:07:11.910523505Z     return self._connection_cls(self)
+2025-10-11T15:07:11.910525905Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910531156Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+2025-10-11T15:07:11.910533796Z     self._dbapi_connection = engine.raw_connection()
+2025-10-11T15:07:11.910536766Z                              ^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910538996Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3302, in raw_connection
+2025-10-11T15:07:11.910541446Z     return self.pool.connect()
+2025-10-11T15:07:11.910543586Z            ^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910545686Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+2025-10-11T15:07:11.910548306Z     return _ConnectionFairy._checkout(self)
+2025-10-11T15:07:11.910552526Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910554786Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1263, in _checkout
+2025-10-11T15:07:11.910556916Z     fairy = _ConnectionRecord.checkout(pool)
+2025-10-11T15:07:11.910558997Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910561106Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
+2025-10-11T15:07:11.910563286Z     rec = pool._do_get()
+2025-10-11T15:07:11.910565417Z           ^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910567587Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 308, in _do_get
+2025-10-11T15:07:11.910569797Z     return self._create_connection()
+2025-10-11T15:07:11.910571877Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910573997Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+2025-10-11T15:07:11.910576067Z     return _ConnectionRecord(self)
+2025-10-11T15:07:11.910578137Z            ^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910580247Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
+2025-10-11T15:07:11.910582387Z     self.__connect()
+2025-10-11T15:07:11.910584507Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
+2025-10-11T15:07:11.910586657Z     with util.safe_reraise():
+2025-10-11T15:07:11.910602447Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+2025-10-11T15:07:11.910606448Z     raise exc_value.with_traceback(exc_tb)
+2025-10-11T15:07:11.910610038Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
+2025-10-11T15:07:11.910613488Z     self.dbapi_connection = connection = pool._invoke_creator(self)
+2025-10-11T15:07:11.910617248Z                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910621068Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 643, in connect
+2025-10-11T15:07:11.910623618Z     return dialect.connect(*cargs, **cparams)
+2025-10-11T15:07:11.910625728Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910627868Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 621, in connect
+2025-10-11T15:07:11.910629968Z     return self.loaded_dbapi.connect(*cargs, **cparams)
+2025-10-11T15:07:11.910636799Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910639068Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 953, in connect
+2025-10-11T15:07:11.910641219Z     await_only(creator_fn(*arg, **kw)),
+2025-10-11T15:07:11.910643279Z                ^^^^^^^^^^^^^^^^^^^^^^
+2025-10-11T15:07:11.910645419Z TypeError: connect() got an unexpected keyword argument 'channel_binding'
+2025-10-11T15:07:11.910647399Z 
+2025-10-11T15:07:11.910659379Z ERROR:    Application startup failed. Exiting.
+2025-10-11T15:07:16.24913909Z 2025-10-11 15:07:16 - INFO - volaris - Logging initialized - Level: INFO
+2025-10-11T15:07:16.24916164Z 2025-10-11 15:07:16 - INFO - volaris - Environment: production
+2025-10-11T15:07:17.555721393Z INFO:     Started server process [36]
+2025-10-11T15:07:17.555742774Z INFO:     Waiting for application startup.
+2025-10-11T15:07:17.982709877Z INFO:     Application startup complete.
+2025-10-11T15:07:17.9829212Z INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
