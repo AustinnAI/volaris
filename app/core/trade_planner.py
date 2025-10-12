@@ -46,20 +46,21 @@ class StrategyCalculationResult:
     legs: list[dict]
 
     # Risk metrics
-    max_profit: Decimal
+    max_profit: Optional[Decimal]  # None for unlimited (long calls)
     max_loss: Decimal
     breakeven_prices: list[Decimal]
-    risk_reward_ratio: Decimal
+    risk_reward_ratio: Optional[Decimal]  # None if max_profit is unlimited
 
     # Probability proxy (delta-based)
     win_probability: Optional[Decimal]
 
-    # Position sizing
-    position_size_contracts: int
-    position_size_dollars: Decimal
+    # Position sizing (risk-based recommendations)
+    recommended_contracts: int  # Based on account size & risk %
+    position_size_dollars: Decimal  # Dollar risk (max_loss * recommended_contracts)
 
     # Metadata
     net_premium: Decimal  # debit (positive) or credit (negative)
+    net_credit: Optional[Decimal]  # For credit spreads, the credit received
     dte: Optional[int]
     total_delta: Optional[Decimal]
 
@@ -79,6 +80,8 @@ def calculate_vertical_spread(
     dte: Optional[int] = None,
     long_delta: Optional[Decimal] = None,
     short_delta: Optional[Decimal] = None,
+    account_size: Optional[Decimal] = None,
+    risk_percentage: Decimal = Decimal("2.0"),
 ) -> StrategyCalculationResult:
     """
     Calculate risk/reward for a vertical spread (debit or credit).
@@ -151,6 +154,21 @@ def calculate_vertical_spread(
         else:
             win_probability = (Decimal(1) - abs(total_delta)) * Decimal(100)
 
+    # Calculate risk-based position sizing
+    if account_size is not None:
+        # Calculate recommended contracts based on risk management
+        max_loss_per_contract = max_loss / Decimal(contracts)
+        recommended_contracts = calculate_position_size(
+            max_loss=max_loss_per_contract,
+            account_size=account_size,
+            risk_percentage=risk_percentage,
+        )
+        position_dollars = max_loss_per_contract * Decimal(recommended_contracts)
+    else:
+        # Use the requested contracts if no account size provided
+        recommended_contracts = contracts
+        position_dollars = max_loss
+
     # Build leg structure
     legs = [
         {
@@ -180,15 +198,17 @@ def calculate_vertical_spread(
         breakeven_prices=breakeven_prices,
         risk_reward_ratio=risk_reward_ratio,
         win_probability=win_probability,
-        position_size_contracts=contracts,
-        position_size_dollars=abs(net_premium) if not is_debit else net_premium,
+        recommended_contracts=recommended_contracts,
+        position_size_dollars=position_dollars,
         net_premium=net_premium,
+        net_credit=abs(net_premium) if not is_debit else None,
         dte=dte,
         total_delta=total_delta,
         assumptions={
             "spread_width": float(spread_width),
             "is_debit_spread": is_debit,
             "multiplier": 100,
+            "max_loss_per_contract": float(max_loss / Decimal(contracts)),
         },
     )
 
@@ -203,6 +223,8 @@ def calculate_long_option(
     contracts: int = 1,
     dte: Optional[int] = None,
     delta: Optional[Decimal] = None,
+    account_size: Optional[Decimal] = None,
+    risk_percentage: Decimal = Decimal("2.0"),
 ) -> StrategyCalculationResult:
     """
     Calculate risk/reward for a long call or long put.
@@ -217,6 +239,8 @@ def calculate_long_option(
         contracts: Number of contracts (default 1)
         dte: Days to expiration
         delta: Delta of the option (optional, for probability proxy)
+        account_size: Total account size for position sizing (optional)
+        risk_percentage: Risk percentage for position sizing (default 2%)
 
     Returns:
         StrategyCalculationResult with all computed metrics
@@ -227,15 +251,17 @@ def calculate_long_option(
 
     # Risk/Reward calculation
     max_loss = net_premium  # Limited to premium paid
-    # Max profit is theoretically unlimited for calls, capped at strike for puts
-    # We'll use a heuristic: 5x risk for calls, (strike - current) for puts
-    if option_type == "call":
-        max_profit = net_premium * Decimal(5)  # Conservative estimate
-    else:
-        # Put max profit = (strike - 0) * contracts * 100
-        max_profit = strike * Decimal(contracts) * Decimal(100)
 
-    risk_reward_ratio = max_profit / max_loss if max_loss != 0 else Decimal(0)
+    # Max profit calculation
+    if option_type == "call":
+        # Calls have theoretically unlimited profit potential
+        max_profit = None
+        risk_reward_ratio = None
+    else:
+        # Puts: max profit = (strike - premium) * 100 * contracts
+        # (max profit occurs if stock goes to $0)
+        max_profit = (strike - premium) * Decimal(100) * Decimal(contracts)
+        risk_reward_ratio = max_profit / max_loss if max_loss != 0 else Decimal(0)
 
     # Breakeven calculation
     if option_type == "call":
@@ -250,6 +276,21 @@ def calculate_long_option(
     if delta is not None:
         # For long options, abs(delta) is a rough probability proxy
         win_probability = abs(delta) * Decimal(100)  # Convert to percentage
+
+    # Calculate risk-based position sizing
+    if account_size is not None:
+        # Calculate recommended contracts based on risk management
+        max_loss_per_contract = max_loss / Decimal(contracts)
+        recommended_contracts = calculate_position_size(
+            max_loss=max_loss_per_contract,
+            account_size=account_size,
+            risk_percentage=risk_percentage,
+        )
+        position_dollars = max_loss_per_contract * Decimal(recommended_contracts)
+    else:
+        # Use the requested contracts if no account size provided
+        recommended_contracts = contracts
+        position_dollars = max_loss
 
     # Build leg structure
     legs = [
@@ -273,14 +314,16 @@ def calculate_long_option(
         breakeven_prices=breakeven_prices,
         risk_reward_ratio=risk_reward_ratio,
         win_probability=win_probability,
-        position_size_contracts=contracts,
-        position_size_dollars=net_premium,
+        recommended_contracts=recommended_contracts,
+        position_size_dollars=position_dollars,
         net_premium=net_premium,
+        net_credit=None,
         dte=dte,
         total_delta=delta * Decimal(contracts) if delta else None,
         assumptions={
-            "max_profit_note": "Theoretical max for calls, strike value for puts",
+            "max_profit_note": "Unlimited for calls, (strike - premium) * 100 * contracts for puts",
             "multiplier": 100,
+            "max_loss_per_contract": float(max_loss / Decimal(contracts)),
         },
     )
 

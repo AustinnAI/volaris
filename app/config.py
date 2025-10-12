@@ -103,12 +103,54 @@ class Settings(BaseSettings):
     # Discord Integration (Phase 8)
     DISCORD_BOT_TOKEN: Optional[str] = Field(default=None, description="Discord bot token")
     DISCORD_WEBHOOK_URL: Optional[str] = Field(default=None, description="Discord webhook URL for alerts")
-    DISCORD_SERVER_ID: Optional[str] = Field(default=None, description="Discord server ID")
+    DISCORD_SERVER_ID: Optional[str] = Field(default=None, description="Discord server/guild ID")
+    DISCORD_GUILD_ID: Optional[str] = Field(default=None, description="Discord guild ID for command registration (fallback to SERVER_ID)")
+    DISCORD_BOT_ENABLED: bool = Field(default=False, description="Enable Discord bot")
+    API_BASE_URL: str = Field(default="http://localhost:8000", description="API base URL for Discord bot")
+
+    @property
+    def discord_guild_id_resolved(self) -> Optional[str]:
+        """Get Discord guild ID, preferring DISCORD_GUILD_ID, falling back to DISCORD_SERVER_ID."""
+        return self.DISCORD_GUILD_ID or self.DISCORD_SERVER_ID
 
     # Trading Configuration
     DEFAULT_ACCOUNT_SIZE: float = Field(default=25000.0, description="Default account size for risk calculations")
     MAX_RISK_PERCENTAGE: float = Field(default=10.0, description="Max risk per trade as % of account")
     PDT_THRESHOLD: int = Field(default=25000, description="Pattern Day Trader threshold")
+
+    # Strike Selection Configuration (Phase 3.2)
+    # IV Regime Thresholds
+    IV_HIGH_THRESHOLD: float = Field(default=50.0, description="IV percentile threshold for 'high' regime")
+    IV_LOW_THRESHOLD: float = Field(default=25.0, description="IV percentile threshold for 'low' regime")
+
+    # Credit Spread Thresholds
+    MIN_CREDIT_PCT: float = Field(default=0.25, description="Minimum credit as % of spread width (default 25%)")
+
+    # Strike Classification
+    ATM_THRESHOLD_PCT: float = Field(default=2.0, description="ATM classification threshold as % of underlying price")
+
+    # Liquidity Filters
+    MIN_OPEN_INTEREST: int = Field(default=10, description="Minimum open interest for tradeable contracts")
+    MIN_VOLUME: int = Field(default=5, description="Minimum daily volume for tradeable contracts")
+    MIN_MARK_PRICE: float = Field(default=0.01, description="Minimum mark price to avoid stale contracts")
+
+    # Spread Width Limits (in points)
+    SPREAD_WIDTH_LOW_PRICE_MIN: int = Field(default=2, description="Min spread width for stocks < $100")
+    SPREAD_WIDTH_LOW_PRICE_MAX: int = Field(default=5, description="Max spread width for stocks < $100")
+    SPREAD_WIDTH_MID_PRICE: int = Field(default=5, description="Spread width for stocks $100-$300")
+    SPREAD_WIDTH_HIGH_PRICE_MIN: int = Field(default=5, description="Min spread width for stocks > $300")
+    SPREAD_WIDTH_HIGH_PRICE_MAX: int = Field(default=10, description="Max spread width for stocks > $300")
+    SPREAD_WIDTH_TOLERANCE_PCT: float = Field(default=0.20, description="Tolerance for short leg width (±20%)")
+
+    # Bid-Ask Spread Quality
+    MAX_BID_ASK_SPREAD_PCT: float = Field(default=0.15, description="Max bid-ask spread as % of mark (15%)")
+
+    # Strategy Recommendation Scoring Weights
+    SCORING_WEIGHT_POP: float = Field(default=0.30, description="POP weight in composite score")
+    SCORING_WEIGHT_RR: float = Field(default=0.30, description="R:R weight in composite score")
+    SCORING_WEIGHT_CREDIT: float = Field(default=0.25, description="Credit quality weight")
+    SCORING_WEIGHT_LIQUIDITY: float = Field(default=0.10, description="Liquidity weight")
+    SCORING_WEIGHT_WIDTH: float = Field(default=0.05, description="Width efficiency weight")
 
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = Field(default=True, description="Enable rate limiting")

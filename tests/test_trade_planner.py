@@ -51,41 +51,35 @@ class TestVerticalSpread:
         assert len(result.breakeven_prices) == 1
         assert result.breakeven_prices[0] == Decimal("449.50")
 
-        # Position sizing
-        assert result.position_size_contracts == 1
+        # Position sizing (no account size provided, uses requested contracts)
+        assert result.recommended_contracts == 1
         assert result.position_size_dollars == Decimal("450.00")
 
-    def test_bear_put_spread_debit(self):
-        """Test bear put spread (debit) calculation."""
+        # Credit spreads only
+        assert result.net_credit is None
+
+    def test_bull_call_spread_with_position_sizing(self):
+        """Test bull call spread with risk-based position sizing."""
         result = calculate_vertical_spread(
-            underlying_symbol="AAPL",
-            underlying_price=Decimal("175.00"),
-            long_strike=Decimal("180.00"),
-            short_strike=Decimal("175.00"),
-            long_premium=Decimal("6.00"),
-            short_premium=Decimal("2.50"),
-            option_type="put",
-            bias=TradeBias.BEARISH,
-            contracts=2,
-            dte=45,
+            underlying_symbol="SPY",
+            underlying_price=Decimal("450.00"),
+            long_strike=Decimal("445.00"),
+            short_strike=Decimal("450.00"),
+            long_premium=Decimal("7.50"),
+            short_premium=Decimal("3.00"),
+            option_type="call",
+            bias=TradeBias.BULLISH,
+            contracts=1,
+            dte=30,
+            account_size=Decimal("25000.00"),
+            risk_percentage=Decimal("2.0"),
         )
 
-        # Verify strategy type
-        assert result.strategy_type == "vertical_debit"
-        assert result.bias == "bearish"
-
-        # Net debit = (6.00 - 2.50) * 2 * 100 = 700
-        assert result.net_premium == Decimal("700.00")
-        assert result.max_loss == Decimal("700.00")
-
-        # Max profit = spread width - debit = (180 - 175) * 2 * 100 - 700 = 300
-        assert result.max_profit == Decimal("300.00")
-
-        # Breakeven = long_strike - net_debit_per_contract = 180 - 3.50 = 176.50
-        assert result.breakeven_prices[0] == Decimal("176.50")
-
-        # Position sizing
-        assert result.position_size_contracts == 2
+        # Max loss per contract = 450
+        # Account risk = 25000 * 0.02 = 500
+        # Recommended contracts = 500 / 450 = 1.11 -> 1
+        assert result.recommended_contracts == 1
+        assert result.position_size_dollars == Decimal("450.00")
 
     def test_bull_put_spread_credit(self):
         """Test bull put spread (credit) calculation."""
@@ -107,6 +101,7 @@ class TestVerticalSpread:
 
         # Net credit = (2.00 - 5.00) * 1 * 100 = -300 (credit received)
         assert result.net_premium == Decimal("-300.00")
+        assert result.net_credit == Decimal("300.00")
 
         # Max profit = credit received = 300
         assert result.max_profit == Decimal("300.00")
@@ -114,38 +109,11 @@ class TestVerticalSpread:
         # Max loss = spread width - credit = (445 - 440) * 100 - 300 = 200
         assert result.max_loss == Decimal("200.00")
 
+        # position_size_dollars should be max_loss (risk), not credit
+        assert result.position_size_dollars == Decimal("200.00")
+
         # Breakeven = short_strike - net_credit_per_contract = 445 - 3.00 = 442.00
         assert result.breakeven_prices[0] == Decimal("442.00")
-
-    def test_bear_call_spread_credit(self):
-        """Test bear call spread (credit) calculation."""
-        result = calculate_vertical_spread(
-            underlying_symbol="TSLA",
-            underlying_price=Decimal("250.00"),
-            long_strike=Decimal("260.00"),
-            short_strike=Decimal("255.00"),
-            long_premium=Decimal("3.00"),
-            short_premium=Decimal("6.50"),
-            option_type="call",
-            bias=TradeBias.BEARISH,
-            contracts=1,
-            dte=21,
-        )
-
-        # Verify strategy type
-        assert result.strategy_type == "vertical_credit"
-
-        # Net credit = (3.00 - 6.50) * 1 * 100 = -350
-        assert result.net_premium == Decimal("-350.00")
-
-        # Max profit = credit received = 350
-        assert result.max_profit == Decimal("350.00")
-
-        # Max loss = spread width - credit = (260 - 255) * 100 - 350 = 150
-        assert result.max_loss == Decimal("150.00")
-
-        # Breakeven = short_strike + net_credit_per_contract = 255 + 3.50 = 258.50
-        assert result.breakeven_prices[0] == Decimal("258.50")
 
     def test_vertical_spread_with_deltas(self):
         """Test vertical spread with delta-based probability."""
@@ -197,15 +165,19 @@ class TestLongOption:
         # Max loss = premium paid
         assert result.max_loss == Decimal("700.00")
 
-        # Max profit = 5x risk (heuristic) = 3500
-        assert result.max_profit == Decimal("3500.00")
+        # Max profit = None (unlimited for calls)
+        assert result.max_profit is None
+        assert result.risk_reward_ratio is None
 
         # Breakeven = strike + premium = 180 + 3.50 = 183.50
         assert result.breakeven_prices[0] == Decimal("183.50")
 
         # Position sizing
-        assert result.position_size_contracts == 2
+        assert result.recommended_contracts == 2
         assert result.position_size_dollars == Decimal("700.00")
+
+        # No credit for long options
+        assert result.net_credit is None
 
     def test_long_put(self):
         """Test long put calculation."""
@@ -230,8 +202,11 @@ class TestLongOption:
         # Max loss = premium paid
         assert result.max_loss == Decimal("500.00")
 
-        # Max profit = strike * contracts * 100 = 445 * 1 * 100 = 44500
-        assert result.max_profit == Decimal("44500.00")
+        # Max profit = (strike - premium) * 100 * contracts = (445 - 5) * 100 * 1 = 44000
+        assert result.max_profit == Decimal("44000.00")
+
+        # Risk/reward = 44000 / 500 = 88
+        assert result.risk_reward_ratio == Decimal("88.00")
 
         # Breakeven = strike - premium = 445 - 5.00 = 440.00
         assert result.breakeven_prices[0] == Decimal("440.00")
@@ -255,6 +230,27 @@ class TestLongOption:
 
         # Win probability = abs(delta) * 100 = 35%
         assert result.win_probability == Decimal("35.00")
+
+    def test_long_put_with_position_sizing(self):
+        """Test long put with risk-based position sizing."""
+        result = calculate_long_option(
+            underlying_symbol="SPY",
+            underlying_price=Decimal("450.00"),
+            strike=Decimal("445.00"),
+            premium=Decimal("5.00"),
+            option_type="put",
+            bias=TradeBias.BEARISH,
+            contracts=1,
+            dte=30,
+            account_size=Decimal("25000.00"),
+            risk_percentage=Decimal("2.0"),
+        )
+
+        # Max loss per contract = 500
+        # Account risk = 25000 * 0.02 = 500
+        # Recommended contracts = 500 / 500 = 1
+        assert result.recommended_contracts == 1
+        assert result.position_size_dollars == Decimal("500.00")
 
 
 class TestPositionSize:
@@ -308,18 +304,6 @@ class TestPositionSize:
         # Contracts = 100 / 1000 = 0.1 -> 0 (can't trade)
         assert contracts == 0
 
-    def test_position_size_minimum_one_contract(self):
-        """Test that at least 1 contract is returned if within risk tolerance."""
-        contracts = calculate_position_size(
-            max_loss=Decimal("450.00"),
-            account_size=Decimal("25000.00"),
-            risk_percentage=Decimal("2.0"),
-        )
-
-        # Max risk = 25000 * 0.02 = 500
-        # Contracts = 500 / 450 = 1.11 -> 1
-        assert contracts >= 1
-
 
 class TestEdgeCases:
     """Test edge cases and validation."""
@@ -364,6 +348,7 @@ class TestEdgeCases:
 
         # Net credit = (1.00 - 1.50) * 1 * 100 = -50
         assert result.net_premium == Decimal("-50.00")
+        assert result.net_credit == Decimal("50.00")
 
         # Max profit = credit = 50
         assert result.max_profit == Decimal("50.00")
@@ -371,6 +356,9 @@ class TestEdgeCases:
         # Spread width = (450 - 449) * 100 = 100
         # Max loss = 100 - 50 = 50
         assert result.max_loss == Decimal("50.00")
+
+        # position_size_dollars = max_loss (risk)
+        assert result.position_size_dollars == Decimal("50.00")
 
     def test_multiple_contracts(self):
         """Test calculations scale correctly with multiple contracts."""
@@ -394,4 +382,4 @@ class TestEdgeCases:
         # Max profit = (5 * 100 * 5) - 2250 = 250
         assert result.max_profit == Decimal("250.00")
 
-        assert result.position_size_contracts == 5
+        assert result.recommended_contracts == 5

@@ -1,0 +1,472 @@
+# Discord Bot - Setup & Usage Guide
+
+## Current Status
+
+✅ **Your Discord bot is already configured!**
+
+- Bot token: Configured in `.env`
+- Server ID: `1413243234569818346`
+- Webhook: Configured for alerts
+- Render deployment: `https://volaris-yz19.onrender.com`
+
+**What's needed:** Just add `DISCORD_BOT_ENABLED=true` to your `.env` and run the bot!
+
+---
+
+## Quick Start (5 minutes)
+
+### 1. Enable the Bot
+
+Add these two lines to your `.env` file:
+
+```bash
+# Add these to your existing .env
+DISCORD_BOT_ENABLED=true
+API_BASE_URL=http://localhost:8000  # For local testing
+# API_BASE_URL=https://volaris-yz19.onrender.com  # For Render deployment (future)
+```
+
+**Note:** The bot will use your existing `DISCORD_SERVER_ID` (1413243234569818346) for command registration. No need to set `DISCORD_GUILD_ID` separately.
+
+### 2. Verify Bot Permissions
+
+Your bot needs these permissions in Discord:
+- ✅ Send Messages
+- ✅ Embed Links
+- ✅ Use Slash Commands
+- ✅ Server Members Intent (enabled in Developer Portal)
+
+If not already invited, use the OAuth2 URL from [Discord Developer Portal](https://discord.com/developers/applications) with scopes: `bot`, `applications.commands`
+
+### 3. Run the Bot
+
+**Option A: Local Testing (Recommended)**
+
+```bash
+# Terminal 1: Start the API
+source venv/bin/activate
+uvicorn app.main:app --reload
+
+# Terminal 2: Start the bot
+source venv/bin/activate
+python -m app.alerts.discord_bot
+```
+
+You should see:
+```
+INFO - Bot ready as Volaris (ID: ...)
+INFO - Synced commands to guild 1413243234569818346
+```
+
+**Option B: Render Deployment (Future)**
+
+When your Render deployment is live:
+1. Set `API_BASE_URL=https://volaris-yz19.onrender.com` in `.env`
+2. Run bot as a separate worker or background process
+3. Bot will call your production API
+
+---
+
+## Using /plan Command
+
+### Command Structure
+
+```
+/plan symbol:<TICKER> bias:<bullish|bearish|neutral> dte:<DAYS> [mode] [max_risk] [account_size]
+```
+
+### Parameters
+
+| Parameter | Required | Type | Description | Example |
+|-----------|----------|------|-------------|---------|
+| `symbol` | ✅ | String | Ticker symbol | `SPY`, `AAPL`, `QQQ` |
+| `bias` | ✅ | Choice | Market bias | `bullish`, `bearish`, `neutral` |
+| `dte` | ✅ | Integer | Days to expiration | `30`, `45`, `21` |
+| `mode` | ❌ | Choice | Strategy preference | `auto` (default), `credit`, `debit` |
+| `max_risk` | ❌ | Number | Max $ risk per trade | `500`, `1000` |
+| `account_size` | ❌ | Number | Account size for position sizing | `25000`, `50000` |
+
+### Real Examples
+
+**1. Auto Strategy (IV-Based)**
+```
+/plan symbol:SPY bias:bullish dte:30
+```
+**→** If IV is high: Bull put credit spread
+**→** If IV is low: Long call
+**→** If IV is neutral: Bull call debit spread
+
+**2. Force Credit Spread**
+```
+/plan symbol:AAPL bias:bearish dte:45 mode:credit max_risk:500
+```
+**→** Bear call credit spread with max $500 risk
+
+**3. With Position Sizing**
+```
+/plan symbol:QQQ bias:bullish dte:21 account_size:25000
+```
+**→** Recommended contracts based on 2% account risk
+
+**4. Force Debit Spread**
+```
+/plan symbol:TSLA bias:bearish dte:30 mode:debit
+```
+**→** Bear put debit spread regardless of IV
+
+---
+
+## Response Format
+
+The bot returns a **rich embed** with comprehensive trade details:
+
+### Example Response
+
+```
+┌─────────────────────────────────────────────────┐
+│ #1 Bull Put Credit - SPY @ $450.00             │
+│ IV Regime: high | DTE: 30                       │
+├─────────────────────────────────────────────────┤
+│ 📊 Strikes          📏 Width                    │
+│ Long: $440.00       $5 pts ($500)               │
+│ Short: $445.00                                   │
+│                                                  │
+│ 💰 Credit           📈 Max Profit               │
+│ $175.00             $175.00                      │
+│                                                  │
+│ 📉 Max Loss         ⚖️ R:R        🎯 POP       │
+│ $325.00             0.54:1         70%           │
+│                                                  │
+│ 📦 Size             🎲 Breakeven   ⭐ Score    │
+│ 2 contracts         $443.25        78.5/100      │
+│ ($650 risk)                                      │
+│                                                  │
+│ 💡 Why This Trade                               │
+│ • High IV regime favors selling premium         │
+│ • At-the-money put                              │
+│ • Attractive R:R of 0.54:1                      │
+│ • High probability setup (~70% POP)             │
+│ • Strong credit collection (35% of width)       │
+│ • $5 spread width for ATM                       │
+│ • Good liquidity (OI: 500)                      │
+└─────────────────────────────────────────────────┘
+[Show More Candidates] button
+```
+
+### Field Descriptions
+
+| Icon | Field | Description |
+|------|-------|-------------|
+| 📊 | **Strikes** | Long and short strike prices |
+| 📏 | **Width** | Spread width in points and dollars |
+| 💰 | **Credit/Debit** | Net cost (credit is negative) |
+| 📈 | **Max Profit** | Maximum profit (unlimited for long calls ♾️) |
+| 📉 | **Max Loss** | Maximum loss (your risk) |
+| ⚖️ | **R:R** | Risk/reward ratio |
+| 🎯 | **POP** | Probability of profit proxy (delta-based) |
+| 📦 | **Size** | Recommended contracts + total risk |
+| 🎲 | **Breakeven** | Price needed to break even |
+| ⭐ | **Score** | Composite quality score (0-100) |
+| 💡 | **Why This Trade** | AI-generated reasoning bullets |
+
+### Interactive Buttons
+
+**"Show More Candidates"** → View recommendations #2 and #3
+(Click for additional ITM/OTM options)
+
+---
+
+## Deployment Options
+
+### Option 1: Local Development (Current)
+
+**Setup:**
+```bash
+API_BASE_URL=http://localhost:8000
+DISCORD_BOT_ENABLED=true
+```
+
+**Run:**
+```bash
+# Terminal 1
+uvicorn app.main:app --reload
+
+# Terminal 2
+python -m app.alerts.discord_bot
+```
+
+**Pros:**
+- Instant testing
+- Fast iteration
+- Full control
+
+**Cons:**
+- Bot offline when laptop sleeps
+- Requires two terminals
+
+---
+
+### Option 2: Render Deployment (Future)
+
+**Setup:**
+```bash
+API_BASE_URL=https://volaris-yz19.onrender.com
+DISCORD_BOT_ENABLED=true
+```
+
+**Deployment Options:**
+
+#### A. Separate Worker Service
+
+Add a second Render service:
+```yaml
+# render.yaml
+services:
+  - type: web
+    name: volaris-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+  - type: worker
+    name: volaris-discord-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.alerts.discord_bot
+    envVars:
+      - key: DISCORD_BOT_ENABLED
+        value: true
+      - key: API_BASE_URL
+        value: https://volaris-yz19.onrender.com
+```
+
+**Pros:**
+- Always online
+- Separate scaling
+- Independent restarts
+
+**Cons:**
+- Two services to manage
+- Additional cost
+
+#### B. Background Task in FastAPI (Simpler)
+
+Modify `app/main.py` lifespan:
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    scheduler = None
+    bot_task = None
+
+    try:
+        if settings.SCHEDULER_ENABLED:
+            scheduler = create_scheduler()
+            scheduler.start()
+
+        # Start Discord bot in background
+        if settings.DISCORD_BOT_ENABLED:
+            from app.alerts.discord_bot import run_bot
+            bot_task = asyncio.create_task(run_bot())
+            logger.info("Discord bot started in background")
+
+        yield
+    finally:
+        if bot_task:
+            bot_task.cancel()
+        if scheduler:
+            scheduler.shutdown(wait=False)
+        await close_db()
+```
+
+**Pros:**
+- Single service
+- Simpler deployment
+- No extra cost
+
+**Cons:**
+- Bot and API share resources
+- API restart = bot restart
+
+---
+
+## Rate Limiting
+
+**Built-in protection:**
+- 3 commands per minute per user
+- Prevents API abuse
+- Automatic cooldown messages
+
+**If rate limited:**
+```
+⚠️ Rate limit: Please wait before requesting another recommendation.
+```
+
+Wait 60 seconds and try again.
+
+---
+
+## Error Messages
+
+### Common Errors & Solutions
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `❌ No data available` | No option chain for DTE | Try different DTE (e.g., 30, 45, 60) |
+| `❌ API error: HTTP 404` | Ticker not found | Verify ticker symbol (SPY not SP500) |
+| `❌ API error: HTTP 500` | Server error | Check API logs, restart if needed |
+| `⚠️ Rate limit` | Too many commands | Wait 60 seconds |
+| Bot doesn't respond | Bot offline or permissions | Check bot status, verify permissions |
+| Command doesn't show | Not synced | Wait 5 min or restart bot |
+
+---
+
+## Troubleshooting
+
+### Bot Won't Start
+
+**Error: `ModuleNotFoundError: No module named 'audioop'`**
+
+```bash
+# Python 3.13+ requires audioop-lts
+pip install audioop-lts
+```
+
+**Error: `DISCORD_BOT_TOKEN not configured`**
+
+```bash
+# Verify .env has token
+grep DISCORD_BOT_TOKEN .env
+```
+
+**Error: `Discord bot disabled`**
+
+```bash
+# Add to .env
+DISCORD_BOT_ENABLED=true
+```
+
+### Command Not Showing
+
+1. **Check bot is online** in Discord (green status)
+2. **Wait 5 minutes** for command sync
+3. **Restart bot** to force re-sync
+4. **Check guild ID** matches your server
+
+### API Connection Fails
+
+```bash
+# Test API is running
+curl http://localhost:8000/health
+
+# Should return:
+{"status":"healthy","database":"connected","cache":"connected"}
+```
+
+### Bot Shows as Online but /plan Fails
+
+1. **Check API_BASE_URL** matches running API
+2. **Test API endpoint** directly:
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/strategy/recommend \
+     -H "Content-Type: application/json" \
+     -d '{"underlying_symbol":"SPY","bias":"bullish","target_dte":30}'
+   ```
+3. **Check bot logs** for error details
+
+---
+
+## Development Tips
+
+### Enable Debug Logging
+
+```python
+# In discord_bot.py, change:
+logging.basicConfig(level=logging.DEBUG)
+```
+
+### Test API Call Directly
+
+```bash
+# Test recommendation API
+curl -X POST http://localhost:8000/api/v1/strategy/recommend \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_symbol": "SPY",
+    "bias": "bullish",
+    "target_dte": 30,
+    "objectives": {"account_size": 25000}
+  }'
+```
+
+### Command Registration
+
+**Guild commands (Current):**
+- Updates instantly
+- Only visible in your test server
+- Set via `DISCORD_SERVER_ID`
+
+**Global commands (Future):**
+- Takes up to 1 hour to propagate
+- Visible in all servers with bot
+- Remove `guild_id` parameter
+
+---
+
+## Security Checklist
+
+- ✅ Never commit `.env` to git
+- ✅ Token is in `.gitignore`
+- ✅ Rate limiting enabled (3/min)
+- ✅ API calls timeout after 30s
+- ✅ Bot has minimal permissions
+
+**If token is exposed:**
+1. Go to Discord Developer Portal
+2. Bot → Reset Token
+3. Update `.env` with new token
+4. Restart bot
+
+---
+
+## Next Steps
+
+### Phase 8 Enhancements
+
+- [ ] "Tighten credit filter" button (+5% min credit)
+- [ ] Export to TastyTrade/ToS order format
+- [ ] Save recommendations to `trade_plans` table
+- [ ] User watchlist integration
+- [ ] Alert subscriptions (`/alerts subscribe SPY`)
+- [ ] Trade journal commands (`/journal add`)
+- [ ] Position tracking (`/positions`)
+- [ ] P/L reporting (`/pnl weekly`)
+
+### Production Checklist
+
+- [ ] Choose deployment option (worker vs background task)
+- [ ] Set `API_BASE_URL` to Render URL
+- [ ] Test with production API
+- [ ] Monitor bot uptime
+- [ ] Set up error alerting (Sentry)
+- [ ] Document for team
+
+---
+
+## Support & References
+
+**Resources:**
+- [Discord.py Documentation](https://discordpy.readthedocs.io/)
+- [Discord Developer Portal](https://discord.com/developers/applications)
+- [Phase 3.3 API Docs](./PHASE_3.md#phase-33-strategy-recommendation-layer-)
+- [Render Deployment Guide](https://render.com/docs)
+
+**Your Setup:**
+- Server ID: `1413243234569818346`
+- Render URL: `https://volaris-yz19.onrender.com`
+- API endpoint: `/api/v1/strategy/recommend`
+
+---
+
+**Ready to test?** Run the Quick Start commands above and use `/plan symbol:SPY bias:bullish dte:30` in your Discord server! 🚀

@@ -70,6 +70,8 @@ async def calculate_vertical_spread_endpoint(
             dte=request.dte,
             long_delta=request.long_delta,
             short_delta=request.short_delta,
+            account_size=request.account_size,
+            risk_percentage=request.risk_percentage,
         )
 
         # Convert to response format
@@ -84,9 +86,10 @@ async def calculate_vertical_spread_endpoint(
             "breakeven_prices": result.breakeven_prices,
             "risk_reward_ratio": result.risk_reward_ratio,
             "win_probability": result.win_probability,
-            "position_size_contracts": result.position_size_contracts,
+            "recommended_contracts": result.recommended_contracts,
             "position_size_dollars": result.position_size_dollars,
             "net_premium": result.net_premium,
+            "net_credit": result.net_credit,
             "dte": result.dte,
             "total_delta": result.total_delta,
             "assumptions": result.assumptions,
@@ -131,6 +134,8 @@ async def calculate_long_option_endpoint(
             contracts=request.contracts,
             dte=request.dte,
             delta=request.delta,
+            account_size=request.account_size,
+            risk_percentage=request.risk_percentage,
         )
 
         # Convert to response format
@@ -145,9 +150,10 @@ async def calculate_long_option_endpoint(
             "breakeven_prices": result.breakeven_prices,
             "risk_reward_ratio": result.risk_reward_ratio,
             "win_probability": result.win_probability,
-            "position_size_contracts": result.position_size_contracts,
+            "recommended_contracts": result.recommended_contracts,
             "position_size_dollars": result.position_size_dollars,
             "net_premium": result.net_premium,
+            "net_credit": result.net_credit,
             "dte": result.dte,
             "total_delta": result.total_delta,
             "assumptions": result.assumptions,
@@ -253,9 +259,10 @@ async def calculate_strategy_unified(
             "breakeven_prices": result.breakeven_prices,
             "risk_reward_ratio": result.risk_reward_ratio,
             "win_probability": result.win_probability,
-            "position_size_contracts": result.position_size_contracts,
+            "recommended_contracts": result.recommended_contracts,
             "position_size_dollars": result.position_size_dollars,
             "net_premium": result.net_premium,
+            "net_credit": result.net_credit,
             "dte": result.dte,
             "total_delta": result.total_delta,
             "assumptions": result.assumptions,

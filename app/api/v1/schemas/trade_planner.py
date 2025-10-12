@@ -22,6 +22,8 @@ class VerticalSpreadRequest(BaseModel):
     dte: Optional[int] = Field(default=None, description="Days to expiration", ge=0)
     long_delta: Optional[Decimal] = Field(default=None, description="Delta of the long option")
     short_delta: Optional[Decimal] = Field(default=None, description="Delta of the short option")
+    account_size: Optional[Decimal] = Field(default=None, description="Account size for position sizing", gt=0)
+    risk_percentage: Decimal = Field(default=Decimal("2.0"), description="Risk percentage", gt=0, le=100)
 
     @field_validator("option_type")
     @classmethod
@@ -54,6 +56,8 @@ class LongOptionRequest(BaseModel):
     contracts: int = Field(default=1, description="Number of contracts", ge=1)
     dte: Optional[int] = Field(default=None, description="Days to expiration", ge=0)
     delta: Optional[Decimal] = Field(default=None, description="Delta of the option")
+    account_size: Optional[Decimal] = Field(default=None, description="Account size for position sizing", gt=0)
+    risk_percentage: Decimal = Field(default=Decimal("2.0"), description="Risk percentage", gt=0, le=100)
 
     @field_validator("option_type")
     @classmethod
@@ -109,20 +113,21 @@ class CalculationResponse(BaseModel):
     legs: List[LegResponse]
 
     # Risk metrics
-    max_profit: Decimal
+    max_profit: Optional[Decimal]  # None for unlimited (long calls)
     max_loss: Decimal
     breakeven_prices: List[Decimal]
-    risk_reward_ratio: Decimal
+    risk_reward_ratio: Optional[Decimal]  # None if max_profit is unlimited
 
     # Probability proxy
     win_probability: Optional[Decimal]
 
-    # Position sizing
-    position_size_contracts: int
-    position_size_dollars: Decimal
+    # Position sizing (risk-based recommendations)
+    recommended_contracts: int  # Based on account size & risk %
+    position_size_dollars: Decimal  # Dollar risk (max_loss * recommended_contracts)
 
     # Metadata
     net_premium: Decimal
+    net_credit: Optional[Decimal]  # For credit spreads
     dte: Optional[int]
     total_delta: Optional[Decimal]
 

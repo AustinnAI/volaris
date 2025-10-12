@@ -59,18 +59,23 @@
 - [x] Probability estimates (delta-based proxy)
 - [x] Position sizing by risk (% of account or fixed $)
 
-### 3.2 Strike Selection Engine
-- [ ] Optimal strike/width recommendations (2-5 wide SPY/QQQ)
-- [ ] Spread width logic for high-priced tickers (5-10 wide)
+### 3.2 Strike Selection Engine ✅
+- [x] Optimal strike/width recommendations (2-5 wide SPY/QQQ)
+- [x] Spread width logic for high-priced tickers (5-10 wide)
+- [x] IV regime-based strategy selection
+- [x] Premium target validation (≥25% of width for credits)
 - [ ] Expected move alignment (inside vs outside EM)
-- [ ] Premium target validation (≥25% of width for credits)
 - [ ] Broker-ready order template export
 
-### 3.3 Strategy Recommendation Logic
-- [ ] IV regime detection (high/low/neutral)
-- [ ] Trend + bias analysis
-- [ ] Debit vs credit structure recommendation
-- [ ] Reasoning explanation engine
+### 3.3 Strategy Recommendation Logic ✅
+- [x] IV regime detection (high/low/neutral)
+- [x] Bias-based strategy family selection
+- [x] Explicit debit vs credit selection
+- [x] Reasoning explanation engine
+- [x] Composite scoring & ranking
+- [x] Constraint filtering (max risk, min POP, min R:R)
+- [x] Position sizing recommendations
+- [x] Unified recommendation API
 
 ---
 

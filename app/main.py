@@ -96,7 +96,11 @@ async def health_check():
 from app.api.v1.providers import router as providers_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.trade_planner import router as trade_planner_router
+from app.api.v1.strike_selection import router as strike_selection_router
+from app.api.v1.strategy_recommendation import router as strategy_router
 
 app.include_router(providers_router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(trade_planner_router, prefix=settings.API_V1_PREFIX)
+app.include_router(strike_selection_router, prefix=settings.API_V1_PREFIX)
+app.include_router(strategy_router, prefix=settings.API_V1_PREFIX)

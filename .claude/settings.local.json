@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(source:*)",
+      "Bash(uvicorn:*)",
+      "Bash(python -m pytest tests/test_strike_selection.py -v)",
+      "Bash(python:*)",
+      "Bash(timeout:*)",
+      "Bash(pip install:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
