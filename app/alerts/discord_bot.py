@@ -555,6 +555,312 @@ async def run_bot():
             logger.error(f"Unexpected error in /plan: {e}", exc_info=True)
             await interaction.followup.send(f"❌ Unexpected error: {str(e)}")
 
+    # Phase 3.6: Additional Discord Commands
+
+    # /calc command - Quick strategy calculator
+    @bot.tree.command(name="calc", description="Calculate P/L for a specific strategy")
+    @app_commands.describe(
+        strategy="Strategy type",
+        symbol="Ticker symbol",
+        strikes="Strike price(s): '540' for long options, '540/545' for spreads",
+        position="Call or Put",
+        dte="Days to expiration",
+        premium="Premium (optional, pulls from market if omitted)"
+    )
+    @app_commands.choices(
+        strategy=[
+            app_commands.Choice(name="Vertical Spread", value="vertical_spread"),
+            app_commands.Choice(name="Long Call", value="long_call"),
+            app_commands.Choice(name="Long Put", value="long_put"),
+        ],
+        position=[
+            app_commands.Choice(name="Call", value="call"),
+            app_commands.Choice(name="Put", value="put"),
+        ]
+    )
+    async def calc(
+        interaction: discord.Interaction,
+        strategy: str,
+        symbol: str,
+        strikes: str,
+        position: str,
+        dte: int,
+        premium: Optional[float] = None
+    ):
+        """Calculate P/L for a specific strategy."""
+        await interaction.response.defer()
+
+        try:
+            # Parse strikes
+            if "/" in strikes:
+                # Spread
+                strike_parts = strikes.split("/")
+                if len(strike_parts) != 2:
+                    await interaction.followup.send("❌ Invalid strikes format. Use '540/545' for spreads.")
+                    return
+                long_strike = float(strike_parts[0])
+                short_strike = float(strike_parts[1])
+            else:
+                # Single strike
+                single_strike = float(strikes)
+
+            # Build API request based on strategy type
+            if strategy == "vertical_spread":
+                # Call vertical spread calculator
+                url = f"{bot.api_client.base_url}/api/v1/trade-planner/calculate/vertical-spread"
+                payload = {
+                    "underlying_symbol": symbol.upper(),
+                    "underlying_price": 0,  # API will fetch
+                    "long_strike": long_strike,
+                    "short_strike": short_strike,
+                    "option_type": position,
+                    "is_credit": short_strike < long_strike if position == "put" else long_strike < short_strike
+                }
+            else:
+                # Long option calculator
+                url = f"{bot.api_client.base_url}/api/v1/trade-planner/calculate/long-option"
+                payload = {
+                    "underlying_symbol": symbol.upper(),
+                    "underlying_price": 0,  # API will fetch
+                    "strike": single_strike,
+                    "option_type": position,
+                    "premium": premium
+                }
+
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.post(url, json=payload) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+                    result = await response.json()
+
+            # Create embed with results
+            embed = discord.Embed(
+                title=f"📊 {strategy.replace('_', ' ').title()} - {symbol.upper()}",
+                color=discord.Color.blue()
+            )
+
+            if strategy == "vertical_spread":
+                embed.add_field(name="Strikes", value=f"Long: ${long_strike:.2f}\nShort: ${short_strike:.2f}", inline=True)
+                if result.get("is_credit"):
+                    embed.add_field(name="💰 Credit", value=f"**${abs(float(result['net_premium'])):.2f}**", inline=True)
+                else:
+                    embed.add_field(name="💸 Debit", value=f"**${float(result['net_premium']):.2f}**", inline=True)
+            else:
+                embed.add_field(name="Strike", value=f"${single_strike:.2f}", inline=True)
+                embed.add_field(name="💸 Premium", value=f"**${float(result['premium']):.2f}**", inline=True)
+
+            embed.add_field(name="📈 Max Profit", value=f"${float(result.get('max_profit', 0)):.2f}", inline=True)
+            embed.add_field(name="📉 Max Loss", value=f"${float(result['max_loss']):.2f}", inline=True)
+            embed.add_field(name="⚖️ R:R", value=f"{float(result.get('risk_reward_ratio', 0)):.2f}:1", inline=True)
+            embed.add_field(name="🎯 Breakeven", value=f"${float(result['breakeven']):.2f}", inline=True)
+
+            if result.get("pop_proxy"):
+                embed.add_field(name="📊 POP", value=f"{float(result['pop_proxy']):.0f}%", inline=True)
+
+            await interaction.followup.send(embed=embed)
+
+        except ValueError as e:
+            await interaction.followup.send(f"❌ Invalid input: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error in /calc: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /size command - Position sizing helper
+    @bot.tree.command(name="size", description="Calculate position sizing")
+    @app_commands.describe(
+        account_size="Your account value",
+        max_risk_pct="Max risk as % of account (e.g., 2 for 2%)",
+        strategy_cost="Cost per contract (premium or max loss)"
+    )
+    async def size(
+        interaction: discord.Interaction,
+        account_size: float,
+        max_risk_pct: float,
+        strategy_cost: float
+    ):
+        """Calculate recommended position size."""
+        await interaction.response.defer()
+
+        try:
+            # Calculate position sizing
+            max_risk_dollars = account_size * (max_risk_pct / 100)
+            recommended_contracts = int(max_risk_dollars / strategy_cost)
+            total_position_size = recommended_contracts * strategy_cost
+            actual_risk_pct = (total_position_size / account_size) * 100
+
+            # Create embed
+            embed = discord.Embed(
+                title="📐 Position Sizing Recommendation",
+                color=discord.Color.green()
+            )
+
+            embed.add_field(name="Account Size", value=f"${account_size:,.2f}", inline=True)
+            embed.add_field(name="Max Risk %", value=f"{max_risk_pct:.1f}%", inline=True)
+            embed.add_field(name="Max Risk $", value=f"${max_risk_dollars:,.2f}", inline=True)
+            embed.add_field(name="Cost/Contract", value=f"${strategy_cost:.2f}", inline=True)
+            embed.add_field(name="✅ Contracts", value=f"**{recommended_contracts}**", inline=True)
+            embed.add_field(name="Total Position", value=f"${total_position_size:,.2f}", inline=True)
+            embed.add_field(name="Actual Risk %", value=f"{actual_risk_pct:.2f}%", inline=True)
+            embed.add_field(name="Max Loss", value=f"${total_position_size:,.2f}", inline=True)
+
+            if recommended_contracts == 0:
+                embed.add_field(
+                    name="⚠️ Warning",
+                    value="Strategy cost exceeds risk limit. Consider reducing position size or using spreads.",
+                    inline=False
+                )
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /size: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /breakeven command - Quick breakeven calculator
+    @bot.tree.command(name="breakeven", description="Calculate breakeven price")
+    @app_commands.describe(
+        strategy="Strategy type",
+        strikes="Strike price(s): '540' for long options, '540/545' for spreads",
+        cost="Premium paid or received (positive for debit, negative for credit)"
+    )
+    @app_commands.choices(
+        strategy=[
+            app_commands.Choice(name="Bull Call Spread", value="bull_call"),
+            app_commands.Choice(name="Bear Put Spread", value="bear_put"),
+            app_commands.Choice(name="Bull Put Spread (Credit)", value="bull_put"),
+            app_commands.Choice(name="Bear Call Spread (Credit)", value="bear_call"),
+            app_commands.Choice(name="Long Call", value="long_call"),
+            app_commands.Choice(name="Long Put", value="long_put"),
+        ]
+    )
+    async def breakeven(
+        interaction: discord.Interaction,
+        strategy: str,
+        strikes: str,
+        cost: float
+    ):
+        """Calculate breakeven price."""
+        await interaction.response.defer()
+
+        try:
+            # Parse strikes
+            if "/" in strikes:
+                strike_parts = strikes.split("/")
+                if len(strike_parts) != 2:
+                    await interaction.followup.send("❌ Invalid strikes format. Use '540/545' for spreads.")
+                    return
+                long_strike = float(strike_parts[0])
+                short_strike = float(strike_parts[1])
+
+                # Calculate breakeven for spreads
+                if strategy in ("bull_call", "bear_put"):
+                    # Debit spreads
+                    if strategy == "bull_call":
+                        breakeven = long_strike + abs(cost)
+                    else:  # bear_put
+                        breakeven = long_strike - abs(cost)
+                else:
+                    # Credit spreads
+                    if strategy == "bull_put":
+                        breakeven = short_strike - abs(cost)
+                    else:  # bear_call
+                        breakeven = short_strike + abs(cost)
+            else:
+                # Long options
+                strike = float(strikes)
+                if strategy == "long_call":
+                    breakeven = strike + abs(cost)
+                else:  # long_put
+                    breakeven = strike - abs(cost)
+
+            # Assume current price for distance calculation (would need API call for real price)
+            embed = discord.Embed(
+                title=f"⚖️ Breakeven Calculator - {strategy.replace('_', ' ').title()}",
+                color=discord.Color.gold()
+            )
+
+            if "/" in strikes:
+                embed.add_field(name="Strikes", value=f"{long_strike:.2f}/{short_strike:.2f}", inline=True)
+            else:
+                embed.add_field(name="Strike", value=f"${strike:.2f}", inline=True)
+
+            embed.add_field(name="Cost", value=f"${abs(cost):.2f}", inline=True)
+            embed.add_field(name="✅ Breakeven", value=f"**${breakeven:.2f}**", inline=True)
+
+            # Add explanation
+            if "/" in strikes:
+                if strategy in ("bull_call", "bear_put"):
+                    embed.add_field(
+                        name="Explanation",
+                        value=f"Debit spread: Needs ${abs(cost):.2f} move beyond long strike to breakeven",
+                        inline=False
+                    )
+                else:
+                    embed.add_field(
+                        name="Explanation",
+                        value=f"Credit spread: Profit if price stays beyond ${breakeven:.2f}",
+                        inline=False
+                    )
+
+            await interaction.followup.send(embed=embed)
+
+        except ValueError as e:
+            await interaction.followup.send(f"❌ Invalid input: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error in /breakeven: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /check command - Health check
+    @bot.tree.command(name="check", description="Check bot and API health")
+    async def check(interaction: discord.Interaction):
+        """Check bot and API health."""
+        await interaction.response.defer()
+
+        try:
+            import time
+            start_time = time.time()
+
+            # Call health endpoint
+            url = f"{bot.api_client.base_url}/health"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    health_data = await response.json() if response.status == 200 else {}
+                    api_status = "✅ Healthy" if response.status == 200 else f"❌ Error ({response.status})"
+
+            response_time = (time.time() - start_time) * 1000  # Convert to ms
+
+            # Create embed
+            embed = discord.Embed(
+                title="🏥 System Health Check",
+                color=discord.Color.green() if response_time < 500 else discord.Color.orange()
+            )
+
+            embed.add_field(name="Bot Status", value="✅ Online", inline=True)
+            embed.add_field(name="API Status", value=api_status, inline=True)
+            embed.add_field(name="Response Time", value=f"{response_time:.0f}ms", inline=True)
+
+            if health_data:
+                embed.add_field(name="Database", value=health_data.get("database", "Unknown"), inline=True)
+                embed.add_field(name="Redis", value=health_data.get("redis", "Unknown"), inline=True)
+                if health_data.get("version"):
+                    embed.add_field(name="Version", value=health_data["version"], inline=True)
+
+            embed.set_footer(text=f"API: {bot.api_client.base_url}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /check: {e}", exc_info=True)
+            embed = discord.Embed(
+                title="🏥 System Health Check",
+                color=discord.Color.red()
+            )
+            embed.add_field(name="Bot Status", value="✅ Online", inline=True)
+            embed.add_field(name="API Status", value=f"❌ Error: {str(e)}", inline=False)
+            await interaction.followup.send(embed=embed)
+
     # Run bot
     try:
         logger.info("Starting Discord bot...")

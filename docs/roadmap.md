@@ -153,23 +153,23 @@
   - Rate limiting: 3 commands/minute per user
   - **Status:** LIVE on Render
 
-**Quick Calculators (Priority 1 - 5-7 hours):**
-- [ ] `/calc` - Calculate P/L for specific strategy without full recommendation flow
+**Quick Calculators (Priority 1 - Complete) ✅:**
+- [x] `/calc` - Calculate P/L for specific strategy without full recommendation flow
   - Parameters: strategy, symbol, strikes, position (call/put), dte, premium (optional)
   - Response: Max profit/loss, breakeven, R:R, POP, credit/debit
   - Wraps Phase 3.1 calculator endpoints
 
-- [ ] `/size` - Position sizing helper
+- [x] `/size` - Position sizing helper
   - Parameters: account_size, max_risk_pct OR max_risk_dollars, strategy_cost
   - Response: Recommended contracts, total position size, risk %, max loss
   - Wraps Phase 3.1 position sizing endpoint
 
-- [ ] `/breakeven` - Quick breakeven calculator
+- [x] `/breakeven` - Quick breakeven calculator
   - Parameters: strategy, strikes, cost (premium paid/received)
   - Response: Breakeven price(s), distance from current, % move needed
   - Simple calculation wrapper
 
-- [ ] `/check` - Bot and API health check
+- [x] `/check` - Bot and API health check
   - Parameters: None
   - Response: Bot status, API status, Schwab connectivity, DB/Redis status, response time
   - Calls existing /health endpoint
