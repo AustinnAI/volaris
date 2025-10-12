@@ -120,6 +120,7 @@ async def recommend_strategy(
                 prefer_credit=request.objectives.prefer_credit,
                 avoid_earnings=request.objectives.avoid_earnings,
                 account_size=request.objectives.account_size,
+                bias_reason=request.objectives.bias_reason,
             )
 
         # Convert request constraints to core model

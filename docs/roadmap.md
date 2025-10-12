@@ -89,8 +89,10 @@
 - [x] Spread width logic for high-priced tickers (5-10 wide)
 - [x] IV regime-based strategy selection
 - [x] Premium target validation (≥25% of width for credits)
-- [ ] Expected move alignment (inside vs outside EM)
-- [ ] Broker-ready order template export
+- [ ] Expected move alignment (inside vs outside EM) → **Deferred to Phase 4**
+- [ ] Broker-ready order template export → **Deferred to Phase 6**
+
+**Note:** Core strike selection complete. Expected move logic will be implemented in Phase 4 (Expected Move Calculator), and order templates will be added in Phase 6 (Trade Execution).
 
 ### 3.3 Strategy Recommendation Logic ✅
 - [x] IV regime detection (high/low/neutral)
@@ -173,6 +175,12 @@
   - Parameters: None
   - Response: Bot status, API status, Schwab connectivity, DB/Redis status, response time
   - Calls existing /health endpoint
+
+- [x] `/help` - Command reference and usage guide
+  - Parameters: None
+  - Response: Comprehensive embed with all commands, parameters, examples, ICT bias reasons
+  - Shows: Command descriptions, parameter formats, usage examples, rate limits, DTE ranges
+  - **Status:** LIVE - Ephemeral response (visible only to requester)
 
 **Analysis Tools (Priority 2 - 5-6 hours):**
 - [ ] `/strikes` - Show available strikes and premiums

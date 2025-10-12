@@ -85,11 +85,40 @@ async def health_check():
     Health check endpoint for monitoring.
     Returns system status and component health.
     """
-    return {
+    from app.db.database import engine
+    from sqlalchemy import text
+
+    health_status = {
         "status": "healthy",
-        "database": "connected",  # TODO: Add actual DB health check
-        "cache": "connected",     # TODO: Add actual Redis health check
+        "database": "disconnected",
+        "cache": "unknown"
     }
+
+    # Check database connection
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        health_status["database"] = "connected"
+    except Exception as e:
+        health_status["database"] = f"error: {str(e)[:50]}"
+        health_status["status"] = "degraded"
+
+    # Check Redis (if configured)
+    try:
+        from app.config import settings
+        if hasattr(settings, 'REDIS_URL') and settings.REDIS_URL:
+            import redis.asyncio as aioredis
+            redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+            await redis_client.ping()
+            health_status["cache"] = "connected"
+            await redis_client.close()
+        else:
+            health_status["cache"] = "not_configured"
+    except Exception as e:
+        health_status["cache"] = f"error: {str(e)[:50]}"
+        # Redis is optional, don't degrade status
+
+    return health_status
 
 
 # Register API routers

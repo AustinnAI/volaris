@@ -80,6 +80,7 @@ class StrategyRecommendationAPI:
         mode: str = "auto",
         max_risk: Optional[float] = None,
         account_size: Optional[float] = None,
+        bias_reason: Optional[str] = None,
     ) -> dict:
         """
         Call strategy recommendation API.
@@ -91,6 +92,7 @@ class StrategyRecommendationAPI:
             mode: auto, debit, or credit
             max_risk: Max risk per trade
             account_size: Account size for position sizing
+            bias_reason: ICT setup context (ssl_sweep, bsl_sweep, fvg_retest, structure_shift, user_manual)
 
         Returns:
             API response dict
@@ -117,6 +119,9 @@ class StrategyRecommendationAPI:
 
         if max_risk:
             objectives["max_risk_per_trade"] = max_risk
+
+        if bias_reason:
+            objectives["bias_reason"] = bias_reason
 
         if mode == "credit":
             objectives["prefer_credit"] = True
@@ -457,7 +462,8 @@ async def run_bot():
         dte="Days to expiration",
         mode="Strategy preference (auto selects based on IV)",
         max_risk="Maximum risk per trade in dollars (optional)",
-        account_size="Account size for position sizing (optional)"
+        account_size="Account size for position sizing (optional)",
+        bias_reason="ICT setup context (optional, advanced)"
     )
     @app_commands.choices(
         bias=[
@@ -469,6 +475,13 @@ async def run_bot():
             app_commands.Choice(name="Auto (IV-based)", value="auto"),
             app_commands.Choice(name="Force Credit", value="credit"),
             app_commands.Choice(name="Force Debit", value="debit"),
+        ],
+        bias_reason=[
+            app_commands.Choice(name="Manual (default)", value="user_manual"),
+            app_commands.Choice(name="SSL Sweep", value="ssl_sweep"),
+            app_commands.Choice(name="BSL Sweep", value="bsl_sweep"),
+            app_commands.Choice(name="FVG Retest", value="fvg_retest"),
+            app_commands.Choice(name="Structure Shift", value="structure_shift"),
         ]
     )
     @app_commands.autocomplete(symbol=symbol_autocomplete)
@@ -479,9 +492,18 @@ async def run_bot():
         dte: int,
         mode: str = "auto",
         max_risk: Optional[float] = None,
-        account_size: Optional[float] = None
+        account_size: Optional[float] = None,
+        bias_reason: Optional[str] = None
     ):
         """Get strategy recommendations."""
+        # Validate DTE range
+        if dte < 1 or dte > 365:
+            await interaction.response.send_message(
+                f"❌ Invalid DTE: {dte}. Must be between 1 and 365 days.",
+                ephemeral=True
+            )
+            return
+
         # Rate limit check
         if not bot.check_rate_limit(interaction.user.id):
             await interaction.response.send_message(
@@ -501,7 +523,8 @@ async def run_bot():
                 dte=dte,
                 mode=mode,
                 max_risk=max_risk,
-                account_size=account_size
+                account_size=account_size,
+                bias_reason=bias_reason
             )
 
             # Extract data
@@ -578,6 +601,7 @@ async def run_bot():
             app_commands.Choice(name="Put", value="put"),
         ]
     )
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def calc(
         interaction: discord.Interaction,
         strategy: str,
@@ -588,6 +612,14 @@ async def run_bot():
         premium: Optional[float] = None
     ):
         """Calculate P/L for a specific strategy."""
+        # Validate DTE range
+        if dte < 1 or dte > 365:
+            await interaction.response.send_message(
+                f"❌ Invalid DTE: {dte}. Must be between 1 and 365 days.",
+                ephemeral=True
+            )
+            return
+
         await interaction.response.defer()
 
         try:
@@ -608,13 +640,18 @@ async def run_bot():
             if strategy == "vertical_spread":
                 # Call vertical spread calculator
                 url = f"{bot.api_client.base_url}/api/v1/trade-planner/calculate/vertical-spread"
+                # Determine if credit spread:
+                # - Bull put credit: short_strike > long_strike (selling higher strike put)
+                # - Bear call credit: short_strike < long_strike (selling lower strike call)
+                is_credit = (position == "put" and short_strike > long_strike) or \
+                            (position == "call" and short_strike < long_strike)
                 payload = {
                     "underlying_symbol": symbol.upper(),
                     "underlying_price": 0,  # API will fetch
                     "long_strike": long_strike,
                     "short_strike": short_strike,
                     "option_type": position,
-                    "is_credit": short_strike < long_strike if position == "put" else long_strike < short_strike
+                    "is_credit": is_credit
                 }
             else:
                 # Long option calculator
@@ -860,6 +897,97 @@ async def run_bot():
             embed.add_field(name="Bot Status", value="✅ Online", inline=True)
             embed.add_field(name="API Status", value=f"❌ Error: {str(e)}", inline=False)
             await interaction.followup.send(embed=embed)
+
+    # /help command - Command reference
+    @bot.tree.command(name="help", description="Show all available commands and usage")
+    async def help_command(interaction: discord.Interaction):
+        """Display comprehensive command reference."""
+        embed = discord.Embed(
+            title="📚 Volaris Bot Commands",
+            description="Options trading strategy recommendations powered by ICT methodology",
+            color=discord.Color.blue()
+        )
+
+        # /plan command
+        embed.add_field(
+            name="📊 /plan",
+            value=(
+                "**Full strategy recommendations with ICT context**\n"
+                "• Parameters: symbol, bias, dte, mode (optional), max_risk (optional), account_size (optional), bias_reason (optional)\n"
+                "• Returns: Top 3 ranked strategies with detailed metrics\n"
+                "• Features: 515 symbol autocomplete, DTE preferences, account sizing\n"
+                "• Example: `/plan SPY bullish 7 auto 500 25000`"
+            ),
+            inline=False
+        )
+
+        # /calc command
+        embed.add_field(
+            name="🧮 /calc",
+            value=(
+                "**Quick P/L calculator for specific strategies**\n"
+                "• Parameters: strategy, symbol, strikes, position (call/put), dte, premium (optional)\n"
+                "• Strategies: Vertical Spread, Long Call, Long Put\n"
+                "• Strike format: '540' for long options, '540/545' for spreads\n"
+                "• Example: `/calc vertical_spread SPY 540/545 put 7`"
+            ),
+            inline=False
+        )
+
+        # /size command
+        embed.add_field(
+            name="📐 /size",
+            value=(
+                "**Position sizing calculator**\n"
+                "• Parameters: account_size, max_risk_pct, strategy_cost\n"
+                "• Returns: Recommended contracts, total position size, risk %\n"
+                "• Example: `/size 25000 2 350` (2% risk on $350 strategy)"
+            ),
+            inline=False
+        )
+
+        # /breakeven command
+        embed.add_field(
+            name="🎯 /breakeven",
+            value=(
+                "**Quick breakeven calculator**\n"
+                "• Parameters: strategy, strikes, cost\n"
+                "• Strategies: bull_call, bear_put, bull_put_credit, bear_call_credit, long_call, long_put\n"
+                "• Example: `/breakeven bull_put_credit 540/545 125`"
+            ),
+            inline=False
+        )
+
+        # /check command
+        embed.add_field(
+            name="🏥 /check",
+            value=(
+                "**System health check**\n"
+                "• Shows: Bot status, API status, database, Redis, response time\n"
+                "• No parameters required"
+            ),
+            inline=False
+        )
+
+        # Additional info
+        embed.add_field(
+            name="ℹ️ Additional Info",
+            value=(
+                "**ICT Bias Reasons** (advanced /plan parameter):\n"
+                "• `ssl_sweep` - Sell-side liquidity swept, bullish reversal\n"
+                "• `bsl_sweep` - Buy-side liquidity swept, bearish reversal\n"
+                "• `fvg_retest` - Fair Value Gap retest continuation\n"
+                "• `structure_shift` - Market Structure Shift (MSS)\n"
+                "• `user_manual` - Manual bias selection (default)\n\n"
+                "**Rate Limits:** 3 commands per minute per user\n"
+                "**DTE Range:** 1-365 days"
+            ),
+            inline=False
+        )
+
+        embed.set_footer(text="Volaris Trading Intelligence Platform | Phase 3 Complete")
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Run bot
     try:
