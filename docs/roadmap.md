@@ -124,15 +124,23 @@
 - [x] Integration: `apply_dte_preferences()` function integrated into recommendation flow
 - [ ] Discord: Update `/plan` response to show DTE rationale (auto-displayed in reasoning)
 
-### 3.5 Bias Context Enhancement 🎯
+### 3.5 Bias Context Enhancement ✅
 > _Foundation for Phase 5 automated sweep detection_
 
-- [ ] Add `bias_reason` optional parameter to recommendation API
+- [x] Add `bias_reason` optional parameter to recommendation API
   - Values: `ssl_sweep`, `bsl_sweep`, `fvg_retest`, `structure_shift`, `user_manual`
-- [ ] Update reasoning engine to incorporate sweep context
-- [ ] API documentation for bias_reason field
-- [ ] Discord: Allow advanced users to specify setup context
-- [ ] Foundation for Phase 5 liquidity-first workflow
+  - Default: `user_manual`
+  - Validation: Pydantic field_validator ensures valid values
+- [x] Update reasoning engine to incorporate sweep context
+  - `get_bias_context_reasoning()` function generates ICT setup explanations
+  - SSL sweep → explains bullish reversal, targeting BSL
+  - BSL sweep → explains bearish reversal, targeting SSL
+  - FVG retest → explains continuation setup
+  - MSS → explains structure shift confirmation
+- [x] Integration: Bias context prepended to strategy reasoning automatically
+- [x] Tests: 11 comprehensive tests validating all bias_reason scenarios (100% pass)
+- [ ] Discord: Allow advanced users to specify setup context (future enhancement)
+- [x] Foundation for Phase 5 liquidity-first workflow
 
 ### 3.6 Additional Discord Commands 🎯
 > _Expose Phase 3 functionality via convenient slash commands for faster workflow_

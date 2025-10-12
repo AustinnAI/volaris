@@ -39,6 +39,23 @@ class StrategyObjectivesRequest(BaseModel):
         description="Account size for position sizing",
         ge=0
     )
+    bias_reason: Optional[str] = Field(
+        default="user_manual",
+        description="Reason for bias: 'ssl_sweep', 'bsl_sweep', 'fvg_retest', 'structure_shift', 'user_manual'"
+    )
+
+    @field_validator("bias_reason")
+    @classmethod
+    def validate_bias_reason(cls, v: Optional[str]) -> Optional[str]:
+        """Validate bias_reason is one of the allowed values."""
+        if v is None:
+            return "user_manual"
+        allowed_values = {"ssl_sweep", "bsl_sweep", "fvg_retest", "structure_shift", "user_manual"}
+        if v.lower() not in allowed_values:
+            raise ValueError(
+                f"bias_reason must be one of: {', '.join(allowed_values)}"
+            )
+        return v.lower()
 
 
 class StrategyConstraintsRequest(BaseModel):

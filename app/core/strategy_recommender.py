@@ -44,6 +44,7 @@ class StrategyObjectives:
     prefer_credit: Optional[bool] = None  # Prefer credit spreads if True
     avoid_earnings: bool = False  # Avoid trades during earnings
     account_size: Optional[Decimal] = None  # For position sizing
+    bias_reason: Optional[str] = "user_manual"  # Reason for bias (Phase 3.5)
 
 
 @dataclass
@@ -385,6 +386,50 @@ def apply_dte_preferences(
     return strategy_family, option_type, reasoning
 
 
+def get_bias_context_reasoning(bias_reason: Optional[str], bias: str, strategy_family: StrategyFamily) -> str:
+    """
+    Generate reasoning context based on bias_reason (Phase 3.5).
+
+    Foundation for Phase 5 automated sweep detection - provides context
+    for why a particular bias was chosen.
+
+    Args:
+        bias_reason: Reason for bias (ssl_sweep, bsl_sweep, fvg_retest, structure_shift, user_manual)
+        bias: Directional bias (bullish, bearish, neutral)
+        strategy_family: Selected strategy family
+
+    Returns:
+        Context string explaining the setup
+    """
+    if not bias_reason or bias_reason == "user_manual":
+        return ""  # No additional context for manual bias
+
+    # ICT setup context
+    if bias_reason == "ssl_sweep":
+        if bias == "bullish":
+            return ("ICT Setup: SSL swept (sell-side liquidity taken) → Bullish reversal expected. "
+                   "Price grabbed liquidity below swing low, now targeting opposite BSL (buy-side). ")
+        else:
+            return "Note: SSL sweep typically indicates bullish bias, but bearish bias selected. "
+
+    elif bias_reason == "bsl_sweep":
+        if bias == "bearish":
+            return ("ICT Setup: BSL swept (buy-side liquidity taken) → Bearish reversal expected. "
+                   "Price grabbed liquidity above swing high, now targeting opposite SSL (sell-side). ")
+        else:
+            return "Note: BSL sweep typically indicates bearish bias, but bullish bias selected. "
+
+    elif bias_reason == "fvg_retest":
+        return (f"ICT Setup: FVG retest (Fair Value Gap) detected → {bias.capitalize()} continuation expected. "
+               "Price returning to imbalance zone for potential continuation move. ")
+
+    elif bias_reason == "structure_shift":
+        return (f"ICT Setup: Market Structure Shift (MSS) confirmed → {bias.capitalize()} trend change. "
+               "Higher highs/lows pattern established, displacement validated. ")
+
+    return ""  # Unknown bias_reason
+
+
 def calculate_composite_score(
     recommendation: StrategyRecommendation,
     weights: ScoringWeights,
@@ -641,6 +686,12 @@ def recommend_strategies(
     strategy_family, option_type, strategy_reason = apply_dte_preferences(
         strategy_family, option_type, dte, account_size, bias, strategy_reason
     )
+
+    # Add bias context (Phase 3.5: ICT setup context)
+    bias_reason = objectives.bias_reason if objectives else "user_manual"
+    bias_context = get_bias_context_reasoning(bias_reason, bias, strategy_family)
+    if bias_context:
+        strategy_reason = bias_context + strategy_reason
 
     # Get spread width
     max_width = constraints.max_spread_width if constraints else None
