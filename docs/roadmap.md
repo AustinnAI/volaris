@@ -60,13 +60,26 @@
 - [x] Trade plans & executions
 - [x] Trade journal entries
 
-### 2.2 Data Fetchers
+### 2.2 Data Fetchers ✅
 - [x] Real-time price fetcher (Schwab 1m/5m)
 - [x] Historical backfill worker (Databento/Alpaca)
 - [x] EOD data sync (Tiingo)
 - [x] Options chain fetcher
 - [x] IV/IVR calculator
 - [x] APScheduler job configuration
+- [x] **Scheduler Setup & Production Deployment**
+  - [x] Background worker configuration for Render
+  - [x] Auto-fetch option chains every 15 minutes (Schwab)
+  - [x] Database seeding scripts for tickers (`scripts/seed_tickers.py`)
+  - [x] **Two deployment options:**
+    - **Option 1 (Recommended)**: Single worker - Discord bot + scheduler in same process (`SCHEDULER_ENABLED=true` on `volaris-bot`)
+    - **Option 2**: Separate workers - Dedicated scheduler worker (`python -m app.workers`)
+  - [x] Cost: $7/month (Option 1) or $14/month (Option 2)
+  - [x] Documentation:
+    - `docs/SCHEDULER_SETUP.md` - Complete setup guide
+    - `docs/RENDER_DEPLOYMENT_OPTIONS.md` - Comparison of deployment strategies
+    - `docs/RENDER_WORKER_QUICKSTART.md` - Quick reference
+  - [x] Jobs: Option chains (15m), prices (1m/5m), IV metrics (30m), EOD sync (daily), historical backfill (daily)
 
 ---
 
@@ -157,9 +170,22 @@
 
 **Quick Calculators (Priority 1 - Complete) ✅:**
 - [x] `/calc` - Calculate P/L for specific strategy without full recommendation flow
-  - Parameters: strategy, symbol, strikes, position (call/put), dte, premium (optional)
-  - Response: Max profit/loss, breakeven, R:R, POP, credit/debit
+  - Parameters: strategy, symbol, strikes, dte, premium (optional)
+  - **6 Strategy Choices with Consistent Strike Formats:**
+    - **Bull Call Spread (Debit):** `lower/higher` (1st=long, 2nd=short) - e.g., `445/450`
+    - **Bear Put Spread (Debit):** `higher/lower` (1st=long, 2nd=short) - e.g., `450/445`
+    - **Bull Put Spread (Credit):** `higher/lower` (1st=short, 2nd=long) - e.g., `450/445`
+    - **Bear Call Spread (Credit):** `lower/higher` (1st=short, 2nd=long) - e.g., `445/450`
+    - **Long Call, Long Put:** Single strike - e.g., `450`
+  - **Strike Format Rules:**
+    - Debit Call: lower/higher
+    - Debit Put: higher/lower
+    - Credit Call: lower/higher
+    - Credit Put: higher/lower
+  - **Validation:** Enforces correct strike order with clear error messages
+  - Response: Max profit/loss, breakeven, R:R, POP, credit/debit, ICT context
   - Wraps Phase 3.1 calculator endpoints
+  - Symbol autocomplete: 515 S&P 500 + ETF tickers
 
 - [x] `/size` - Position sizing helper
   - Parameters: account_size, max_risk_pct OR max_risk_dollars, strategy_cost

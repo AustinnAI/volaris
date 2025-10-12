@@ -426,7 +426,7 @@ class MoreCandidatesView(discord.ui.View):
 
 
 async def run_bot():
-    """Run the Discord bot."""
+    """Run the Discord bot with optional scheduler."""
     global bot
 
     if not settings.DISCORD_BOT_TOKEN:
@@ -436,6 +436,23 @@ async def run_bot():
     if not settings.DISCORD_BOT_ENABLED:
         logger.info("Discord bot disabled (DISCORD_BOT_ENABLED=false)")
         return
+
+    # Start scheduler if enabled (allows single worker to run both bot + data fetching)
+    scheduler = None
+    if settings.SCHEDULER_ENABLED:
+        try:
+            from app.workers import create_scheduler
+            from app.db.database import init_db
+
+            logger.info("Initializing database for scheduler...")
+            await init_db()
+
+            scheduler = create_scheduler()
+            scheduler.start()
+            logger.info("✅ Background scheduler started alongside Discord bot")
+        except Exception as e:
+            logger.error(f"Failed to start scheduler: {e}", exc_info=True)
+            logger.warning("Discord bot will continue without scheduler")
 
     # Create bot instance
     # Use DISCORD_GUILD_ID if set, otherwise fall back to DISCORD_SERVER_ID
@@ -585,20 +602,19 @@ async def run_bot():
     @app_commands.describe(
         strategy="Strategy type",
         symbol="Ticker symbol",
-        strikes="Strike price(s): '540' for long options, '540/545' for spreads",
-        position="Call or Put",
+        strikes="Strike price(s): '540' for long, 'long/short' for spreads (e.g., '445/450')",
         dte="Days to expiration",
-        premium="Premium (optional, pulls from market if omitted)"
+        premium="Net premium (optional - auto-fetches from Schwab API if omitted)",
+        underlying_price="Current stock price (optional - auto-fetches if omitted)"
     )
     @app_commands.choices(
         strategy=[
-            app_commands.Choice(name="Vertical Spread", value="vertical_spread"),
+            app_commands.Choice(name="Bull Call Spread (Debit)", value="bull_call_spread"),
+            app_commands.Choice(name="Bear Put Spread (Debit)", value="bear_put_spread"),
+            app_commands.Choice(name="Bull Put Spread (Credit)", value="bull_put_spread"),
+            app_commands.Choice(name="Bear Call Spread (Credit)", value="bear_call_spread"),
             app_commands.Choice(name="Long Call", value="long_call"),
             app_commands.Choice(name="Long Put", value="long_put"),
-        ],
-        position=[
-            app_commands.Choice(name="Call", value="call"),
-            app_commands.Choice(name="Put", value="put"),
         ]
     )
     @app_commands.autocomplete(symbol=symbol_autocomplete)
@@ -607,9 +623,9 @@ async def run_bot():
         strategy: str,
         symbol: str,
         strikes: str,
-        position: str,
         dte: int,
-        premium: Optional[float] = None
+        premium: Optional[float] = None,
+        underlying_price: Optional[float] = None
     ):
         """Calculate P/L for a specific strategy."""
         # Validate DTE range
@@ -623,47 +639,134 @@ async def run_bot():
         await interaction.response.defer()
 
         try:
-            # Parse strikes
-            if "/" in strikes:
-                # Spread
+            # Determine if spread or single option
+            is_spread = strategy in ("bull_call_spread", "bear_put_spread", "bull_put_spread", "bear_call_spread")
+
+            if is_spread:
+                # Parse spread strikes (format: "long/short")
+                if "/" not in strikes:
+                    await interaction.followup.send(
+                        f"❌ Spread requires two strikes in format 'long/short' (e.g., '445/450')"
+                    )
+                    return
+
                 strike_parts = strikes.split("/")
                 if len(strike_parts) != 2:
-                    await interaction.followup.send("❌ Invalid strikes format. Use '540/545' for spreads.")
+                    await interaction.followup.send("❌ Invalid format. Use 'long/short' (e.g., '445/450')")
                     return
-                long_strike = float(strike_parts[0])
-                short_strike = float(strike_parts[1])
-            else:
-                # Single strike
-                single_strike = float(strikes)
 
-            # Build API request based on strategy type
-            if strategy == "vertical_spread":
-                # Call vertical spread calculator
+                # Parse strikes - format is consistent across all spreads
+                first_strike = float(strike_parts[0])
+                second_strike = float(strike_parts[1])
+
+                # Validate and assign based on strategy
+                if strategy == "bull_call_spread":
+                    # Bull Call Debit: Buy lower call + Sell higher call
+                    # Format: lower/higher (e.g., 445/450)
+                    # First = Long, Second = Short
+                    if first_strike >= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bull Call Spread: Format is 'lower/higher' (e.g., '445/450')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    long_strike = first_strike   # Buy the lower strike
+                    short_strike = second_strike # Sell the higher strike
+                    option_type = "call"
+                    is_credit = False
+
+                elif strategy == "bear_put_spread":
+                    # Bear Put Debit: Buy higher put + Sell lower put
+                    # Format: higher/lower (e.g., 450/445)
+                    # First = Long, Second = Short
+                    if first_strike <= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bear Put Spread: Format is 'higher/lower' (e.g., '450/445')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    long_strike = first_strike   # Buy the higher strike
+                    short_strike = second_strike # Sell the lower strike
+                    option_type = "put"
+                    is_credit = False
+
+                elif strategy == "bull_put_spread":
+                    # Bull Put Credit: Sell higher put + Buy lower put
+                    # Format: higher/lower (e.g., 450/445)
+                    # First = Short, Second = Long
+                    if first_strike <= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bull Put Spread: Format is 'higher/lower' (e.g., '450/445')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    short_strike = first_strike  # Sell the higher strike
+                    long_strike = second_strike  # Buy the lower strike
+                    option_type = "put"
+                    is_credit = True
+
+                elif strategy == "bear_call_spread":
+                    # Bear Call Credit: Sell lower call + Buy higher call
+                    # Format: lower/higher (e.g., 445/450)
+                    # First = Short, Second = Long
+                    if first_strike >= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bear Call Spread: Format is 'lower/higher' (e.g., '445/450')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    short_strike = first_strike  # Sell the lower strike
+                    long_strike = second_strike  # Buy the higher strike
+                    option_type = "call"
+                    is_credit = True
+
+                # Build spread API request
                 url = f"{bot.api_client.base_url}/api/v1/trade-planner/calculate/vertical-spread"
-                # Determine if credit spread:
-                # - Bull put credit: short_strike > long_strike (selling higher strike put)
-                # - Bear call credit: short_strike < long_strike (selling lower strike call)
-                is_credit = (position == "put" and short_strike > long_strike) or \
-                            (position == "call" and short_strike < long_strike)
+
+                # For spreads, calculate individual leg premiums from net premium
+                # This is a simplified calculation - actual leg premiums would need option chain data
+                if is_credit:
+                    # Credit spread: we receive premium (short leg is more valuable)
+                    short_premium = premium + (abs(long_strike - short_strike) / 2)
+                    long_premium = short_premium - premium
+                else:
+                    # Debit spread: we pay premium (long leg is more valuable)
+                    long_premium = premium + (abs(long_strike - short_strike) / 2)
+                    short_premium = long_premium - premium
+
                 payload = {
                     "underlying_symbol": symbol.upper(),
-                    "underlying_price": 0,  # API will fetch
+                    "underlying_price": underlying_price,
                     "long_strike": long_strike,
                     "short_strike": short_strike,
-                    "option_type": position,
+                    "long_premium": long_premium,
+                    "short_premium": short_premium,
+                    "option_type": option_type,
                     "is_credit": is_credit
                 }
+
             else:
-                # Long option calculator
+                # Long option (single strike)
+                if "/" in strikes:
+                    await interaction.followup.send(
+                        f"❌ Long options require single strike only (e.g., '450')"
+                    )
+                    return
+
+                single_strike = float(strikes)
+                option_type = "call" if strategy == "long_call" else "put"
+
+                # Build long option API request
                 url = f"{bot.api_client.base_url}/api/v1/trade-planner/calculate/long-option"
                 payload = {
                     "underlying_symbol": symbol.upper(),
-                    "underlying_price": 0,  # API will fetch
+                    "underlying_price": underlying_price,
                     "strike": single_strike,
-                    "option_type": position,
+                    "option_type": option_type,
                     "premium": premium
                 }
 
+            # Call API
             async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
                 async with session.post(url, json=payload) as response:
                     if response.status != 200:
@@ -673,14 +776,27 @@ async def run_bot():
                     result = await response.json()
 
             # Create embed with results
+            strategy_name = {
+                "bull_call_spread": "Bull Call Spread (Debit)",
+                "bear_put_spread": "Bear Put Spread (Debit)",
+                "bull_put_spread": "Bull Put Spread (Credit)",
+                "bear_call_spread": "Bear Call Spread (Credit)",
+                "long_call": "Long Call",
+                "long_put": "Long Put"
+            }
+
             embed = discord.Embed(
-                title=f"📊 {strategy.replace('_', ' ').title()} - {symbol.upper()}",
-                color=discord.Color.blue()
+                title=f"📊 {strategy_name[strategy]} - {symbol.upper()}",
+                color=discord.Color.green() if is_spread and is_credit else discord.Color.blue()
             )
 
-            if strategy == "vertical_spread":
-                embed.add_field(name="Strikes", value=f"Long: ${long_strike:.2f}\nShort: ${short_strike:.2f}", inline=True)
-                if result.get("is_credit"):
+            if is_spread:
+                embed.add_field(
+                    name="Strikes",
+                    value=f"Long: ${long_strike:.2f}\nShort: ${short_strike:.2f}",
+                    inline=True
+                )
+                if is_credit:
                     embed.add_field(name="💰 Credit", value=f"**${abs(float(result['net_premium'])):.2f}**", inline=True)
                 else:
                     embed.add_field(name="💸 Debit", value=f"**${float(result['net_premium']):.2f}**", inline=True)
@@ -695,6 +811,16 @@ async def run_bot():
 
             if result.get("pop_proxy"):
                 embed.add_field(name="📊 POP", value=f"{float(result['pop_proxy']):.0f}%", inline=True)
+
+            # Add ICT context for spreads
+            if is_spread:
+                ict_context = {
+                    "bull_call_spread": "Best after SSL sweep + bullish displacement",
+                    "bear_put_spread": "Best after BSL sweep + bearish displacement",
+                    "bull_put_spread": "Profit if price stays above short strike (bullish/neutral)",
+                    "bear_call_spread": "Profit if price stays below short strike (bearish/neutral)"
+                }
+                embed.add_field(name="💡 ICT Context", value=ict_context[strategy], inline=False)
 
             await interaction.followup.send(embed=embed)
 
@@ -926,10 +1052,17 @@ async def run_bot():
             name="🧮 /calc",
             value=(
                 "**Quick P/L calculator for specific strategies**\n"
-                "• Parameters: strategy, symbol, strikes, position (call/put), dte, premium (optional)\n"
-                "• Strategies: Vertical Spread, Long Call, Long Put\n"
-                "• Strike format: '540' for long options, '540/545' for spreads\n"
-                "• Example: `/calc vertical_spread SPY 540/545 put 7`"
+                "• Parameters: strategy, symbol, strikes, dte, premium (optional)\n\n"
+                "**Strike Formats:**\n"
+                "• Bull Call Spread (Debit): `lower/higher` → 1st=long, 2nd=short\n"
+                "• Bear Put Spread (Debit): `higher/lower` → 1st=long, 2nd=short\n"
+                "• Bull Put Spread (Credit): `higher/lower` → 1st=short, 2nd=long\n"
+                "• Bear Call Spread (Credit): `lower/higher` → 1st=short, 2nd=long\n"
+                "• Long Call/Put: single strike (e.g., `450`)\n\n"
+                "**Examples:**\n"
+                "• `/calc bull_call_spread SPY 540/545 7` (buy 540, sell 545)\n"
+                "• `/calc bull_put_spread SPY 450/445 7` (sell 450, buy 445)\n"
+                "• `/calc long_call SPY 540 7`"
             ),
             inline=False
         )
@@ -995,6 +1128,12 @@ async def run_bot():
         await bot.start(settings.DISCORD_BOT_TOKEN)
     except Exception as e:
         logger.error(f"Bot error: {e}", exc_info=True)
+    finally:
+        # Gracefully shutdown scheduler if it was started
+        if scheduler:
+            logger.info("Shutting down scheduler...")
+            scheduler.shutdown(wait=True)
+            logger.info("Scheduler stopped")
 
 
 if __name__ == "__main__":
