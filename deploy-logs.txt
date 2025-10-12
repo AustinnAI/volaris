@@ -1,0 +1,50 @@
+2025-10-12T16:12:56.710142779Z ==> Running 'python app/alerts/discord_bot.py'
+2025-10-12T16:12:57.907756117Z Traceback (most recent call last):
+2025-10-12T16:12:57.907776058Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 16, in <module>
+2025-10-12T16:12:57.907790378Z     from app.config import settings
+2025-10-12T16:12:57.907797578Z ModuleNotFoundError: No module named 'app'
+2025-10-12T16:13:06.718832588Z ==> Your service is live 🎉
+2025-10-12T16:14:06.6208121Z ==> Running 'python app/alerts/discord_bot.py'
+2025-10-12T16:14:07.822762925Z Traceback (most recent call last):
+2025-10-12T16:14:07.822782156Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 16, in <module>
+2025-10-12T16:14:07.822837437Z     from app.config import settings
+2025-10-12T16:14:07.822860527Z ModuleNotFoundError: No module named 'app'
+2025-10-12T16:14:37.924946725Z ==> Deploying...
+2025-10-12T16:14:49.659328096Z ==> Running 'python app/alerts/discord_bot.py'
+2025-10-12T16:14:50.868414325Z Traceback (most recent call last):
+2025-10-12T16:14:50.868441226Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 16, in <module>
+2025-10-12T16:14:50.868532747Z     from app.config import settings
+2025-10-12T16:14:50.868542167Z ModuleNotFoundError: No module named 'app'
+2025-10-12T16:15:05.040914203Z ==> Running 'python -m app.alerts.discord_bot'
+2025-10-12T16:15:05.981120531Z ==> Your service is live 🎉
+2025-10-12T16:15:06.459865431Z 2025-10-12 16:15:06,459 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:15:19.030911633Z ==> Running 'python -m app.alerts.discord_bot'
+2025-10-12T16:15:20.511484535Z 2025-10-12 16:15:20,511 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:15:38.154150819Z ==> Running 'python -m app.alerts.discord_bot'
+2025-10-12T16:15:39.55488038Z 2025-10-12 16:15:39,554 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:15:44.94099593Z ==> Deploying...
+2025-10-12T16:16:10.076497795Z ==> Running 'python -m app.alerts.discord_bot'
+2025-10-12T16:16:10.264183479Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:16:10.479388346Z ==> Your service is live 🎉
+2025-10-12T16:16:11.490316179Z 2025-10-12 16:16:11,490 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:16:11.689746923Z 2025-10-12 16:16:11,689 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:16:23.249863792Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:16:24.669032662Z 2025-10-12 16:16:24,668 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:16:40.341214911Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:16:41.79593966Z 2025-10-12 16:16:41,746 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:17:11.346018571Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:17:12.826160198Z 2025-10-12 16:17:12,825 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:18:08.343091572Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:18:09.851984281Z 2025-10-12 16:18:09,851 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:19:45.316502828Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:19:46.822715664Z 2025-10-12 16:19:46,822 - volaris.discord_bot - ERROR - DISCORD_BOT_TOKEN not configured
+2025-10-12T16:20:02.792536878Z ==> Deploying...
+2025-10-12T16:20:29.703584815Z ==> Your service is live 🎉
+2025-10-12T16:20:30.347615775Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-12T16:20:31.250062535Z 2025-10-12 16:20:31,249 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-10-12T16:20:31.250874726Z 2025-10-12 16:20:31,250 - volaris.discord_bot - INFO - Starting Discord bot...
+2025-10-12T16:20:31.250920256Z 2025-10-12 16:20:31,250 - discord.client - INFO - logging in using static token
+2025-10-12T16:20:31.250999667Z 2025-10-12 16:20:31,250 - discord.ext.commands.bot - WARNING - Privileged message content intent is missing, commands may not work as expected.
+2025-10-12T16:20:31.998965999Z 2025-10-12 16:20:31,998 - volaris.discord_bot - INFO - Synced commands to guild 1413243234569818346
+2025-10-12T16:20:32.167373017Z 2025-10-12 16:20:32,167 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 6467dd81abf340624131bf6cd6f9ab16).
+2025-10-12T16:20:34.170900216Z 2025-10-12 16:20:34,170 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)

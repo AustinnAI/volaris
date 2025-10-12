@@ -4,7 +4,9 @@ Provides /plan slash command to get trade recommendations from Phase 3.3
 """
 
 import asyncio
+import csv
 import logging
+from pathlib import Path
 from typing import Optional
 from decimal import Decimal
 
@@ -17,6 +19,43 @@ from app.config import settings
 
 # Configure logging
 logger = logging.getLogger("volaris.discord_bot")
+
+# Load S&P 500 symbols from CSV
+def load_sp500_symbols() -> list[str]:
+    """Load S&P 500 symbols from SP500.csv file."""
+    symbols = []
+    csv_path = Path(__file__).parent.parent.parent / "SP500.csv"
+
+    # Major ETFs to prepend (prioritize these in autocomplete)
+    priority_symbols = [
+        "SPY", "QQQ", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "TLT", "EEM"
+    ]
+
+    try:
+        if csv_path.exists():
+            with open(csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    symbol = row.get('Symbol', '').strip()
+                    if symbol:
+                        symbols.append(symbol)
+            logger.info(f"Loaded {len(symbols)} S&P 500 symbols from CSV")
+        else:
+            logger.warning(f"SP500.csv not found at {csv_path}, using fallback list")
+            # Fallback to major tickers if CSV not found
+            symbols = [
+                "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "NFLX",
+                "JPM", "BAC", "V", "MA", "WMT", "HD", "UNH", "JNJ"
+            ]
+    except Exception as e:
+        logger.error(f"Error loading SP500.csv: {e}")
+        symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA"]
+
+    # Combine priority ETFs with S&P 500 (ETFs first for better autocomplete UX)
+    return priority_symbols + [s for s in symbols if s not in priority_symbols]
+
+# Load symbols once at module level
+AVAILABLE_SYMBOLS = load_sp500_symbols()
 
 
 class StrategyRecommendationAPI:
@@ -399,6 +438,17 @@ async def run_bot():
     guild_id = int(guild_id_str) if guild_id_str else None
     bot = VolarisBot(api_base_url=settings.API_BASE_URL, guild_id=guild_id)
 
+    # Autocomplete for symbol parameter
+    async def symbol_autocomplete(
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete S&P 500 symbols."""
+        current_upper = current.upper()
+        matches = [s for s in AVAILABLE_SYMBOLS if s.startswith(current_upper)]
+        # Discord limits to 25 choices
+        return [app_commands.Choice(name=symbol, value=symbol) for symbol in matches[:25]]
+
     # Define /plan command
     @bot.tree.command(name="plan", description="Get options strategy recommendations")
     @app_commands.describe(
@@ -421,6 +471,7 @@ async def run_bot():
             app_commands.Choice(name="Force Debit", value="debit"),
         ]
     )
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def plan(
         interaction: discord.Interaction,
         symbol: str,
