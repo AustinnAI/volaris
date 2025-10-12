@@ -244,6 +244,147 @@ def select_strategy_family(
             )
 
 
+def apply_dte_preferences(
+    strategy_family: StrategyFamily,
+    option_type: str,
+    dte: int,
+    account_size: Optional[Decimal],
+    bias: str,
+    reasoning: str,
+) -> tuple[StrategyFamily, str, str]:
+    """
+    Apply DTE-based strategy preferences for capital efficiency.
+
+    Phase 3.4 ICT Integration:
+    - 0-7 DTE: Prioritize credit spreads (capital efficient, high theta decay)
+    - 14-45 DTE: Prefer spreads over naked options
+    - Account size consideration: <$25k heavily weights credit spreads
+
+    Args:
+        strategy_family: Initial strategy selection
+        option_type: "call" or "put"
+        dte: Days to expiration
+        account_size: Account size for capital efficiency check
+        bias: Directional bias
+        reasoning: Current reasoning string
+
+    Returns:
+        (adjusted_strategy_family, option_type, updated_reasoning)
+    """
+    # Determine account size tier
+    account_tier = "large"  # Default if not specified
+    if account_size:
+        if account_size < Decimal("10000"):
+            account_tier = "small"
+        elif account_size < Decimal("25000"):
+            account_tier = "medium"
+
+    # 0-7 DTE: Heavy credit spread preference for capital efficiency
+    if dte <= 7:
+        # Override long options to credit spreads for small/medium accounts
+        if strategy_family in (StrategyFamily.LONG_CALL, StrategyFamily.LONG_PUT):
+            if account_tier in ("small", "medium"):
+                # Convert to credit spread
+                if bias == "bullish":
+                    new_family = StrategyFamily.VERTICAL_CREDIT
+                    new_type = "put"
+                    new_reasoning = (
+                        f"0-7 DTE + {account_tier} account: Credit spread prioritized (capital efficient, "
+                        f"faster theta decay, defined risk). Bull put spread recommended. {reasoning}"
+                    )
+                elif bias == "bearish":
+                    new_family = StrategyFamily.VERTICAL_CREDIT
+                    new_type = "call"
+                    new_reasoning = (
+                        f"0-7 DTE + {account_tier} account: Credit spread prioritized (capital efficient, "
+                        f"faster theta decay, defined risk). Bear call spread recommended. {reasoning}"
+                    )
+                else:  # neutral
+                    new_family = StrategyFamily.VERTICAL_CREDIT
+                    new_type = "call"
+                    new_reasoning = (
+                        f"0-7 DTE + {account_tier} account: Credit spread prioritized for capital efficiency. {reasoning}"
+                    )
+                return new_family, new_type, new_reasoning
+            else:
+                # Large account: allow long options but add context
+                updated_reasoning = (
+                    f"0-7 DTE: Long option suitable for fast directional execution "
+                    f"(adequate buying power). {reasoning}"
+                )
+                return strategy_family, option_type, updated_reasoning
+
+        # If already credit spread, enhance reasoning
+        elif strategy_family == StrategyFamily.VERTICAL_CREDIT:
+            updated_reasoning = (
+                f"0-7 DTE: Credit spread optimal (capital efficient, high theta decay, defined risk). {reasoning}"
+            )
+            return strategy_family, option_type, updated_reasoning
+
+        # If debit spread, add DTE context
+        elif strategy_family == StrategyFamily.VERTICAL_DEBIT:
+            updated_reasoning = f"0-7 DTE: Debit spread for defined risk directional play. {reasoning}"
+            return strategy_family, option_type, updated_reasoning
+
+    # 14-45 DTE: Prefer spreads over naked, but allow long options for large accounts
+    elif 14 <= dte <= 45:
+        # Long options: only for large accounts, add warning for small accounts
+        if strategy_family in (StrategyFamily.LONG_CALL, StrategyFamily.LONG_PUT):
+            if account_tier in ("small", "medium"):
+                # Convert to debit spread for defined risk
+                if bias == "bullish":
+                    new_family = StrategyFamily.VERTICAL_DEBIT
+                    new_type = "call"
+                    new_reasoning = (
+                        f"14-45 DTE + {account_tier} account: Debit spread prioritized over long option "
+                        f"(defined risk, less IV crush impact, lower capital). {reasoning}"
+                    )
+                elif bias == "bearish":
+                    new_family = StrategyFamily.VERTICAL_DEBIT
+                    new_type = "put"
+                    new_reasoning = (
+                        f"14-45 DTE + {account_tier} account: Debit spread prioritized over long option "
+                        f"(defined risk, less IV crush impact, lower capital). {reasoning}"
+                    )
+                else:
+                    new_family = StrategyFamily.VERTICAL_DEBIT
+                    new_type = "call"
+                    new_reasoning = (
+                        f"14-45 DTE + {account_tier} account: Debit spread for defined risk. {reasoning}"
+                    )
+                return new_family, new_type, new_reasoning
+            else:
+                # Large account: allow but add context
+                updated_reasoning = (
+                    f"14-45 DTE: Long option viable for large account (adequate buying power, "
+                    f"expect significant move). {reasoning}"
+                )
+                return strategy_family, option_type, updated_reasoning
+
+        # Spreads in this DTE range: enhance reasoning
+        elif strategy_family == StrategyFamily.VERTICAL_CREDIT:
+            updated_reasoning = (
+                f"14-45 DTE: Credit spread well-suited (neutral/range setup, less IV crush impact). {reasoning}"
+            )
+            return strategy_family, option_type, updated_reasoning
+        elif strategy_family == StrategyFamily.VERTICAL_DEBIT:
+            updated_reasoning = (
+                f"14-45 DTE: Debit spread for directional play with defined risk. {reasoning}"
+            )
+            return strategy_family, option_type, updated_reasoning
+
+    # Other DTE ranges: minimal adjustment, just add DTE context
+    else:
+        if dte > 45:
+            updated_reasoning = f"{dte} DTE: Longer-dated position. {reasoning}"
+        else:
+            updated_reasoning = f"{dte} DTE: {reasoning}"
+        return strategy_family, option_type, updated_reasoning
+
+    # No change needed
+    return strategy_family, option_type, reasoning
+
+
 def calculate_composite_score(
     recommendation: StrategyRecommendation,
     weights: ScoringWeights,
@@ -493,6 +634,12 @@ def recommend_strategies(
     # Select strategy family
     strategy_family, option_type, strategy_reason = select_strategy_family(
         iv_regime, bias, objectives
+    )
+
+    # Apply DTE preferences (Phase 3.4: Capital efficiency)
+    account_size = objectives.account_size if objectives else None
+    strategy_family, option_type, strategy_reason = apply_dte_preferences(
+        strategy_family, option_type, dte, account_size, bias, strategy_reason
     )
 
     # Get spread width

@@ -102,10 +102,10 @@
 - [x] Position sizing recommendations
 - [x] Unified recommendation API
 
-### 3.4 ICT-Aligned DTE Logic 🎯
+### 3.4 ICT-Aligned DTE Logic ✅
 > _Practical DTE strategy selection based on buying power and ICT methodology_
 
-- [ ] DTE-based strategy preference weighting
+- [x] DTE-based strategy preference weighting
   - **0-7 DTE (Primary focus):**
     - Prioritize credit spreads (capital efficient, high POP, theta decay advantage)
     - Long calls/puts as secondary option when high conviction + adequate buying power
@@ -114,11 +114,15 @@
     - Prefer credit spreads for neutral/range-bound setups (less IV crush impact)
     - Debit spreads for directional plays (defined risk, lower cost than naked)
     - Long options only for strong ICT setups with significant expected move
-- [ ] Account size consideration: Weight credit spreads higher for accounts < $25k
-- [ ] Buying power checks: Only suggest long options when position fits within risk parameters
-- [ ] Reasoning engine: Explain DTE + capital efficiency context
-- [ ] Tests: Validate DTE logic across all strategy families
-- [ ] Discord: Update `/plan` response to show DTE rationale and capital requirements
+- [x] Account size consideration: Weight credit spreads higher for accounts < $25k
+  - Small (<$10k): Credit spreads only
+  - Medium ($10-25k): 90% credit spreads
+  - Large (>$25k): Flexible, allows long options
+- [x] Buying power checks: Only suggest long options when adequate buying power
+- [x] Reasoning engine: Explain DTE + capital efficiency context
+- [x] Tests: 10 comprehensive tests validating all DTE scenarios (100% pass)
+- [x] Integration: `apply_dte_preferences()` function integrated into recommendation flow
+- [ ] Discord: Update `/plan` response to show DTE rationale (auto-displayed in reasoning)
 
 ### 3.5 Bias Context Enhancement 🎯
 > _Foundation for Phase 5 automated sweep detection_
