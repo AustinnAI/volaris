@@ -34,7 +34,11 @@ class StrategyCog(commands.Cog):
             self.breakeven,
         ]
         for command in self._commands:
-            self.bot.tree.add_command(command)
+            try:
+                self.bot.tree.add_command(command)
+            except app_commands.errors.CommandAlreadyRegistered:
+                self.bot.tree.remove_command(command.name, type=command.type)
+                self.bot.tree.add_command(command)
 
     async def cog_unload(self) -> None:
         """Remove commands when the cog is unloaded."""
