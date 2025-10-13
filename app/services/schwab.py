@@ -221,7 +221,10 @@ class SchwabClient(BaseAPIClient):
             ) from e
 
     async def _cache_tokens(self, tokens: Dict) -> None:
-        """Cache access and refresh tokens"""
+        """Cache access and refresh tokens with expiry tracking"""
+        from datetime import datetime, timezone
+        from app.utils.logger import app_logger
+
         if "access_token" in tokens:
             # Cache access token with TTL slightly less than expires_in
             ttl = tokens.get("expires_in", 1800) - 60  # 1 min buffer
@@ -229,23 +232,72 @@ class SchwabClient(BaseAPIClient):
 
         if "refresh_token" in tokens:
             # Refresh tokens typically last 7 days
+            refresh_ttl = 7 * 24 * 3600  # 7 days in seconds
             await cache.set(
                 self.refresh_token_key,
                 tokens["refresh_token"],
-                ttl=7 * 24 * 3600,
+                ttl=refresh_ttl,
+            )
+
+            # Store timestamp when refresh token was issued
+            token_issued_key = f"{self.refresh_token_key}:issued_at"
+            await cache.set(
+                token_issued_key,
+                datetime.now(timezone.utc).isoformat(),
+                ttl=refresh_ttl,
+            )
+
+            app_logger.info(
+                "Schwab refresh token cached",
+                extra={"expires_in_days": 7},
             )
 
     async def _get_access_token(self) -> str:
         """Get valid access token, refreshing if necessary"""
+        from datetime import datetime, timedelta, timezone
+        from app.utils.logger import app_logger
+
         # Try cached token first
         access_token = await cache.get(self.access_token_key)
 
         if access_token:
+            # Check if refresh token is nearing expiry
+            await self._check_refresh_token_expiry()
             return access_token
 
         # Need to refresh
         tokens = await self.refresh_access_token()
         return tokens["access_token"]
+
+    async def _check_refresh_token_expiry(self) -> None:
+        """Log warning if refresh token is nearing expiry"""
+        from datetime import datetime, timedelta, timezone
+        from app.utils.logger import app_logger
+
+        token_issued_key = f"{self.refresh_token_key}:issued_at"
+        issued_at_str = await cache.get(token_issued_key)
+
+        if not issued_at_str:
+            # No timestamp tracked - likely using .env refresh token
+            return
+
+        try:
+            issued_at = datetime.fromisoformat(issued_at_str)
+            now = datetime.now(timezone.utc)
+            age_days = (now - issued_at).days
+
+            # Warn if token is 6+ days old (expires in 7 days)
+            if age_days >= 6:
+                app_logger.warning(
+                    "Schwab refresh token nearing expiry",
+                    extra={
+                        "age_days": age_days,
+                        "expires_in_days": 7 - age_days,
+                        "action": "Regenerate token via /api/v1/auth/schwab/authorize",
+                    },
+                )
+        except (ValueError, TypeError) as e:
+            app_logger.debug(f"Could not parse refresh token timestamp: {e}")
 
     async def _get_headers(self) -> Dict[str, str]:
         """Get headers with access token"""

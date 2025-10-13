@@ -29,6 +29,7 @@ def create_scheduler() -> AsyncIOScheduler:
         kwargs={"timeframe": Timeframe.ONE_MINUTE},
         id="prices_1m",
         max_instances=1,
+        misfire_grace_time=30,  # Skip if job is 30s late
     )
 
     scheduler.add_job(
@@ -38,6 +39,7 @@ def create_scheduler() -> AsyncIOScheduler:
         kwargs={"timeframe": Timeframe.FIVE_MINUTE},
         id="prices_5m",
         max_instances=1,
+        misfire_grace_time=60,  # Skip if job is 60s late
     )
 
     scheduler.add_job(
@@ -48,6 +50,7 @@ def create_scheduler() -> AsyncIOScheduler:
         ),
         id="eod_sync",
         max_instances=1,
+        misfire_grace_time=300,  # Skip if job is 5 min late
     )
 
     scheduler.add_job(
@@ -55,6 +58,7 @@ def create_scheduler() -> AsyncIOScheduler:
         trigger=CronTrigger(hour=settings.HISTORICAL_BACKFILL_CRON_HOUR, minute=0),
         id="historical_backfill",
         max_instances=1,
+        misfire_grace_time=600,  # Skip if job is 10 min late
     )
 
     scheduler.add_job(
@@ -63,6 +67,7 @@ def create_scheduler() -> AsyncIOScheduler:
         minutes=settings.OPTION_CHAIN_JOB_INTERVAL_MINUTES,
         id="options_refresh",
         max_instances=1,
+        misfire_grace_time=120,  # Skip if job is 2 min late
     )
 
     scheduler.add_job(
@@ -71,6 +76,7 @@ def create_scheduler() -> AsyncIOScheduler:
         minutes=settings.IV_METRICS_JOB_INTERVAL_MINUTES,
         id="iv_metrics",
         max_instances=1,
+        misfire_grace_time=120,  # Skip if job is 2 min late
     )
 
     app_logger.info("APScheduler configured with background jobs")

@@ -11,7 +11,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.db.models import Ticker, PriceData, Timeframe, OptionContract, IVMetric
+from app.db.models import Ticker, PriceBar, Timeframe, OptionContract, IVMetric, OptionChainSnapshot
 from app.services.schwab import SchwabClient
 from app.services.finnhub import FinnhubClient
 from app.config import settings
@@ -34,36 +34,50 @@ async def get_price(symbol: str, db: AsyncSession = Depends(get_db)):
     symbol = symbol.upper()
 
     # Try to get latest price from database
-    stmt = (
-        select(PriceData)
-        .where(PriceData.symbol == symbol)
-        .where(PriceData.timeframe == Timeframe.DAILY)
-        .order_by(desc(PriceData.timestamp))
-        .limit(2)
-    )
-    result = await db.execute(stmt)
-    prices = result.scalars().all()
+    # Strategy: Get most recent bar (any timeframe) + most recent daily bar for previous close
 
-    if len(prices) >= 2:
-        latest = prices[0]
-        previous = prices[1]
+    # Get most recent bar of any timeframe for current price
+    stmt_latest = (
+        select(PriceBar)
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .order_by(desc(PriceBar.timestamp))
+        .limit(1)
+    )
+    result_latest = await db.execute(stmt_latest)
+    latest_bar = result_latest.scalar_one_or_none()
+
+    # Get most recent DAILY bar for previous close
+    stmt_daily = (
+        select(PriceBar)
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .where(PriceBar.timeframe == Timeframe.DAILY)
+        .order_by(desc(PriceBar.timestamp))
+        .limit(1)
+    )
+    result_daily = await db.execute(stmt_daily)
+    daily_bar = result_daily.scalar_one_or_none()
+
+    if latest_bar and daily_bar:
+        # Use most recent bar for current price, daily bar for previous close
+        current_price = float(latest_bar.close)
+        previous_close = float(daily_bar.close)
+        change = current_price - previous_close
+        change_pct = (change / previous_close * 100) if previous_close else 0
 
         return {
             "symbol": symbol,
-            "price": float(latest.close),
-            "previous_close": float(previous.close),
-            "change": float(latest.close - previous.close),
-            "change_pct": float((latest.close - previous.close) / previous.close * 100),
-            "volume": latest.volume or 0,
+            "price": current_price,
+            "previous_close": previous_close,
+            "change": change,
+            "change_pct": change_pct,
+            "volume": latest_bar.volume or 0,
         }
 
     # Fallback: Fetch from Schwab API
     try:
-        schwab = SchwabClient(
-            app_key=settings.SCHWAB_APP_KEY,
-            secret_key=settings.SCHWAB_SECRET_KEY,
-            refresh_token=settings.SCHWAB_REFRESH_TOKEN
-        )
+        schwab = SchwabClient()
         quote_data = await schwab.get_quote(symbol)
 
         current_price = quote_data.get("lastPrice", 0)
@@ -99,8 +113,9 @@ async def get_iv(symbol: str, db: AsyncSession = Depends(get_db)):
     # Get latest IV metric from database
     stmt = (
         select(IVMetric)
-        .where(IVMetric.symbol == symbol)
-        .order_by(desc(IVMetric.timestamp))
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .order_by(desc(IVMetric.as_of))
         .limit(1)
     )
     result = await db.execute(stmt)
@@ -117,9 +132,9 @@ async def get_iv(symbol: str, db: AsyncSession = Depends(get_db)):
 
         return {
             "symbol": symbol,
-            "current_iv": float(iv_metric.current_iv),
-            "iv_rank": float(iv_metric.iv_rank),
-            "iv_percentile": float(iv_metric.iv_percentile),
+            "current_iv": float(iv_metric.implied_vol) if iv_metric.implied_vol else 0,
+            "iv_rank": float(iv_metric.iv_rank) if iv_metric.iv_rank else 0,
+            "iv_percentile": float(iv_metric.iv_percentile) if iv_metric.iv_percentile else 0,
             "regime": regime,
         }
 
@@ -146,11 +161,7 @@ async def get_quote(symbol: str):
     symbol = symbol.upper()
 
     try:
-        schwab = SchwabClient(
-            app_key=settings.SCHWAB_APP_KEY,
-            secret_key=settings.SCHWAB_SECRET_KEY,
-            refresh_token=settings.SCHWAB_REFRESH_TOKEN
-        )
+        schwab = SchwabClient()
         quote_data = await schwab.get_quote(symbol)
 
         current_price = quote_data.get("lastPrice", 0)
@@ -195,11 +206,13 @@ async def get_delta(
 
     stmt = (
         select(OptionContract)
-        .where(OptionContract.symbol == symbol)
+        .join(OptionChainSnapshot)
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
         .where(OptionContract.option_type == option_type)
         .where(OptionContract.strike == strike)
-        .where(OptionContract.expiration >= expiration_target - timedelta(days=3))
-        .where(OptionContract.expiration <= expiration_target + timedelta(days=3))
+        .where(OptionChainSnapshot.expiration >= expiration_target.date() - timedelta(days=3))
+        .where(OptionChainSnapshot.expiration <= expiration_target.date() + timedelta(days=3))
         .limit(1)
     )
     result = await db.execute(stmt)
@@ -279,22 +292,24 @@ async def get_range(symbol: str, db: AsyncSession = Depends(get_db)):
 
     stmt = (
         select(
-            func.max(PriceData.high).label("high_52w"),
-            func.min(PriceData.low).label("low_52w")
+            func.max(PriceBar.high).label("high_52w"),
+            func.min(PriceBar.low).label("low_52w")
         )
-        .where(PriceData.symbol == symbol)
-        .where(PriceData.timeframe == Timeframe.DAILY)
-        .where(PriceData.timestamp >= one_year_ago)
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .where(PriceBar.timeframe == Timeframe.DAILY)
+        .where(PriceBar.timestamp >= one_year_ago)
     )
     result = await db.execute(stmt)
     range_data = result.one_or_none()
 
     # Get current price
     stmt_current = (
-        select(PriceData)
-        .where(PriceData.symbol == symbol)
-        .where(PriceData.timeframe == Timeframe.DAILY)
-        .order_by(desc(PriceData.timestamp))
+        select(PriceBar)
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .where(PriceBar.timeframe == Timeframe.DAILY)
+        .order_by(desc(PriceBar.timestamp))
         .limit(1)
     )
     result_current = await db.execute(stmt_current)
@@ -336,10 +351,11 @@ async def get_volume(symbol: str, db: AsyncSession = Depends(get_db)):
 
     # Get current day volume
     stmt_current = (
-        select(PriceData)
-        .where(PriceData.symbol == symbol)
-        .where(PriceData.timeframe == Timeframe.DAILY)
-        .order_by(desc(PriceData.timestamp))
+        select(PriceBar)
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .where(PriceBar.timeframe == Timeframe.DAILY)
+        .order_by(desc(PriceBar.timestamp))
         .limit(1)
     )
     result_current = await db.execute(stmt_current)
@@ -349,11 +365,12 @@ async def get_volume(symbol: str, db: AsyncSession = Depends(get_db)):
     thirty_days_ago = datetime.now() - timedelta(days=30)
 
     stmt_avg = (
-        select(func.avg(PriceData.volume).label("avg_volume"))
-        .where(PriceData.symbol == symbol)
-        .where(PriceData.timeframe == Timeframe.DAILY)
-        .where(PriceData.timestamp >= thirty_days_ago)
-        .where(PriceData.volume.isnot(None))
+        select(func.avg(PriceBar.volume).label("avg_volume"))
+        .join(Ticker)
+        .where(Ticker.symbol == symbol)
+        .where(PriceBar.timeframe == Timeframe.DAILY)
+        .where(PriceBar.timestamp >= thirty_days_ago)
+        .where(PriceBar.volume.isnot(None))
     )
     result_avg = await db.execute(stmt_avg)
     avg_data = result_avg.one_or_none()
