@@ -3,10 +3,10 @@ Market Data API Endpoints
 Provides quick market data access for Discord commands.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,13 @@ from app.db.database import get_db
 from app.db.models import Ticker, PriceBar, Timeframe, OptionContract, IVMetric, OptionChainSnapshot
 from app.services.schwab import SchwabClient
 from app.services.finnhub import FinnhubClient
+from app.services.market_insights import fetch_sentiment, get_top_movers
+from app.services.index_service import (
+    get_index_constituents_symbols,
+    refresh_index_constituents,
+    SP500_SYMBOL,
+)
+from app.services.exceptions import DataNotFoundError
 from app.config import settings
 
 router = APIRouter(prefix="/market", tags=["market-data"])
@@ -116,11 +123,12 @@ async def get_price(symbol: str, db: AsyncSession = Depends(get_db)):
     # Try to get latest price from database
     # Strategy: Get most recent bar (any timeframe) + most recent daily bar for previous close
 
-    # Get most recent bar of any timeframe for current price
+    # Get most recent intraday bar (1m preferred, fallback to 5m) for current price
     stmt_latest = (
         select(PriceBar)
         .join(Ticker)
         .where(Ticker.symbol == symbol)
+        .where(PriceBar.timeframe.in_([Timeframe.ONE_MINUTE, Timeframe.FIVE_MINUTE]))
         .order_by(desc(PriceBar.timestamp))
         .limit(1)
     )
@@ -139,7 +147,15 @@ async def get_price(symbol: str, db: AsyncSession = Depends(get_db)):
     result_daily = await db.execute(stmt_daily)
     daily_bar = result_daily.scalar_one_or_none()
 
-    if latest_bar and daily_bar:
+    def _is_stale(bar_timestamp: datetime, grace_minutes: int = 15) -> bool:
+        """Return True when cached bar data is older than the allowed freshness window."""
+        if bar_timestamp.tzinfo is None:
+            ts = bar_timestamp.replace(tzinfo=timezone.utc)
+        else:
+            ts = bar_timestamp
+        return datetime.now(ts.tzinfo or timezone.utc) - ts > timedelta(minutes=grace_minutes)
+
+    if latest_bar and daily_bar and not _is_stale(latest_bar.timestamp):
         # Use most recent bar for current price, daily bar for previous close
         current_price = float(latest_bar.close)
         previous_close = float(daily_bar.close)
@@ -271,6 +287,77 @@ async def get_quote(symbol: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch quote: {str(e)}")
+
+
+@router.get("/sentiment/{symbol}")
+async def get_sentiment(symbol: str, db: AsyncSession = Depends(get_db)):
+    symbol_upper = symbol.upper()
+
+    sp500_symbols = await get_index_constituents_symbols(db)
+    if not sp500_symbols:
+        try:
+            sp500_symbols = set(await refresh_index_constituents(db))
+        except DataNotFoundError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        except Exception as exc:  # pylint: disable=broad-except
+            raise HTTPException(status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}") from exc
+
+    if symbol_upper not in sp500_symbols:
+        raise HTTPException(status_code=400, detail="Symbol must be part of the S&P 500 list")
+
+    try:
+        sentiment = await fetch_sentiment(symbol_upper)
+    except DataNotFoundError as exc:
+        raise HTTPException(status_code=501, detail=str(exc)) from exc
+    except Exception as exc:  # pylint: disable=broad-except
+        raise HTTPException(status_code=500, detail=f"Failed to fetch sentiment: {str(exc)}") from exc
+
+    return sentiment
+
+
+@router.get("/top")
+async def get_top_movers_endpoint(
+    limit: int = Query(default=settings.TOP_MOVERS_LIMIT, ge=1, le=25),
+    db: AsyncSession = Depends(get_db),
+):
+    sp500_symbols = await get_index_constituents_symbols(db)
+    if not sp500_symbols:
+        try:
+            sp500_symbols = set(await refresh_index_constituents(db))
+        except DataNotFoundError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        except Exception as exc:  # pylint: disable=broad-except
+            raise HTTPException(status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}") from exc
+
+    try:
+        movers = await get_top_movers(limit=limit, sp500_symbols=sp500_symbols)
+    except DataNotFoundError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:  # pylint: disable=broad-except
+        raise HTTPException(status_code=500, detail=f"Failed to fetch top movers: {str(exc)}") from exc
+
+    return {
+        "index": SP500_SYMBOL,
+        "limit": limit,
+        "gainers": movers.get("gainers", []),
+        "losers": movers.get("losers", []),
+    }
+
+
+@router.get("/sp500")
+async def get_sp500_constituents(db: AsyncSession = Depends(get_db)):
+    symbols = await get_index_constituents_symbols(db)
+    if not symbols:
+        try:
+            symbols = set(await refresh_index_constituents(db))
+        except DataNotFoundError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        except Exception as exc:  # pylint: disable=broad-except
+            raise HTTPException(status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}") from exc
+    return {
+        "index": SP500_SYMBOL,
+        "symbols": sorted(symbols),
+    }
 
 
 @router.get("/delta/{symbol}/{strike}/{option_type}/{dte}")

@@ -430,6 +430,34 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 
 ---
 
+## Streaming & Market Snapshots (Phase 3.7)
+
+### Price Streams
+- `/streams add <symbol> <interval>` — start a recurring update in the current channel (interval choices: 5, 15, 30, 60 min).
+- `/streams list` — view all active streams, including stream IDs and channels.
+- `/streams remove <stream_id>` — stop a stream by ID.
+- Updates are powered by `/api/v1/streams/price` and post live Schwab quotes with change/percent change.
+
+> **Tip:** Set `PRICE_STREAM_DEFAULT_INTERVAL_SECONDS`, `PRICE_STREAM_MIN_INTERVAL_SECONDS`, and `PRICE_STREAM_MAX_INTERVAL_SECONDS` in `.env` to control allowed cadences.
+
+### Sentiment Snapshot
+- `/sentiment <symbol>` (S&P 500 only) — combines Finnhub news sentiment with latest analyst recommendation trends.
+- Responses show bullish/bearish percentages, sector averages, and latest recommendation breakdown.
+
+### Top Movers & Daily Digest
+- `/top [limit]` — fetches top S&P 500 gainers/losers (default limit from `TOP_MOVERS_LIMIT`).
+  - **Free-tier note:** Tiingo's top-movers endpoint requires the paid IEX add-on. With a free key, the command will respond with guidance instead of data. Configure a paid key or alternative provider before relying on the digest.
+- Automated digest posts at **4:00 PM ET** each trading day when `DISCORD_DEFAULT_CHANNEL_ID` is set and premium data is available.
+- We're evaluating alternatives (Polygon.io, Alpha Vantage, or in-house computation) to remove the paid dependency in a future phase.
+
+### Dynamic S&P 500 Membership
+- Weekly APScheduler job (`sp500_refresh`) updates constituents via Finnhub `/index/constituents`.
+- `/api/v1/market/sp500` exposes the live membership list; the bot refreshes its autocomplete cache at startup.
+
+> **Required secrets:** `FINNHUB_API_KEY`, `TIINGO_API_KEY`, and Redis config for caching.
+
+---
+
 ## Next Steps
 
 ### Phase 8 Enhancements
@@ -438,7 +466,10 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 - [ ] Export to TastyTrade/ToS order format
 - [ ] Save recommendations to `trade_plans` table
 - [ ] User watchlist integration
-- [ ] Alert subscriptions (`/alerts subscribe SPY`)
+- [x] Price alerts (`/alerts add`, `/alerts list`, `/alerts remove`)
+- [x] Price streams (`/streams add|list|remove`)
+- [x] Sentiment snapshot (`/sentiment <symbol>`)
+- [x] Top movers digest (`/top`, daily 4 PM ET summary)
 - [ ] Trade journal commands (`/journal add`)
 - [ ] Position tracking (`/positions`)
 - [ ] P/L reporting (`/pnl weekly`)

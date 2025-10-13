@@ -1437,3 +1437,65 @@ This seeds 12 essential tickers (SPY, QQQ, IWM, DIA, AAPL, MSFT, NVDA, TSLA, AMZ
 **Long Options:**
 - Single strike: `450`
 
+# Phase 3.8: Discord Bot Refactoring ✅
+
+**Status:** ✅ Complete  
+**Last Updated:** 2025-10-12  
+**Owner:** Volaris Alerts Team
+
+## Overview & Status
+- Refactored the 1,900-line monolithic Discord bot into modular cogs aligned with Discord.py best practices.
+- Extracted reusable helper utilities (API clients, embeds, autocomplete cache, interactive views) to support command reuse.
+- Preserved background jobs (price alerts, streams, daily digest) while improving logging and dependency injection.
+
+## Completed Tasks
+- [x] Created helper modules for API clients, embed builders, autocomplete caching, and Discord UI components.
+- [x] Split slash commands into dedicated cogs (`strategy`, `market_data`, `calculators`, `utilities`) with shared dependencies.
+- [x] Slimmed `app/alerts/discord_bot.py` into a bootstrapper that loads cogs and supervises background loops.
+- [x] Added helper-focused unit tests (symbol service, recommendation embed rendering).
+- [x] Updated roadmap status and documented follow-ups for Phase 3.8.
+
+## Key Files Created/Modified
+- `app/alerts/discord_bot.py`
+- `app/alerts/helpers/__init__.py`
+- `app/alerts/helpers/autocomplete.py`
+- `app/alerts/helpers/api_client.py`
+- `app/alerts/helpers/embeds.py`
+- `app/alerts/helpers/views.py`
+- `app/alerts/cogs/strategy.py`
+- `app/alerts/cogs/market_data.py`
+- `app/alerts/cogs/calculators.py`
+- `app/alerts/cogs/utilities.py`
+- `tests/test_discord_commands.py`
+
+## Usage Examples
+```bash
+# Local run (ensure virtualenv is active and DISCORD_BOT_TOKEN set)
+python -m app.alerts.discord_bot
+
+# Example slash command (after bot starts)
+/plan SPY bullish 30 mode:auto
+```
+
+```python
+# Symbol autocomplete usage
+from app.alerts.helpers import SymbolService
+
+service = SymbolService()
+service.matches("SP")  # ['SPY', 'SLV', ...]
+```
+
+## Testing Procedures
+- `pytest` – validates helper behaviour and calculation logic (requires `discord.py` dependency).
+- `ruff check` – linting target for CI environments.
+- `black --check` – formatting gate to ensure PEP 8 compliance.
+
+## Configuration Details
+- Reuses existing env vars: `DISCORD_BOT_TOKEN`, `DISCORD_DEFAULT_CHANNEL_ID`, `SCHEDULER_ENABLED`, `API_BASE_URL`.
+- Symbol autocomplete pulls from `/api/v1/market/sp500` when available; otherwise falls back to bundled CSV.
+- No new environment variables introduced in this phase.
+
+## Next Steps
+- [ ] Add higher-level integration tests that mock Discord interactions for cog commands (Phase 4 QA).
+- [ ] Monitor production logs to confirm alert/stream pollers remain stable after refactor.
+- [ ] Add optional admin-only `/reload` command for hot-reloading cogs during development.

@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import datetime, timedelta
 import discord
 
+from app.alerts.helpers import SymbolService, create_recommendation_embed
+
 
 class TestStrategyCommands:
     """Test strategy planning commands (/plan, /calc, /size, /breakeven)."""
@@ -197,6 +199,52 @@ class TestCalculatorCommands:
 
         days_remaining = (expiration.date() - today.date()).days
         assert days_remaining == 7
+
+
+class TestRefactoredDiscordHelpers:
+    """Validate helper utilities extracted during bot refactor."""
+
+    def test_symbol_service_prioritises_etfs(self):
+        """Priority ETFs should appear before alphabetical equities."""
+        service = SymbolService()
+        matches = service.matches("S")
+        assert matches[0] == "SPY"
+        assert "SLV" in matches
+
+    def test_create_recommendation_embed_structure(self):
+        """Recommendation embeds carry key metrics for Discord display."""
+        recommendation = {
+            "rank": 1,
+            "strategy_family": "bull_put_credit",
+            "position": "short",
+            "long_strike": 430,
+            "short_strike": 435,
+            "width_points": 5,
+            "width_dollars": 500,
+            "net_premium": -1.25,
+            "is_credit": True,
+            "max_profit": 125.0,
+            "max_loss": 375.0,
+            "risk_reward_ratio": 0.33,
+            "pop_proxy": 0.72,
+            "recommended_contracts": 2,
+            "position_size_dollars": 750.0,
+            "breakeven": 433.75,
+            "composite_score": 82.5,
+            "reasons": ["High IV rank", "Liquidity sweep", "Favorable DTE"],
+        }
+        embed = create_recommendation_embed(
+            recommendation,
+            symbol="SPY",
+            underlying_price=432.1,
+            iv_regime="high",
+            chosen_strategy="bull_put_credit",
+        )
+        assert embed.title.startswith("#1 Bull Put Credit")
+        field_names = [field.name for field in embed.fields]
+        assert "📊 Strikes" in field_names
+        assert "💰 Credit" in field_names
+        assert "📈 Max Profit" in field_names
 
     @pytest.mark.asyncio
     async def test_dte_classification(self, mock_interaction):

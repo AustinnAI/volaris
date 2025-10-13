@@ -107,6 +107,18 @@ class Settings(BaseSettings):
     DISCORD_GUILD_ID: Optional[str] = Field(default=None, description="Discord guild ID for command registration (fallback to SERVER_ID)")
     DISCORD_BOT_ENABLED: bool = Field(default=False, description="Enable Discord bot")
     API_BASE_URL: str = Field(default="http://localhost:8000", description="API base URL for Discord bot")
+    PRICE_ALERT_POLL_SECONDS: int = Field(default=60, description="Polling cadence (seconds) for Discord price alerts")
+    PRICE_STREAM_POLL_SECONDS: int = Field(default=60, description="Polling cadence (seconds) for Discord price streams")
+    PRICE_STREAM_DEFAULT_INTERVAL_SECONDS: int = Field(default=900, description="Default interval for recurring price streams (seconds)")
+    PRICE_STREAM_MIN_INTERVAL_SECONDS: int = Field(default=300, description="Minimum allowed interval for price streams (seconds)")
+    PRICE_STREAM_MAX_INTERVAL_SECONDS: int = Field(default=7200, description="Maximum allowed interval for price streams (seconds)")
+    SENTIMENT_CACHE_SECONDS: int = Field(default=600, description="Cache TTL for sentiment responses (seconds)")
+    TOP_MOVERS_LIMIT: int = Field(default=5, description="Number of gainers/losers to display in top command")
+    DISCORD_DEFAULT_CHANNEL_ID: Optional[str] = Field(default=None, description="Default Discord channel for scheduled digests")
+    POLYGON_API_KEY: Optional[str] = Field(default=None, description="Polygon.io API key for market data")
+    POLYGON_API_BASE: str = Field(default="https://api.polygon.io", description="Polygon API base URL")
+    MARKETSTACK_API_KEY: Optional[str] = Field(default=None, description="Marketstack API key for EOD fallback")
+    MARKETSTACK_API_BASE: str = Field(default="http://api.marketstack.com/v1", description="Marketstack API base URL")
 
     @property
     def discord_guild_id_resolved(self) -> Optional[str]:
@@ -198,6 +210,9 @@ class Settings(BaseSettings):
         default=30,
         description="Lookback window (days) for historical backfill",
     )
+    SP500_REFRESH_CRON_DAY: str = Field(default="mon", description="Day of week for S&P 500 constituent refresh (cron expression, e.g., mon)")
+    SP500_REFRESH_CRON_HOUR: int = Field(default=6, description="Hour (24h) for S&P 500 refresh job")
+    SP500_REFRESH_CRON_MINUTE: int = Field(default=0, description="Minute for S&P 500 refresh job")
 
     @field_validator("ENVIRONMENT")
     @classmethod

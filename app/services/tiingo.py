@@ -111,7 +111,13 @@ class TiingoClient(BaseAPIClient):
         if end_date:
             params["endDate"] = end_date.isoformat()
 
-        return await self.get(endpoint, headers=self._get_headers(), params=params)
+        prices = await self.get(endpoint, headers=self._get_headers(), params=params)
+        symbol = ticker.upper()
+        if isinstance(prices, list):
+            for item in prices:
+                if isinstance(item, dict):
+                    item.setdefault("symbol", symbol)
+        return prices
 
     async def get_latest_price(self, ticker: str) -> Dict:
         """
@@ -210,6 +216,13 @@ class TiingoClient(BaseAPIClient):
         if end_date:
             params["endDate"] = end_date.isoformat()
 
+        return await self.get(endpoint, headers=self._get_headers(), params=params)
+
+    async def get_top_movers(self, list_type: str, limit: int = 10) -> List[Dict]:
+        """Return Tiingo top movers list (e.g., topgainers, toplosers)."""
+
+        endpoint = "/tiingo/utilities/top"
+        params = {"list": list_type, "limit": limit}
         return await self.get(endpoint, headers=self._get_headers(), params=params)
 
     async def health_check(self) -> bool:

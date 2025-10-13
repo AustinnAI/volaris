@@ -316,6 +316,18 @@ class FinnhubClient(BaseAPIClient):
         params = self._get_params(params)
         return await self.get(endpoint, params=params)
 
+    async def get_index_constituents(self, index_symbol: str) -> Dict:
+        """Return constituents for a specific index (e.g., ^GSPC)."""
+        endpoint = "/index/constituents"
+        params = self._get_params({"symbol": index_symbol})
+        return await self.get(endpoint, params=params)
+
+    async def get_news_sentiment(self, symbol: str) -> Dict:
+        """Return news sentiment statistics for a symbol."""
+        endpoint = "/news-sentiment"
+        params = self._get_params({"symbol": symbol.upper()})
+        return await self.get(endpoint, params=params)
+
     async def health_check(self) -> bool:
         """Check if Finnhub API is accessible"""
         try:

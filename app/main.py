@@ -11,8 +11,10 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.config import settings
-from app.db.database import init_db, close_db
+from app.db.database import init_db, close_db, async_session_maker
 from app.workers import create_scheduler
+from app.services.index_service import ensure_sp500_constituents
+from app.utils.logger import app_logger
 
 
 # Initialize Sentry for error tracking
@@ -38,6 +40,20 @@ async def lifespan(app: FastAPI):
     """
     scheduler = None
     await init_db()
+    async with async_session_maker() as session:
+        try:
+            symbols = await ensure_sp500_constituents(session)
+            await session.commit()
+            app_logger.info(
+                "S&P 500 constituents ensured",
+                extra={"count": len(symbols)},
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            await session.rollback()
+            app_logger.error(
+                "Failed to ensure S&P 500 constituents",
+                extra={"error": str(exc)},
+            )
     try:
         if settings.SCHEDULER_ENABLED:
             scheduler = create_scheduler()
@@ -128,6 +144,8 @@ from app.api.v1.trade_planner import router as trade_planner_router
 from app.api.v1.strike_selection import router as strike_selection_router
 from app.api.v1.strategy_recommendation import router as strategy_router
 from app.api.v1.market_data import router as market_data_router
+from app.api.v1.alerts import router as alerts_router
+from app.api.v1.streams import router as streams_router
 
 app.include_router(providers_router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
@@ -135,3 +153,15 @@ app.include_router(trade_planner_router, prefix=settings.API_V1_PREFIX)
 app.include_router(strike_selection_router, prefix=settings.API_V1_PREFIX)
 app.include_router(strategy_router, prefix=settings.API_V1_PREFIX)
 app.include_router(market_data_router, prefix=settings.API_V1_PREFIX)
+app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
+app.include_router(streams_router, prefix=settings.API_V1_PREFIX)
+
+
+def create_app() -> FastAPI:
+    """
+    FastAPI application factory used by Uvicorn's --factory option.
+
+    Returns:
+        FastAPI: Configured Volaris application instance.
+    """
+    return app

@@ -14,6 +14,7 @@ from app.workers.jobs import (
     iv_metric_job,
     option_chain_refresh_job,
     realtime_prices_job,
+    refresh_sp500_job,
 )
 
 
@@ -77,6 +78,18 @@ def create_scheduler() -> AsyncIOScheduler:
         id="iv_metrics",
         max_instances=1,
         misfire_grace_time=120,  # Skip if job is 2 min late
+    )
+
+    scheduler.add_job(
+        refresh_sp500_job,
+        trigger=CronTrigger(
+            day_of_week=settings.SP500_REFRESH_CRON_DAY,
+            hour=settings.SP500_REFRESH_CRON_HOUR,
+            minute=settings.SP500_REFRESH_CRON_MINUTE,
+        ),
+        id="sp500_refresh",
+        max_instances=1,
+        misfire_grace_time=600,
     )
 
     app_logger.info("APScheduler configured with background jobs")

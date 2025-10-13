@@ -19,6 +19,7 @@ from app.services.alpaca import alpaca_client
 from app.services.databento import databento_client
 from app.services.tiingo import tiingo_client
 from app.services.finnhub import finnhub_client
+from app.services.marketstack import marketstack_client
 from app.utils.logger import app_logger
 
 
@@ -52,13 +53,14 @@ class ProviderManager:
             "databento": databento_client,
             "tiingo": tiingo_client,
             "finnhub": finnhub_client,
+            "marketstack": marketstack_client,
         }
 
         # Provider hierarchy by data type
         self.hierarchy = {
             DataType.REALTIME_MINUTE: ["schwab", "alpaca"],
             DataType.MINUTE_DELAYED: ["alpaca", "schwab"],
-            DataType.EOD: ["tiingo"],
+            DataType.EOD: ["tiingo", "marketstack"],
             DataType.HISTORICAL: ["databento", "alpaca"],
             DataType.FUNDAMENTALS: ["finnhub"],
             DataType.NEWS: ["finnhub"],

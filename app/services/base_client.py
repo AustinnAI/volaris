@@ -56,6 +56,7 @@ class BaseAPIClient:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type((NetworkError, ProviderError)),
+        reraise=True,
     )
     async def _request(
         self,

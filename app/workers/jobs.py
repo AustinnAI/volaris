@@ -73,3 +73,8 @@ async def iv_metric_job() -> None:
             app_logger.debug("IV metric job complete", extra={"metrics": metrics})
         except Exception as exc:  # pylint: disable=broad-except
             app_logger.error("IV metric job failed", extra={"error": str(exc)})
+
+
+async def refresh_sp500_job() -> None:
+    async with async_session_maker() as session:
+        await tasks.refresh_sp500_constituents_task(session)

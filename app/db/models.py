@@ -139,6 +139,13 @@ def enum_column(enum_cls: type[enum.Enum], *, length: int) -> SqlEnum:
     return SqlEnum(enum_cls, native_enum=False, length=length)
 
 
+class PriceAlertDirection(str, enum.Enum):
+    """Directional trigger for price alerts."""
+
+    ABOVE = "above"
+    BELOW = "below"
+
+
 class Ticker(TimestampMixin, Base):
     """Represents a tradeable underlying security."""
 
@@ -158,6 +165,21 @@ class Ticker(TimestampMixin, Base):
     iv_metrics: Mapped[list[IVMetric]] = relationship("IVMetric", back_populates="ticker")  # type: ignore[name-defined]
     market_levels: Mapped[list[MarketStructureLevel]] = relationship("MarketStructureLevel", back_populates="ticker")  # type: ignore[name-defined]
     trade_plans: Mapped[list[TradePlan]] = relationship("TradePlan", back_populates="ticker")  # type: ignore[name-defined]
+    price_alerts: Mapped[list["PriceAlert"]] = relationship(
+        "PriceAlert",
+        back_populates="ticker",
+        cascade="all, delete-orphan",
+    )
+    price_streams: Mapped[list["PriceStream"]] = relationship(
+        "PriceStream",
+        back_populates="ticker",
+        cascade="all, delete-orphan",
+    )
+    index_memberships: Mapped[list["IndexConstituent"]] = relationship(
+        "IndexConstituent",
+        back_populates="ticker",
+        cascade="all, delete-orphan",
+    )
 
 
 class Watchlist(TimestampMixin, Base):
@@ -308,6 +330,65 @@ class MarketStructureLevel(TimestampMixin, Base):
 
     __table_args__ = (
         Index("ix_market_levels_ticker_type", "ticker_id", "level_type"),
+    )
+
+
+class PriceAlert(TimestampMixin, Base):
+    """Server-wide price alert triggered when price crosses target."""
+
+    __tablename__ = "price_alerts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker_id: Mapped[int] = mapped_column(ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False)
+    direction: Mapped[PriceAlertDirection] = mapped_column(enum_column(PriceAlertDirection, length=16), nullable=False)
+    target_price: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    channel_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_by: Mapped[Optional[str]] = mapped_column(String(64))
+    triggered_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+    ticker: Mapped[Ticker] = relationship("Ticker", back_populates="price_alerts")
+
+    __table_args__ = (
+        Index("ix_price_alerts_ticker_direction", "ticker_id", "direction"),
+    )
+
+
+class PriceStream(TimestampMixin, Base):
+    """Recurring price stream announcements for a channel."""
+
+    __tablename__ = "price_streams"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker_id: Mapped[int] = mapped_column(ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False)
+    channel_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    interval_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
+    next_run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_by: Mapped[Optional[str]] = mapped_column(String(64))
+    last_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
+
+    ticker: Mapped[Ticker] = relationship("Ticker", back_populates="price_streams")
+
+    __table_args__ = (
+        UniqueConstraint("ticker_id", "channel_id", name="uq_price_stream_channel"),
+        Index("ix_price_streams_next_run", "next_run_at"),
+    )
+
+
+class IndexConstituent(TimestampMixin, Base):
+    """Ticker membership for a specific market index (e.g., S&P 500)."""
+
+    __tablename__ = "index_constituents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    index_symbol: Mapped[str] = mapped_column(String(32), nullable=False)
+    ticker_id: Mapped[int] = mapped_column(ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False)
+    weight: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
+
+    ticker: Mapped[Ticker] = relationship("Ticker", back_populates="index_memberships")
+
+    __table_args__ = (
+        UniqueConstraint("index_symbol", "ticker_id", name="uq_index_constituent"),
+        Index("ix_index_constituents_symbol", "index_symbol"),
     )
 
 

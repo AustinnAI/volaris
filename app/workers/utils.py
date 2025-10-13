@@ -136,9 +136,22 @@ def normalize_option_contracts(raw: Any) -> List[Dict[str, Any]]:
             for key in ("callExpDateMap", "putExpDateMap"):
                 exp_map = raw.get(key, {})
                 if isinstance(exp_map, dict):
-                    for expirations in exp_map.values():
-                        for strike_list in expirations.values():
-                            combined.extend(strike_list)
+                    for expiration_key, strikes in exp_map.items():
+                        if isinstance(strikes, dict):
+                            expiration_value = None
+                            if isinstance(expiration_key, str):
+                                expiration_value = expiration_key.split(":")[0]
+                            elif expiration_key:
+                                expiration_value = str(expiration_key)
+
+                            for strike_list in strikes.values():
+                                for contract in strike_list:
+                                    if not isinstance(contract, dict):
+                                        continue
+                                    enriched = dict(contract)
+                                    if "expirationDate" not in enriched and "expiration" not in enriched:
+                                        enriched["expiration"] = expiration_value
+                                    combined.append(enriched)
             raw_list = combined
     elif isinstance(raw, Iterable):
         raw_list = raw

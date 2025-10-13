@@ -31,6 +31,8 @@ from app.workers.utils import (
     parse_date,
     to_decimal,
 )
+from app.services.index_service import refresh_index_constituents, SP500_SYMBOL
+from app.services.exceptions import DataNotFoundError
 
 
 TIMEFRAME_TO_PROVIDER_ARGS = {
@@ -107,6 +109,23 @@ async def fetch_realtime_prices(
     return added
 
 
+async def refresh_sp500_constituents_task(session: AsyncSession) -> int:
+    """Refresh S&P 500 constituents from external provider."""
+
+    try:
+        symbols = await refresh_index_constituents(session, SP500_SYMBOL)
+        await session.commit()
+        app_logger.info("S&P 500 constituents refreshed", extra={"count": len(symbols)})
+        return len(symbols)
+    except DataNotFoundError as exc:
+        await session.rollback()
+        app_logger.error("Failed to refresh S&P 500 constituents", extra={"error": str(exc)})
+    except Exception as exc:  # pylint: disable=broad-except
+        await session.rollback()
+        app_logger.error("Unexpected error refreshing S&P 500 constituents", extra={"error": str(exc)})
+    return 0
+
+
 async def backfill_historical_prices(
     session: AsyncSession,
     symbols: Optional[Sequence[str]] = None,
@@ -173,7 +192,14 @@ async def sync_eod_prices(
 
     for ticker in tickers:
         try:
-            response = await provider.get_eod_prices(ticker.symbol)
+            if hasattr(provider, "get_eod_prices"):
+                response = await provider.get_eod_prices(ticker.symbol)
+            elif hasattr(provider, "get_eod"):
+                response = await provider.get_eod(ticker.symbol, limit=5)
+            elif hasattr(provider, "get_latest"):
+                response = [await provider.get_latest(ticker.symbol)]
+            else:
+                raise AttributeError("EOD provider missing required method")
             for candle in normalize_price_points(response):
                 if await _upsert_price_bar(session, ticker, Timeframe.DAILY, candle, provider_enum):
                     added += 1

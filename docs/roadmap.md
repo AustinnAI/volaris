@@ -19,6 +19,7 @@
 - ✅ Phase 3: Foundation complete (spreads, strikes, IV logic)
 - 🎯 Phase 3.4-3.5: DTE logic + bias context (quick wins)
 - 🎯 Phase 4.4: Expected move validation
+- 🧠 Phase 4.5: Sentiment intelligence pipeline (NLP scoring)
 - 🎯 Phase 5: Core ICT structure detection (BSL/SSL, FVGs, sweeps, MSS)
 - 🎯 Phase 7.4: ICT-based stops & targets
 - 🎯 Phase 8.3-8.5: ICT Discord commands
@@ -284,74 +285,54 @@
   - Response: Delta, gamma, theta, vega with explanations
   - Requires Greek calculation implementation
 
-### 3.7 Discord Bot Refactoring (Technical Debt) 🔧
-**Priority:** 🟡 MEDIUM (Technical Improvement)
-**Status:** ⏰ Deferred - Tests Created, Refactor Pending
+### 3.7 Streaming & Market Snapshot Commands 📡
+> _Deliver richer Discord workflows (streams, sentiment, market movers) before Phase 4_
 
-**Current State:**
-- `app/alerts/discord_bot.py`: **1912 lines** (exceeds 600-line industry guideline)
-- All 18 commands in single file
-- ✅ **Test coverage: 24 tests passing** (`tests/test_discord_commands.py`)
-- Working code deployed on Render
+**Status:** ✅ Complete  
+**Focus:** Introduce recurring channel updates and additional market insight commands for S&P 500 names.
 
-**Refactoring Plan (Discord.py Cog Pattern):**
+**Objectives:**
+- [x] `/streams` command group to list/add/remove auto-updating price posts per ticker & channel (configurable intervals).
+- [x] `/sentiment <symbol>` command summarizing bullish/bearish sentiment, news snippets, and analyst leaning.
+- [x] `/top` command plus daily 4 PM ET digest covering S&P 500 top gainers/losers.
+- [x] Replace static `SP500.csv` with scheduled refresh from an external API (Finnhub `index/constituents`) with CSV fallback.
 
-**Proposed Structure:**
+**Implementation Notes:**
+- Created `price_streams` table + REST endpoints (`/api/v1/streams`) leveraged by the Discord bot poller.
+- Added market endpoints for sentiment (recommendation trend + recent news) and constituent retrieval with caching.
+- `/top` command currently surfaces a paid-plan notice; Tiingo IEX data is required for movers. Evaluating Polygon.io or in-house calculation as follow-up.
+- Extended the Discord bot with `/streams`, `/sentiment`, `/top`, price stream polling, and daily movers digest (digest posts when premium data is available).
+- Added weekly APScheduler job to sync S&P 500 constituents and refresh autocomplete cache (falls back to bundled CSV when APIs are unavailable).
+
+**Dependencies:** Finnhub & Tiingo API keys, Redis cache, scheduler enabled in deployment.
+
+**Success Metrics:**
+- Stream messages delivered within ±60 s of configured interval.
+- Sentiment command latency observed < 2 s with Redis caching.
+- `/top` digest becomes active once an IEX-enabled provider is configured; otherwise the command communicates the requirement.
+
+### 3.8 Discord Bot Refactoring (Technical Debt) 🔧
+**Priority:** 🟢 COMPLETE (Technical Improvement)
+**Status:** ✅ Refactor merged – modular bot with cog architecture
+
+**New Architecture:**
 ```
 app/alerts/
-├── discord_bot.py                 # 100-150 lines - Bot setup + cog loading
-├── helpers/
-│   ├── __init__.py
-│   ├── autocomplete.py           # Symbol autocomplete (65 lines)
-│   ├── api_client.py             # API wrapper (95 lines)
-│   └── embeds.py                 # Embed builders (150 lines)
-└── cogs/
-    ├── __init__.py
-    ├── strategy.py               # /plan, /calc, /size, /breakeven (~250 lines)
-    ├── market_data.py            # /price, /quote, /iv, /range, /volume, /earnings, /spread (~400 lines)
-    ├── calculators.py            # /pop, /delta, /contracts, /risk, /dte (~300 lines)
-    └── utilities.py              # /check, /help (~200 lines)
+├── discord_bot.py        # Bootstrap + background tasks + cog loading
+├── helpers/              # API clients, embeds, autocomplete, views
+└── cogs/                 # strategy, market_data, calculators, utilities
 ```
 
-**Benefits:**
-- ✅ Each file < 600 lines (meets industry standards)
-- ✅ Hot-reload individual cogs during development (`bot.reload_extension('cogs.strategy')`)
-- ✅ Clear separation of concerns (one file per command category)
-- ✅ Easier testing (test individual cogs in isolation)
-- ✅ Standard Discord.py pattern (idiomatic)
-- ✅ Parallel development (multiple devs can work on different cogs)
+**Highlights:**
+- ☑️ Split all 18 slash commands into dedicated cogs for easier maintenance.
+- ☑️ Extracted helper modules (API clients, embed builders, symbol cache, Discord views).
+- ☑️ Background tasks (alerts, streams, daily digest) retained with improved logging.
+- ☑️ Added helper-focused tests to cover embed formatting and autocomplete behaviour.
 
-**Risks & Mitigation:**
-- ⚠️ Refactoring 1912 lines could introduce bugs
-  - **Mitigation:** 24 existing tests verify command logic
-- ⚠️ Shared state (rate limiter, API client) needs careful handling
-  - **Mitigation:** Use cog `__init__` to pass bot instance
-- ⚠️ Discord.py cog lifecycle (async setup, extension loading)
-  - **Mitigation:** Follow official Discord.py cog documentation
-
-**Implementation Steps:**
-1. ✅ **Create tests first** (COMPLETED - 24 tests passing)
-2. [ ] Create cog files alongside existing bot.py (keep as fallback)
-3. [ ] Test cogs thoroughly with pytest
-4. [ ] Update bot.py to load cogs
-5. [ ] Deploy to Render and verify all 18 commands work
-6. [ ] Remove old bot.py once stable
-
-**Effort:** 2-3 hours (with testing)
-**Timeline:** Defer to end of Phase 3 or start of Phase 4
-**Dependencies:** None (tests already created)
-
-**Testing Strategy:**
-```bash
-# Run unit tests
-pytest tests/test_discord_commands.py -v
-
-# Test individual cog loading
-pytest tests/test_strategy_cog.py -v
-
-# Integration test (requires running bot)
-pytest tests/test_discord_commands.py -m integration
-```
+**Follow-ups:**
+- 🔄 Re-run full pytest suite once `discord.py` dependency is available in CI/local env.
+- 🚀 Deploy refactored bot to Render and perform smoke tests on live guild.
+- 🛠️ Consider admin-only `/reload` utility for hot-reloading cogs during development.
 
 ---
 
@@ -387,6 +368,32 @@ pytest tests/test_discord_commands.py -m integration
 - [ ] Reasoning engine: Explain strike positioning relative to EM
 - [ ] Phase 3 integration: Use EM in strike selection scoring
 - [ ] Discord: Show EM context in `/plan` response
+
+---
+
+## Phase 4.5: Sentiment Intelligence (Weeks 8-9)
+**Priority:** 🧠 MEDIUM (Enhances discretionary context before ICT automation)
+
+### 4.5.1 News Ingestion & Storage
+- [ ] Aggregate headlines from Polygon (real time) + backup source (Finnhub/NewsAPI)
+- [ ] Persist normalized articles (ticker, published_at, source, url, summary)
+- [ ] Schedule hourly refresh with deduplication + retention policy
+
+### 4.5.2 NLP Scoring Pipeline
+- [ ] Implement sentiment scoring (baseline: VADER/TextBlob)
+- [ ] Evaluate transformer-based model (FinBERT) for accuracy uplift
+- [ ] Compute ticker-level aggregate scores (weighted by recency + source reliability)
+- [ ] Cache sentiment snapshots in Redis for low-latency responses
+
+### 4.5.3 API & Discord Surfacing
+- [ ] `/api/v1/market/sentiment` returns score, trend, headline snippets, and methodology metadata
+- [ ] `/sentiment` command shows numeric sentiment score, confidence, and top positive/negative headlines
+- [ ] Add guardrails (rate limiting, fallback to cached score, graceful degradation when NLP offline)
+
+### 4.5.4 Validation & QA
+- [ ] Backtest sentiment vs. price reaction on recent earnings/major events
+- [ ] Add unit tests for scoring pipeline and caching behavior
+- [ ] Document sentiment interpretation guidelines in `docs/SENTIMENT_PIPELINE.md`
 
 ---
 

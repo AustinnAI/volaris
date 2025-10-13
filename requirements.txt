@@ -32,6 +32,9 @@ apscheduler==3.10.4
 
 # Data Processing (Phase 2+)
 pandas==2.2.3
+beautifulsoup4==4.12.3
+aiosqlite==0.20.0
+apscheduler==3.10.4
 numpy==2.1.2
 
 # Discord Integration (Phase 8)
