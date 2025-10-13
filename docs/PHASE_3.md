@@ -1,8 +1,8 @@
 # Phase 3: Trade Planning & Strategy Engine
 
-**Status:** 🟢 In Progress (3.1 ✅ Complete, 3.2 ✅ Complete)
-**Version:** 2.0.0
-**Last Updated:** 2025-10-11
+**Status:** 🟢 Complete (3.1-3.6 ✅ Complete, 3.7 ⏰ Deferred)
+**Version:** 3.0.0
+**Last Updated:** 2025-10-12
 
 ---
 
@@ -1156,7 +1156,195 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 
 ---
 
-**Phase 3 Status:** ✅ **3.1 COMPLETE** | ✅ **3.2 COMPLETE** | ✅ **3.3 COMPLETE**
+# Phase 3.6: Additional Discord Commands ✅
+
+**Status:** ✅ Complete
+**Completed:** 2025-10-12
+
+## Overview
+
+Expanded Discord bot with 12 new slash commands providing quick market data access, calculators, and validators for faster trading workflows.
+
+## New Commands
+
+### Market Data Commands (6)
+
+**`/price <symbol>`** - Current stock price + % change
+- API: `GET /api/v1/market/price/{symbol}`
+- Data source: Database (Schwab fallback)
+- Returns: Current price, previous close, change ($), change (%), volume
+
+**`/quote <symbol>`** - Full quote with bid/ask/volume
+- API: `GET /api/v1/market/quote/{symbol}`
+- Data source: Schwab API
+- Returns: Last price, bid, ask, spread, volume, avg volume
+
+**`/iv <symbol>`** - IV, IV rank, IV percentile
+- API: `GET /api/v1/market/iv/{symbol}`
+- Data source: Database (IVMetric table)
+- Returns: Current IV, IV rank, IV percentile, regime (high/low/neutral)
+
+**`/range <symbol>`** - 52-week high/low + position
+- API: `GET /api/v1/market/range/{symbol}`
+- Data source: Database (PriceData aggregation)
+- Returns: Current price, 52W high/low, position % in range, ICT context
+
+**`/volume <symbol>`** - Volume vs 30-day average
+- API: `GET /api/v1/market/volume/{symbol}`
+- Data source: Database (PriceData aggregation)
+- Returns: Current volume, 30D avg, ratio, trading implications
+
+**`/earnings <symbol>`** - Next earnings date
+- API: `GET /api/v1/market/earnings/{symbol}`
+- Data source: Finnhub API
+- Returns: Earnings date, days until, status, trading recommendation
+
+### Quick Calculators (5)
+
+**`/pop <delta>`** - Probability of profit from delta
+- Pure calculation (no API call)
+- Formula: Short POP = 100 - (delta * 100), Long POP = delta * 100
+- Returns: Short option POP, long option POP, explanation
+
+**`/delta <symbol> <strike> <type> <dte>`** - Get delta for strike
+- API: `GET /api/v1/market/delta/{symbol}/{strike}/{type}/{dte}`
+- Data source: Database (OptionContract table)
+- Returns: Delta, POP (short), classification (ITM/ATM/OTM)
+
+**`/contracts <risk> <premium>`** - Contracts for target risk
+- Pure calculation (no API call)
+- Formula: contracts = int(risk / premium)
+- Returns: Number of contracts, actual risk, remaining budget
+
+**`/risk <contracts> <premium>`** - Total risk calculation
+- Pure calculation (no API call)
+- Formula: total_risk = contracts * premium
+- Returns: Total risk, % of various account sizes
+
+**`/dte <date>`** - Days to expiration calculator
+- Pure calculation (no API call)
+- Accepts formats: YYYY-MM-DD, MM/DD/YYYY
+- Returns: DTE, classification (0-7/8-45/45+ days), ICT strategy suggestion
+
+### Validators (1)
+
+**`/spread <symbol> <width>`** - Validate spread width
+- API: `GET /api/v1/market/price/{symbol}` + validation logic
+- Validation rules: Low-priced (<$100): 2-5 wide, Mid-priced ($100-$300): 5-10 wide, High-priced (>$300): 5-15 wide
+- Returns: Verdict (optimal/too narrow/too wide), recommended range
+
+## API Endpoints Created
+
+**File:** `app/api/v1/market_data.py`
+
+```python
+router = APIRouter(prefix="/market", tags=["market-data"])
+
+# 8 new endpoints
+GET /api/v1/market/price/{symbol}
+GET /api/v1/market/quote/{symbol}
+GET /api/v1/market/iv/{symbol}
+GET /api/v1/market/delta/{symbol}/{strike}/{option_type}/{dte}
+GET /api/v1/market/earnings/{symbol}
+GET /api/v1/market/range/{symbol}
+GET /api/v1/market/volume/{symbol}
+```
+
+## Updated Commands
+
+**`/help`** - Updated with all 18 commands
+- Reorganized into 4 categories: Strategy Planning, Market Data, Quick Calculators, Validators & Tools
+- Added quick examples section
+- Shows command count: "18 Commands Available"
+
+## Total Commands Summary
+
+| Category | Commands | Count |
+|----------|----------|-------|
+| Strategy Planning | `/plan`, `/calc` | 2 |
+| Market Data | `/price`, `/quote`, `/iv`, `/range`, `/volume`, `/earnings` | 6 |
+| Quick Calculators | `/pop`, `/delta`, `/contracts`, `/risk`, `/dte` | 5 |
+| Validators & Tools | `/spread`, `/size`, `/breakeven`, `/check`, `/help` | 5 |
+| **Total** | | **18** |
+
+## Example Workflows
+
+**Quick Market Check:**
+```
+/price SPY
+/iv SPY
+/volume SPY
+```
+
+**Strategy Validation:**
+```
+/spread QQQ 5              # Validate 5-wide spread
+/iv QQQ                    # Check IV regime
+/calc bull_put_spread QQQ 445/440 7
+/contracts 500 125         # How many contracts?
+```
+
+**Earnings Safety Check:**
+```
+/earnings AAPL
+/range AAPL
+/plan AAPL bullish 14
+```
+
+## Files Modified
+
+- `app/alerts/discord_bot.py` - Added 12 new commands (1912 lines total)
+- `app/api/v1/market_data.py` - Created with 8 endpoints
+- `app/main.py` - Registered market_data router
+
+## Testing
+
+**Created:** `tests/test_discord_commands.py` (24 tests, 100% pass rate)
+- Coverage: All 18 Discord commands
+- Test categories: Strategy (4), Market Data (4), Calculators (5), Utilities (2), Validation (9)
+
+---
+
+**Phase 3 Status:** ✅ **3.1 COMPLETE** | ✅ **3.2 COMPLETE** | ✅ **3.3 COMPLETE** | ✅ **3.4 COMPLETE** | ✅ **3.5 COMPLETE** | ✅ **3.6 COMPLETE** | ⏰ **3.7 DEFERRED**
+
+---
+
+## Testing
+
+### Test Coverage
+
+**Discord Commands:** 24 tests (100% pass rate)
+- File: `tests/test_discord_commands.py`
+- Coverage: All 18 Discord slash commands
+- Categories: Strategy (4), Market Data (4), Calculators (5), Utilities (2), Validation (9)
+
+**Run Tests:**
+```bash
+# All tests
+pytest tests/test_discord_commands.py -v
+
+# Specific category
+pytest tests/test_discord_commands.py::TestStrategyCommands -v
+
+# With coverage
+pytest tests/test_discord_commands.py --cov=app/alerts --cov-report=html
+
+# Skip integration tests
+pytest tests/test_discord_commands.py -m "not integration" -v
+```
+
+**Results:**
+```
+======================== 24 passed, 2 skipped in 0.06s =========================
+```
+
+### Test Fixtures
+
+**Location:** `tests/conftest.py`
+- `mock_interaction` - Mock Discord interaction
+- `mock_bot` - Mock Discord bot with rate limiter
+- `mock_api_response` - Sample strategy recommendation response
+- `mock_aiohttp_session` - Mock HTTP client
 
 ---
 
