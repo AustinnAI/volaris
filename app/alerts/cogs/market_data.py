@@ -24,33 +24,6 @@ class MarketDataCog(commands.Cog):
 
     def __init__(self, bot: "VolarisBot") -> None:
         self.bot = bot
-        self._commands: list[app_commands.Command] = []
-
-    async def cog_load(self) -> None:
-        self._commands = [
-            self.sentiment,
-            self.top,
-            self.price,
-            self.iv,
-            self.quote,
-            self.earnings,
-            self.range,
-            self.volume,
-        ]
-        for command in self._commands:
-            try:
-                self.bot.tree.add_command(command)
-            except app_commands.errors.CommandAlreadyRegistered:
-                self.bot.tree.remove_command(command.name, type=command.type)
-                self.bot.tree.add_command(command)
-
-    async def cog_unload(self) -> None:
-        for command in self._commands:
-            try:
-                self.bot.tree.remove_command(command.name, type=command.type)
-            except Exception:  # pylint: disable=broad-except
-                continue
-        self._commands.clear()
 
     async def _maybe_refresh_price(self, symbol: str) -> None:
         if settings.SCHEDULER_ENABLED:

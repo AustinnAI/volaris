@@ -1,33 +1,50 @@
-2025-10-13 23:19:55 - ERROR - volaris.discord_bot - Failed to load extension app.alerts.cogs.strategy
-2025-10-13 23:19:55,899 - volaris.discord_bot - ERROR - Failed to load extension app.alerts.cogs.strategy
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'plan' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.strategy' raised an error: CommandAlreadyRegistered: Command 'plan' already registered.
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'plan' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.strategy' raised an error: CommandAlreadyRegistered: Command 'plan' already registered.
-2025-10-13 23:19:55,908 - volaris.discord_bot - ERROR - Failed to load extension app.alerts.cogs.market_data
-2025-10-13 23:19:55 - ERROR - volaris.discord_bot - Failed to load extension app.alerts.cogs.market_data
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'sentiment' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.market_data' raised an error: CommandAlreadyRegistered: Command 'sentiment' already registered.
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'sentiment' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.market_data' raised an error: CommandAlreadyRegistered: Command 'sentiment' already registered.
-2025-10-13 23:19:55,913 - volaris.discord_bot - ERROR - Failed to load extension app.alerts.cogs.calculators
-2025-10-13 23:19:55 - ERROR - volaris.discord_bot - Failed to load extension app.alerts.cogs.calculators
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'pop' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.calculators' raised an error: CommandAlreadyRegistered: Command 'pop' already registered.
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'pop' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.calculators' raised an error: CommandAlreadyRegistered: Command 'pop' already registered.
-2025-10-13 23:19:55 - ERROR - volaris.discord_bot - Failed to load extension app.alerts.cogs.utilities
-2025-10-13 23:19:55,918 - volaris.discord_bot - ERROR - Failed to load extension app.alerts.cogs.utilities
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'check' already registered.
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.utilities' raised an error: CommandAlreadyRegistered: Command 'check' already registered.
-discord.app_commands.errors.CommandAlreadyRegistered: Command 'check' already registered.
-
-    raise errors.ExtensionFailed(key, e) from e
-discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.utilities' raised an error: CommandAlreadyRegistered: Command 'check' already registered.
+2025-10-13T23:41:55.989130803Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 963, in _load_from_module_spec
+2025-10-13T23:41:55.989134293Z     await setup(self)
+2025-10-13T23:41:55.989137753Z   File "/opt/render/project/src/app/alerts/cogs/utilities.py", line 385, in setup
+2025-10-13T23:41:55.989140463Z     await bot.add_cog(UtilitiesCog(bot))
+2025-10-13T23:41:55.989144153Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 799, in add_cog
+2025-10-13T23:41:55.989147793Z     cog = await cog._inject(self, override=override, guild=guild, guilds=guilds)
+2025-10-13T23:41:55.989154334Z Traceback (most recent call last):
+2025-10-13T23:41:55.989158264Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 963, in _load_from_module_spec
+2025-10-13T23:41:55.989164554Z           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-13T23:41:55.989164644Z     await setup(self)
+2025-10-13T23:41:55.989167664Z   File "/opt/render/project/src/app/alerts/cogs/utilities.py", line 385, in setup
+2025-10-13T23:41:55.989184254Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/cog.py", line 745, in _inject
+2025-10-13T23:41:55.989186734Z     bot.tree.add_command(command, override=override, guild=guild, guilds=guilds)
+2025-10-13T23:41:55.989188514Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/app_commands/tree.py", line 407, in add_command
+2025-10-13T23:41:55.989191254Z     raise CommandAlreadyRegistered(name, None)
+2025-10-13T23:41:55.989193734Z discord.app_commands.errors.CommandAlreadyRegistered: Command 'check' already registered.
+2025-10-13T23:41:55.989195325Z 
+2025-10-13T23:41:55.989197245Z The above exception was the direct cause of the following exception:
+2025-10-13T23:41:55.989198865Z 
+2025-10-13T23:41:55.989200635Z Traceback (most recent call last):
+2025-10-13T23:41:55.989202405Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 83, in setup_hook
+2025-10-13T23:41:55.989204075Z     await self.load_extension(extension)
+2025-10-13T23:41:55.989205805Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1029, in load_extension
+2025-10-13T23:41:55.989208055Z     await self._load_from_module_spec(spec, name)
+2025-10-13T23:41:55.989213985Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 968, in _load_from_module_spec
+2025-10-13T23:41:55.989217305Z     raise errors.ExtensionFailed(key, e) from e
+2025-10-13T23:41:55.989221315Z discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.utilities' raised an error: CommandAlreadyRegistered: Command 'check' already registered.
+2025-10-13T23:41:55.989228955Z     await bot.add_cog(UtilitiesCog(bot))
+2025-10-13T23:41:55.989232055Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 799, in add_cog
+2025-10-13T23:41:55.989237406Z     cog = await cog._inject(self, override=override, guild=guild, guilds=guilds)
+2025-10-13T23:41:55.989240235Z           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-13T23:41:55.989243496Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/cog.py", line 745, in _inject
+2025-10-13T23:41:55.989246366Z     bot.tree.add_command(command, override=override, guild=guild, guilds=guilds)
+2025-10-13T23:41:55.989249636Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/app_commands/tree.py", line 407, in add_command
+2025-10-13T23:41:55.989252156Z     raise CommandAlreadyRegistered(name, None)
+2025-10-13T23:41:55.989253926Z discord.app_commands.errors.CommandAlreadyRegistered: Command 'check' already registered.
+2025-10-13T23:41:55.989255536Z 
+2025-10-13T23:41:55.989257286Z The above exception was the direct cause of the following exception:
+2025-10-13T23:41:55.989258856Z 
+2025-10-13T23:41:55.989260516Z Traceback (most recent call last):
+2025-10-13T23:41:55.989262346Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 83, in setup_hook
+2025-10-13T23:41:55.989264016Z     await self.load_extension(extension)
+2025-10-13T23:41:55.989265736Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1029, in load_extension
+2025-10-13T23:41:55.989267446Z     await self._load_from_module_spec(spec, name)
+2025-10-13T23:41:55.989269166Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 968, in _load_from_module_spec
+2025-10-13T23:41:55.989270856Z     raise errors.ExtensionFailed(key, e) from e
+2025-10-13T23:41:55.989277586Z discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.utilities' raised an error: CommandAlreadyRegistered: Command 'check' already registered.
+2025-10-13T23:41:56.17396321Z 2025-10-13 23:41:56,173 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: b85e669f9f840c839d1446288e6ab314).
+2025-10-13T23:41:58.181452038Z 2025-10-13 23:41:58,179 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-13T23:41:58.181492299Z 2025-10-13 23:41:58 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)
