@@ -4,7 +4,7 @@ Provides quick market data access for Discord commands.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select, func, desc
@@ -17,6 +17,86 @@ from app.services.finnhub import FinnhubClient
 from app.config import settings
 
 router = APIRouter(prefix="/market", tags=["market-data"])
+
+
+def _extract_schwab_quote(payload: Dict[str, Any], symbol: str) -> Dict[str, Any]:
+    """
+    Normalize Schwab quote payloads into a flat quote dict.
+
+    The Schwab Market Data API can return several shapes:
+    - {"symbol": "...", "quote": {...}}
+    - {"quotes": {"AAPL": {"quote": {...}}}}
+    - {"quotes": {"AAPL": {...}}}
+
+    Args:
+        payload: Raw response from SchwabClient.get_quote
+        symbol: Requested symbol (used to disambiguate keyed responses)
+
+    Returns:
+        The innermost quote dict if present; empty dict otherwise.
+    """
+    if not payload:
+        return {}
+
+    symbol_key = symbol.upper()
+
+    direct_quote = payload.get("quote")
+    if isinstance(direct_quote, dict):
+        return direct_quote
+
+    quotes_container = payload.get("quotes")
+    if isinstance(quotes_container, dict):
+        candidate = quotes_container.get(symbol_key)
+        if isinstance(candidate, dict):
+            nested_quote = candidate.get("quote")
+            if isinstance(nested_quote, dict):
+                return nested_quote
+            return candidate
+
+    keyed_entry = payload.get(symbol_key)
+    if isinstance(keyed_entry, dict):
+        nested_quote = keyed_entry.get("quote")
+        if isinstance(nested_quote, dict):
+            return nested_quote
+        return keyed_entry
+
+    return {}
+
+
+def _extract_finnhub_earnings(payload: Any, symbol: str) -> Optional[Dict[str, Any]]:
+    """
+    Extract the next earnings record for a symbol from a Finnhub payload.
+
+    Args:
+        payload: Raw response from FinnhubClient.get_earnings_calendar.
+        symbol: Requested ticker symbol.
+
+    Returns:
+        Matching earnings record or None.
+    """
+    symbol_upper = symbol.upper()
+    records: list[Dict[str, Any]] = []
+
+    if isinstance(payload, dict):
+        candidates = payload.get("earningsCalendar") or payload.get("earnings")
+        if isinstance(candidates, list):
+            records = [item for item in candidates if isinstance(item, dict)]
+    elif isinstance(payload, list):
+        records = [item for item in payload if isinstance(item, dict)]
+
+    if not records:
+        return None
+
+    for record in records:
+        record_symbol = str(record.get("symbol") or symbol_upper).upper()
+        if record.get("date") and record_symbol == symbol_upper:
+            return record
+
+    for record in records:
+        if record.get("date"):
+            return record
+
+    return None
 
 
 @router.get("/price/{symbol}")
@@ -80,8 +160,12 @@ async def get_price(symbol: str, db: AsyncSession = Depends(get_db)):
         schwab = SchwabClient()
         quote_data = await schwab.get_quote(symbol)
 
-        current_price = quote_data.get("lastPrice", 0)
-        previous_close = quote_data.get("previousClose", current_price)
+        quote = _extract_schwab_quote(quote_data, symbol)
+        if not quote:
+            raise HTTPException(status_code=502, detail="Malformed Schwab quote payload")
+
+        current_price = quote.get("lastPrice") or quote.get("mark") or quote.get("closePrice") or 0
+        previous_close = quote.get("previousClose") or quote.get("closePrice") or current_price
         change = current_price - previous_close
         change_pct = (change / previous_close * 100) if previous_close else 0
 
@@ -91,8 +175,10 @@ async def get_price(symbol: str, db: AsyncSession = Depends(get_db)):
             "previous_close": previous_close,
             "change": change,
             "change_pct": change_pct,
-            "volume": quote_data.get("totalVolume", 0),
+            "volume": quote.get("totalVolume") or quote.get("realTimeVolume") or 0,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch price: {str(e)}")
 
@@ -164,19 +250,25 @@ async def get_quote(symbol: str):
         schwab = SchwabClient()
         quote_data = await schwab.get_quote(symbol)
 
-        current_price = quote_data.get("lastPrice", 0)
-        previous_close = quote_data.get("previousClose", current_price)
+        quote = _extract_schwab_quote(quote_data, symbol)
+        if not quote:
+            raise HTTPException(status_code=502, detail="Malformed Schwab quote payload")
+
+        current_price = quote.get("lastPrice") or quote.get("mark") or quote.get("closePrice") or 0
+        previous_close = quote.get("previousClose") or quote.get("closePrice") or current_price
         change_pct = ((current_price - previous_close) / previous_close * 100) if previous_close else 0
 
         return {
             "symbol": symbol,
             "price": current_price,
-            "bid": quote_data.get("bidPrice", 0),
-            "ask": quote_data.get("askPrice", 0),
-            "volume": quote_data.get("totalVolume", 0),
-            "avg_volume": quote_data.get("avgVolume", quote_data.get("totalVolume", 0)),
+            "bid": quote.get("bidPrice") or 0,
+            "ask": quote.get("askPrice") or 0,
+            "volume": quote.get("totalVolume") or quote.get("realTimeVolume") or 0,
+            "avg_volume": quote.get("averageVolume") or quote.get("avgVolume") or quote.get("totalVolume") or 0,
             "change_pct": change_pct,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch quote: {str(e)}")
 
@@ -249,24 +341,38 @@ async def get_earnings(symbol: str):
     symbol = symbol.upper()
 
     try:
-        finnhub = FinnhubClient(api_key=settings.FINNHUB_API_KEY)
-        earnings_data = await finnhub.get_earnings_calendar(symbol)
+        finnhub = FinnhubClient()
+        earnings_payload = await finnhub.get_earnings_calendar(symbol=symbol)
 
-        if earnings_data and len(earnings_data) > 0:
-            next_earnings = earnings_data[0]
-            earnings_date_str = next_earnings.get("date")
+        record = _extract_finnhub_earnings(earnings_payload, symbol)
+        if not record:
+            raise HTTPException(status_code=404, detail=f"No upcoming earnings data for {symbol}")
 
-            if earnings_date_str:
-                earnings_date = datetime.fromisoformat(earnings_date_str)
-                days_until = (earnings_date.date() - datetime.now().date()).days
+        earnings_date_raw = record.get("date")
+        if not earnings_date_raw:
+            raise HTTPException(status_code=404, detail=f"No upcoming earnings data for {symbol}")
 
-                return {
-                    "symbol": symbol,
-                    "earnings_date": earnings_date.isoformat(),
-                    "days_until": days_until,
-                }
+        try:
+            earnings_date = datetime.fromisoformat(earnings_date_raw).date()
+        except ValueError:
+            from datetime import datetime as dt
 
-        raise HTTPException(status_code=404, detail=f"No upcoming earnings data for {symbol}")
+            earnings_date = dt.strptime(earnings_date_raw, "%Y-%m-%d").date()
+
+        today = date.today()
+        days_until = (earnings_date - today).days
+
+        response: Dict[str, Any] = {
+            "symbol": symbol,
+            "earnings_date": earnings_date.isoformat(),
+            "days_until": days_until,
+        }
+
+        for key in ("hour", "epsEstimate", "epsActual", "revenueEstimate", "revenueActual"):
+            if record.get(key) is not None:
+                response[key] = record[key]
+
+        return response
 
     except HTTPException:
         raise

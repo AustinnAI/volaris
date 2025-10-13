@@ -1027,6 +1027,7 @@ async def run_bot():
     # /price command - Current stock price
     @bot.tree.command(name="price", description="Get current stock price and % change")
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def price(interaction: discord.Interaction, symbol: str):
         """Get current stock price."""
         await interaction.response.defer()
@@ -1289,6 +1290,7 @@ async def run_bot():
     # /iv command - Implied volatility metrics
     @bot.tree.command(name="iv", description="Get IV, IV rank, and IV percentile for a stock")
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def iv(interaction: discord.Interaction, symbol: str):
         """Get IV metrics."""
         await interaction.response.defer()
@@ -1355,6 +1357,7 @@ async def run_bot():
     # /quote command - Full quote with bid/ask
     @bot.tree.command(name="quote", description="Get full quote with price, volume, and bid/ask")
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def quote(interaction: discord.Interaction, symbol: str):
         """Get full quote."""
         await interaction.response.defer()
@@ -1430,6 +1433,7 @@ async def run_bot():
             app_commands.Choice(name="Put", value="put"),
         ]
     )
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def delta(
         interaction: discord.Interaction,
         symbol: str,
@@ -1495,6 +1499,7 @@ async def run_bot():
         symbol="Ticker symbol (e.g., SPY)",
         width="Spread width in points (e.g., 5 for a 5-point spread)"
     )
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def spread(interaction: discord.Interaction, symbol: str, width: int):
         """Validate spread width."""
         await interaction.response.defer()
@@ -1575,6 +1580,7 @@ async def run_bot():
     # /earnings command - Next earnings date
     @bot.tree.command(name="earnings", description="Get next earnings date for a stock")
     @app_commands.describe(symbol="Ticker symbol (e.g., AAPL)")
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def earnings(interaction: discord.Interaction, symbol: str):
         """Get earnings date."""
         await interaction.response.defer()
@@ -1649,6 +1655,7 @@ async def run_bot():
     # /range command - 52-week high/low
     @bot.tree.command(name="range", description="Get 52-week high/low and current position")
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY)")
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def range_cmd(interaction: discord.Interaction, symbol: str):
         """Get 52-week range."""
         await interaction.response.defer()
@@ -1730,6 +1737,7 @@ async def run_bot():
     # /volume command - Volume vs average
     @bot.tree.command(name="volume", description="Compare today's volume to 30-day average")
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY)")
+    @app_commands.autocomplete(symbol=symbol_autocomplete)
     async def volume(interaction: discord.Interaction, symbol: str):
         """Get volume comparison."""
         await interaction.response.defer()
