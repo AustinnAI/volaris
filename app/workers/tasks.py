@@ -12,6 +12,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import settings
+try:
+    from itertools import batched  # Python 3.12+
+except ImportError:  # pragma: no cover
+    def batched(iterable, n):
+        it = iter(iterable)
+        while True:
+            batch = []
+            try:
+                for _ in range(n):
+                    batch.append(next(it))
+            except StopIteration:
+                if batch:
+                    yield tuple(batch)
+                break
+            if batch:
+                yield tuple(batch)
 from app.db.models import (
     DataProvider,
     IVMetric,
@@ -92,18 +108,20 @@ async def fetch_realtime_prices(
 
     frequency = provider_kwargs.get("frequency") or 1
     limit = max(int(lookback_minutes / frequency), 1)
+    batch_size = max(settings.REALTIME_SYNC_BATCH_SIZE, 1)
 
-    for ticker in tickers:
-        try:
-            response = await _fetch_price_payload(provider, ticker.symbol, timeframe, limit)
-            for candle in normalize_price_points(response):
-                if await _upsert_price_bar(session, ticker, timeframe, candle, provider_enum):
-                    added += 1
-        except Exception as exc:  # pylint: disable=broad-except
-            app_logger.error(
-                "Realtime price sync failed",
-                extra={"symbol": ticker.symbol, "error": str(exc)},
-            )
+    for batch in batched(tickers, batch_size):
+        for ticker in batch:
+            try:
+                response = await _fetch_price_payload(provider, ticker.symbol, timeframe, limit)
+                for candle in normalize_price_points(response):
+                    if await _upsert_price_bar(session, ticker, timeframe, candle, provider_enum):
+                        added += 1
+            except Exception as exc:  # pylint: disable=broad-except
+                app_logger.error(
+                    "Realtime price sync failed",
+                    extra={"symbol": ticker.symbol, "error": str(exc)},
+                )
 
     await session.commit()
     return added

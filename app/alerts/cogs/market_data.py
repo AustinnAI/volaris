@@ -24,6 +24,29 @@ class MarketDataCog(commands.Cog):
 
     def __init__(self, bot: "VolarisBot") -> None:
         self.bot = bot
+        self._commands: list[app_commands.Command] = []
+
+    async def cog_load(self) -> None:
+        self._commands = [
+            self.sentiment,
+            self.top,
+            self.price,
+            self.iv,
+            self.quote,
+            self.earnings,
+            self.range,
+            self.volume,
+        ]
+        for command in self._commands:
+            self.bot.tree.add_command(command)
+
+    async def cog_unload(self) -> None:
+        for command in self._commands:
+            try:
+                self.bot.tree.remove_command(command.name, type=command.type)
+            except Exception:  # pylint: disable=broad-except
+                continue
+        self._commands.clear()
 
     # -------------------------------------------------------------------------
     # Sentiment

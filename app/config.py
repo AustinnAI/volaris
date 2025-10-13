@@ -112,6 +112,7 @@ class Settings(BaseSettings):
     PRICE_STREAM_DEFAULT_INTERVAL_SECONDS: int = Field(default=900, description="Default interval for recurring price streams (seconds)")
     PRICE_STREAM_MIN_INTERVAL_SECONDS: int = Field(default=300, description="Minimum allowed interval for price streams (seconds)")
     PRICE_STREAM_MAX_INTERVAL_SECONDS: int = Field(default=7200, description="Maximum allowed interval for price streams (seconds)")
+    REALTIME_SYNC_BATCH_SIZE: int = Field(default=25, ge=1, description="Number of tickers to process per realtime price batch")
     SENTIMENT_CACHE_SECONDS: int = Field(default=600, description="Cache TTL for sentiment responses (seconds)")
     TOP_MOVERS_LIMIT: int = Field(default=5, description="Number of gainers/losers to display in top command")
     DISCORD_DEFAULT_CHANNEL_ID: Optional[str] = Field(default=None, description="Default Discord channel for scheduled digests")

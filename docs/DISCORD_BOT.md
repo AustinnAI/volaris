@@ -470,6 +470,7 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 - [x] Price streams (`/streams add|list|remove`)
 - [x] Sentiment snapshot (`/sentiment <symbol>`)
 - [x] Top movers digest (`/top`, daily 4 PM ET summary)
+- [x] Realtime job batch tuning via `REALTIME_SYNC_BATCH_SIZE` (lower if Render worker RAM constrained)
 - [ ] Trade journal commands (`/journal add`)
 - [ ] Position tracking (`/positions`)
 - [ ] P/L reporting (`/pnl weekly`)

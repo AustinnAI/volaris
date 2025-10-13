@@ -21,6 +21,7 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
 
     def __init__(self, bot: "VolarisBot") -> None:
         self.bot = bot
+        super().__init__()
 
     @app_commands.command(name="add", description="Create a server-wide price alert")
     @app_commands.describe(
@@ -141,6 +142,7 @@ class StreamsCog(commands.GroupCog, name="streams", group_description="Manage re
 
     def __init__(self, bot: "VolarisBot") -> None:
         self.bot = bot
+        super().__init__()
 
     @app_commands.command(name="add", description="Start a recurring price update")
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY)", interval="Update cadence in minutes")
@@ -237,6 +239,20 @@ class UtilitiesCog(commands.Cog):
 
     def __init__(self, bot: "VolarisBot") -> None:
         self.bot = bot
+        self._commands: list[app_commands.Command] = []
+
+    async def cog_load(self) -> None:
+        self._commands = [self.check, self.help]
+        for command in self._commands:
+            self.bot.tree.add_command(command)
+
+    async def cog_unload(self) -> None:
+        for command in self._commands:
+            try:
+                self.bot.tree.remove_command(command.name, type=command.type)
+            except Exception:  # pylint: disable=broad-except
+                continue
+        self._commands.clear()
 
     @app_commands.command(name="check", description="Check bot and API health")
     async def check(self, interaction: discord.Interaction) -> None:

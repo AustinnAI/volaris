@@ -17,6 +17,7 @@
 
 **Implementation Status:**
 - ✅ Phase 3: Foundation complete (spreads, strikes, IV logic)
+- ✅ Phase 3.8: Discord bot refactor shipped (modular cogs, helpers, tests)
 - 🎯 Phase 3.4-3.5: DTE logic + bias context (quick wins)
 - 🎯 Phase 4.4: Expected move validation
 - 🧠 Phase 4.5: Sentiment intelligence pipeline (NLP scoring)
@@ -328,6 +329,14 @@ app/alerts/
 - ☑️ Extracted helper modules (API clients, embed builders, symbol cache, Discord views).
 - ☑️ Background tasks (alerts, streams, daily digest) retained with improved logging.
 - ☑️ Added helper-focused tests to cover embed formatting and autocomplete behaviour.
+
+**Implementation Steps:**
+- [x] Create tests up front to lock in command behaviour and helper interfaces.
+- [x] Stand up new helper modules (API clients, embeds, autocomplete) and wire them into the bot.
+- [x] Split the monolithic command file into strategy, market-data, calculator, and utilities cogs.
+- [x] Trim `discord_bot.py` into a bootstrapper that loads cogs and supervises background jobs.
+- [x] Deploy to Render, verify slash command sync, and smoke test `/plan`, `/price`, `/alerts`, and `/streams`.
+- [x] Retire the legacy bot implementation once the modular version proved stable.
 
 **Follow-ups:**
 - 🔄 Re-run full pytest suite once `discord.py` dependency is available in CI/local env.

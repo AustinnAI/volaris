@@ -1,0 +1,50 @@
+2025-10-13T20:16:43.408933219Z 2025-10-13 20:16:43,408 - httpx - INFO - HTTP Request: GET https://api.schwabapi.com/marketdata/v1/pricehistory?symbol=AVUS&periodType=day&period=1&frequencyType=minute&frequency=1 "HTTP/1.1 200 OK"
+2025-10-13T20:16:43.468592003Z 2025-10-13 20:16:43,468 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:access_token "HTTP/1.1 200 OK"
+2025-10-13T20:16:43.472357887Z 2025-10-13 20:16:43,472 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:refresh_token:issued_at "HTTP/1.1 200 OK"
+2025-10-13T20:16:43.705143044Z 2025-10-13 20:16:43,704 - httpx - INFO - HTTP Request: GET https://api.schwabapi.com/marketdata/v1/pricehistory?symbol=AAMI&periodType=day&period=1&frequencyType=minute&frequency=5 "HTTP/1.1 200 OK"
+2025-10-13T20:16:43.861257429Z 2025-10-13 20:16:43,861 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:access_token "HTTP/1.1 200 OK"
+2025-10-13T20:16:43.874215866Z 2025-10-13 20:16:43,874 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:refresh_token:issued_at "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.065471411Z 2025-10-13 20:16:44,065 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:access_token "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.068701133Z 2025-10-13 20:16:44,068 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:refresh_token:issued_at "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.075535004Z 2025-10-13 20:16:44,075 - httpx - INFO - HTTP Request: GET https://api.schwabapi.com/marketdata/v1/pricehistory?symbol=AORT&periodType=day&period=1&frequencyType=minute&frequency=5 "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.23706088Z 2025-10-13 20:16:44,236 - httpx - INFO - HTTP Request: GET https://api.schwabapi.com/marketdata/v1/pricehistory?symbol=APRZ&periodType=day&period=1&frequencyType=minute&frequency=1 "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.241637591Z 2025-10-13 20:16:44,241 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:access_token "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.245068318Z 2025-10-13 20:16:44,244 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:refresh_token:issued_at "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.265655504Z 2025-10-13 20:16:44,265 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:access_token "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.268708832Z 2025-10-13 20:16:44,268 - httpx - INFO - HTTP Request: GET https://alert-hermit-21942.upstash.io/get/schwab:refresh_token:issued_at "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.422729501Z 2025-10-13 20:16:44,422 - httpx - INFO - HTTP Request: GET https://api.schwabapi.com/marketdata/v1/pricehistory?symbol=ACM&periodType=day&period=1&frequencyType=minute&frequency=5 "HTTP/1.1 200 OK"
+2025-10-13T20:16:44.433353386Z 2025-10-13 20:16:44,433 - httpx - INFO - HTTP Request: GET https://api.schwabapi.com/marketdata/v1/pricehistory?symbol=AUTL&periodType=day&period=1&frequencyType=minute&frequency=1 "HTTP/1.1 200 OK"
+2025-10-13T20:16:47.114354743Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-13T20:16:50.613460127Z 2025-10-13 20:16:50 - INFO - volaris - Logging initialized - Level: INFO
+2025-10-13T20:16:50.613495148Z 2025-10-13 20:16:50,613 - volaris - INFO - Logging initialized - Level: INFO
+2025-10-13T20:16:50.613504018Z 2025-10-13 20:16:50,613 - volaris - INFO - Environment: production
+2025-10-13T20:16:50.613504248Z 2025-10-13 20:16:50 - INFO - volaris - Environment: production
+2025-10-13T20:16:51.400021815Z 2025-10-13 20:16:51,399 - volaris.discord_bot - INFO - Initializing database for scheduler...
+2025-10-13T20:16:51.400027165Z 2025-10-13 20:16:51 - INFO - volaris.discord_bot - Initializing database for scheduler...
+2025-10-13T20:16:51.593941699Z 2025-10-13 20:16:51,593 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-10-13T20:16:51.59400665Z 2025-10-13 20:16:51,593 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-10-13T20:16:51.595865632Z 2025-10-13 20:16:51,595 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-10-13T20:16:51.596028345Z 2025-10-13 20:16:51,595 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-10-13T20:16:51.596150138Z 2025-10-13 20:16:51,596 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-10-13T20:16:51.59626355Z 2025-10-13 20:16:51,596 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-10-13T20:16:51.596281421Z 2025-10-13 20:16:51 - INFO - volaris - APScheduler configured with background jobs
+2025-10-13T20:16:51.596291881Z 2025-10-13 20:16:51,596 - volaris - INFO - APScheduler configured with background jobs
+2025-10-13T20:16:51.596915745Z 2025-10-13 20:16:51,596 - apscheduler.scheduler - INFO - Added job "realtime_prices_job" to job store "default"
+2025-10-13T20:16:51.596995046Z 2025-10-13 20:16:51,596 - apscheduler.scheduler - INFO - Added job "realtime_prices_job" to job store "default"
+2025-10-13T20:16:51.59714369Z 2025-10-13 20:16:51,597 - apscheduler.scheduler - INFO - Added job "eod_sync_job" to job store "default"
+2025-10-13T20:16:51.597276733Z 2025-10-13 20:16:51,597 - apscheduler.scheduler - INFO - Added job "historical_backfill_job" to job store "default"
+2025-10-13T20:16:51.597356825Z 2025-10-13 20:16:51,597 - apscheduler.scheduler - INFO - Added job "option_chain_refresh_job" to job store "default"
+2025-10-13T20:16:51.597479137Z 2025-10-13 20:16:51,597 - apscheduler.scheduler - INFO - Added job "iv_metric_job" to job store "default"
+2025-10-13T20:16:51.597513518Z 2025-10-13 20:16:51,597 - apscheduler.scheduler - INFO - Scheduler started
+2025-10-13T20:16:51.5975923Z 2025-10-13 20:16:51,597 - volaris.discord_bot - INFO - ✅ Background scheduler started alongside Discord bot
+2025-10-13T20:16:51.59760134Z 2025-10-13 20:16:51 - INFO - volaris.discord_bot - ✅ Background scheduler started alongside Discord bot
+2025-10-13T20:16:51.598020749Z 2025-10-13 20:16:51,597 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-10-13T20:16:51.600902023Z 2025-10-13 20:16:51,600 - volaris.discord_bot - INFO - Starting Discord bot...
+2025-10-13T20:16:51.600905683Z 2025-10-13 20:16:51 - INFO - volaris.discord_bot - Starting Discord bot...
+2025-10-13T20:16:51.600934634Z 2025-10-13 20:16:51,600 - discord.client - INFO - logging in using static token
+2025-10-13T20:16:51.601017916Z 2025-10-13 20:16:51,600 - discord.ext.commands.bot - WARNING - Privileged message content intent is missing, commands may not work as expected.
+2025-10-13T20:16:52.086051481Z 2025-10-13 20:16:52 - INFO - volaris.discord_bot - Synced commands to guild 1413243234569818346
+2025-10-13T20:16:52.086077112Z 2025-10-13 20:16:52,085 - volaris.discord_bot - INFO - Synced commands to guild 1413243234569818346
+2025-10-13T20:16:52.51897037Z 2025-10-13 20:16:52,518 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: b7e0d0abc7950aea7e24c7044cb94f60).
+2025-10-13T20:16:54.524282329Z 2025-10-13 20:16:54,524 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-13T20:16:54.524288159Z 2025-10-13 20:16:54 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)

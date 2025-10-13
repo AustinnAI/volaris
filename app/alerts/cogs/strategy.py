@@ -22,6 +22,27 @@ class StrategyCog(commands.Cog):
 
     def __init__(self, bot: "VolarisBot") -> None:
         self.bot = bot
+        self._commands: list[app_commands.Command] = []
+
+    async def cog_load(self) -> None:
+        """Register slash commands with the application's command tree."""
+        self._commands = [
+            self.plan,
+            self.calc,
+            self.size,
+            self.breakeven,
+        ]
+        for command in self._commands:
+            self.bot.tree.add_command(command)
+
+    async def cog_unload(self) -> None:
+        """Remove commands when the cog is unloaded."""
+        for command in self._commands:
+            try:
+                self.bot.tree.remove_command(command.name, type=command.type)
+            except Exception:  # pylint: disable=broad-except
+                continue
+        self._commands.clear()
 
     # =============================================================================
     # /plan
