@@ -339,9 +339,17 @@ app/alerts/
 - [x] Retire the legacy bot implementation once the modular version proved stable.
 
 **Follow-ups:**
+
+**Scheduler strategy recap:**
+- Keep `SCHEDULER_ENABLED=false` during lightweight Discord usage; slash commands now trigger on-demand refreshes for the requested symbol only.
+- Use the GitHub Actions workflow to call `/api/v1/market/refresh/price|options|iv/{symbol}` on a curated watchlist every hour so data stays reasonably fresh without running APScheduler.
+- When building real-time detectors (Phase 4/5), turn the in-process scheduler back on for the universe of symbols you monitor so the rolling datasets stay up-to-date.
+
 - 🔄 Re-run full pytest suite once `discord.py` dependency is available in CI/local env.
 - 🚀 Deploy refactored bot to Render and perform smoke tests on live guild.
 - 🛠️ Consider admin-only `/reload` utility for hot-reloading cogs during development.
+- 🪬 Plan for mixed strategy: keep `SCHEDULER_ENABLED=false` by default (on-demand refresh per command) but establish a lightweight periodic job to hit `/api/v1/market/refresh/price|options|iv/{symbol}` for a curated watchlist.
+- 📈 When building real-time anomaly detection (Phase 4+/5), re-enable the scheduler continuously for the target symbols so background jobs maintain the rolling datasets those features depend on.
 
 ---
 
@@ -965,3 +973,5 @@ User provides bias → Select IV regime → Recommend strategy → Calculate P/L
 - 🟡 Medium-high priority
 - 🟠 Medium priority
 - ⚪ Low priority / Future
+
+> **Lightweight periodic refresh idea:** If the Render worker can’t keep the full scheduler on, consider a small external runner (cron job, GitHub Action, or Render cron task) that calls `/api/v1/market/refresh/price/{symbol}`, `/refresh/options/{symbol}`, and `/refresh/iv/{symbol}` for the symbols that matter. That keeps data reasonably fresh without the heavy APScheduler load.

@@ -260,3 +260,30 @@ class MarketInsightsAPI:
                     raise aiohttp.ClientError(data.get("detail", "Failed to fetch constituents"))
                 symbols = data.get("symbols", [])
                 return symbols if isinstance(symbols, list) else []
+
+    async def refresh_price(self, symbol: str) -> dict[str, Any]:
+        url = f"{self.base_url}/api/v1/market/refresh/price/{symbol.upper()}"
+        async with aiohttp.ClientSession(timeout=self.timeout) as session:
+            async with session.post(url) as response:
+                data = await response.json()
+                if response.status not in (200, 202):
+                    raise aiohttp.ClientError(data.get("detail", "Failed to refresh price"))
+                return data
+
+    async def refresh_option_chain(self, symbol: str) -> dict[str, Any]:
+        url = f"{self.base_url}/api/v1/market/refresh/options/{symbol.upper()}"
+        async with aiohttp.ClientSession(timeout=self.timeout) as session:
+            async with session.post(url) as response:
+                data = await response.json()
+                if response.status not in (200, 202):
+                    raise aiohttp.ClientError(data.get("detail", "Failed to refresh option chain"))
+                return data
+
+    async def refresh_iv_metrics(self, symbol: str) -> dict[str, Any]:
+        url = f"{self.base_url}/api/v1/market/refresh/iv/{symbol.upper()}"
+        async with aiohttp.ClientSession(timeout=self.timeout) as session:
+            async with session.post(url) as response:
+                data = await response.json()
+                if response.status not in (200, 202):
+                    raise aiohttp.ClientError(data.get("detail", "Failed to refresh IV metrics"))
+                return data

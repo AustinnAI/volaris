@@ -1,0 +1,37 @@
+name: refresh-watchlist
+
+on:
+  schedule:
+    - cron: "0 * * * *"      # every 60 minutes UTC
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      API_BASE: ${{ secrets.VOLARIS_API_BASE }}
+      API_TOKEN: ${{ secrets.VOLARIS_API_TOKEN }}
+    steps:
+      - name: Refresh SPY price/options/iv
+        run: |
+          curl -s -o /dev/null -w "%{http_code}\n" \
+            -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "$API_BASE/api/v1/market/refresh/price/SPY"
+          curl -s -o /dev/null -w "%{http_code}\n" \
+            -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "$API_BASE/api/v1/market/refresh/options/SPY"
+          curl -s -o /dev/null -w "%{http_code}\n" \
+            -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "$API_BASE/api/v1/market/refresh/iv/SPY"
+
+      - name: Refresh QQQ
+        run: |
+          curl -s -o /dev/null -w "%{http_code}\n" \
+            -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "$API_BASE/api/v1/market/refresh/price/QQQ"
+          curl -s -o /dev/null -w "%{http_code}\n" \
+            -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "$API_BASE/api/v1/market/refresh/options/QQQ"
+          curl -s -o /dev/null -w "%{http_code}\n" \
+            -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "$API_BASE/api/v1/market/refresh/iv/QQQ"

@@ -48,6 +48,30 @@ class MarketDataCog(commands.Cog):
                 continue
         self._commands.clear()
 
+    async def _maybe_refresh_price(self, symbol: str) -> None:
+        if settings.SCHEDULER_ENABLED:
+            return
+        try:
+            await self.bot.market_api.refresh_price(symbol)
+        except aiohttp.ClientError as exc:
+            self.bot.logger.warning("Price refresh failed", extra={"symbol": symbol, "error": str(exc)})
+        except Exception:  # pylint: disable=broad-except
+            self.bot.logger.exception("Unexpected price refresh failure", extra={"symbol": symbol})
+
+    async def _maybe_refresh_option_context(self, symbol: str) -> None:
+        if settings.SCHEDULER_ENABLED:
+            return
+        try:
+            await self.bot.market_api.refresh_price(symbol)
+            await self.bot.market_api.refresh_option_chain(symbol)
+            await self.bot.market_api.refresh_iv_metrics(symbol)
+        except aiohttp.ClientError as exc:
+            self.bot.logger.warning(
+                "Option context refresh failed", extra={"symbol": symbol, "error": str(exc)}
+            )
+        except Exception:  # pylint: disable=broad-except
+            self.bot.logger.exception("Unexpected option refresh failure", extra={"symbol": symbol})
+
     # -------------------------------------------------------------------------
     # Sentiment
     # -------------------------------------------------------------------------
@@ -143,6 +167,7 @@ class MarketDataCog(commands.Cog):
 
         try:
             symbol_clean = symbol.upper().strip()
+            await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/price/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -207,6 +232,7 @@ class MarketDataCog(commands.Cog):
 
         try:
             symbol_clean = symbol.upper().strip()
+            await self._maybe_refresh_option_context(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/iv/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -276,6 +302,7 @@ class MarketDataCog(commands.Cog):
 
         try:
             symbol_clean = symbol.upper().strip()
+            await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/quote/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -425,6 +452,7 @@ class MarketDataCog(commands.Cog):
 
         try:
             symbol_clean = symbol.upper().strip()
+            await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/range/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -508,6 +536,7 @@ class MarketDataCog(commands.Cog):
 
         try:
             symbol_clean = symbol.upper().strip()
+            await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/volume/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:

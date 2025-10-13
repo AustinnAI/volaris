@@ -12,6 +12,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from app.alerts.helpers import MoreCandidatesView, create_recommendation_embed
+from app.config import settings
 
 if TYPE_CHECKING:
     from app.alerts.discord_bot import VolarisBot
@@ -43,6 +44,28 @@ class StrategyCog(commands.Cog):
             except Exception:  # pylint: disable=broad-except
                 continue
         self._commands.clear()
+
+    async def _refresh_trade_context(self, symbol: str) -> None:
+        if settings.SCHEDULER_ENABLED:
+            return
+        try:
+            await self.bot.market_api.refresh_price(symbol)
+            await self.bot.market_api.refresh_option_chain(symbol)
+            await self.bot.market_api.refresh_iv_metrics(symbol)
+        except aiohttp.ClientError as exc:
+            self.bot.logger.warning("Trade context refresh failed", extra={"symbol": symbol, "error": str(exc)})
+        except Exception:  # pylint: disable=broad-except
+            self.bot.logger.exception("Unexpected trade context refresh failure", extra={"symbol": symbol})
+
+    async def _refresh_price_only(self, symbol: str) -> None:
+        if settings.SCHEDULER_ENABLED:
+            return
+        try:
+            await self.bot.market_api.refresh_price(symbol)
+        except aiohttp.ClientError as exc:
+            self.bot.logger.warning("Price refresh failed", extra={"symbol": symbol, "error": str(exc)})
+        except Exception:  # pylint: disable=broad-except
+            self.bot.logger.exception("Unexpected price refresh failure", extra={"symbol": symbol})
 
     # =============================================================================
     # /plan
@@ -104,9 +127,15 @@ class StrategyCog(commands.Cog):
 
         await interaction.response.defer()
 
+        symbol_clean = symbol.upper().strip()
+        await self._refresh_price_only(symbol_clean)
+
+        symbol_clean = symbol.upper().strip()
+        await self._refresh_trade_context(symbol_clean)
+
         try:
             result = await self.bot.api_client.recommend_strategy(
-                symbol=symbol,
+                symbol=symbol_clean,
                 bias=bias,
                 dte=dte,
                 mode=mode,
@@ -129,7 +158,7 @@ class StrategyCog(commands.Cog):
         if not recommendations:
             warnings = ", ".join(result.get("warnings", ["No data available"]))
             await interaction.followup.send(
-                f"❌ No recommendations found for {symbol.upper()}.\nWarnings: {warnings}"
+                f"❌ No recommendations found for {symbol_clean}.\nWarnings: {warnings}"
             )
             return
 
@@ -289,7 +318,7 @@ class StrategyCog(commands.Cog):
 
             payload: dict[str, Optional[float | str | int]] = {
                 "strategy_type": strategy,
-                "symbol": symbol.upper(),
+                "symbol": symbol_clean,
                 "dte": dte,
                 "premium": premium,
                 "underlying_price": underlying_price,
@@ -318,7 +347,7 @@ class StrategyCog(commands.Cog):
             }
 
             embed = discord.Embed(
-                title=f"📊 {strategy_name[strategy]} - {symbol.upper()}",
+                title=f"📊 {strategy_name[strategy]} - {symbol_clean}",
                 color=discord.Color.green() if is_spread and is_credit else discord.Color.blue(),
             )
 

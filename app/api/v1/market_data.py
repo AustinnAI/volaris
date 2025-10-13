@@ -4,7 +4,7 @@ Provides quick market data access for Discord commands.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy import select, func, desc
@@ -22,6 +22,11 @@ from app.services.index_service import (
 )
 from app.services.exceptions import DataNotFoundError
 from app.config import settings
+from app.workers.tasks import (
+    fetch_realtime_prices,
+    fetch_option_chains,
+    compute_iv_metrics,
+)
 
 router = APIRouter(prefix="/market", tags=["market-data"])
 
@@ -358,6 +363,27 @@ async def get_sp500_constituents(db: AsyncSession = Depends(get_db)):
         "index": SP500_SYMBOL,
         "symbols": sorted(symbols),
     }
+
+
+@router.post("/refresh/price/{symbol}", status_code=202)
+async def refresh_price(symbol: str, db: AsyncSession = Depends(get_db)) -> Dict[str, int]:
+    symbol_upper = symbol.upper()
+    inserted = await fetch_realtime_prices(db, symbols=[symbol_upper])
+    return {"inserted": inserted}
+
+
+@router.post("/refresh/options/{symbol}", status_code=202)
+async def refresh_option_chain(symbol: str, db: AsyncSession = Depends(get_db)) -> Dict[str, int]:
+    symbol_upper = symbol.upper()
+    snapshots = await fetch_option_chains(db, symbols=[symbol_upper])
+    return {"snapshots": snapshots}
+
+
+@router.post("/refresh/iv/{symbol}", status_code=202)
+async def refresh_iv_metrics(symbol: str, db: AsyncSession = Depends(get_db)) -> Dict[str, int]:
+    symbol_upper = symbol.upper()
+    metrics = await compute_iv_metrics(db, symbols=[symbol_upper])
+    return {"metrics": metrics}
 
 
 @router.get("/delta/{symbol}/{strike}/{option_type}/{dte}")

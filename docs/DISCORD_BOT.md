@@ -58,6 +58,8 @@ INFO - Bot ready as Volaris (ID: ...)
 INFO - Synced commands to guild 1413243234569818346
 ```
 
+**On-demand refresh:** With `SCHEDULER_ENABLED=false`, the bot now refetches price bars, option chains, and IV metrics for the requested symbol just before responding. This keeps the Render worker light while still delivering fresh data whenever you run a slash command.
+
 **Option B: Render Deployment (Future)**
 
 When your Render deployment is live:
@@ -475,6 +477,22 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 - [ ] Position tracking (`/positions`)
 - [ ] P/L reporting (`/pnl weekly`)
 
+
+
+### APScheduler Reference
+
+When `SCHEDULER_ENABLED=true`, the bot boots an in-process APScheduler instance with these jobs:
+
+| Job | Default cadence | Purpose |
+| --- | --- | --- |
+| `realtime_prices_job` | every `REALTIME_JOB_INTERVAL_SECONDS` (60s) | Pull minute bars for every ticker marked `is_active` via Schwab; feeds `/price`, `/quote`, and intraday analytics. |
+| `historical_backfill_job` | daily @ `HISTORICAL_BACKFILL_CRON_HOUR` | Refresh multi-day OHLC candles (Databento/Alpaca) for backtesting and analytics. |
+| `eod_sync_job` | daily @ `EOD_SYNC_CRON_*` | Update Tiingo end-of-day prices and close data. |
+| `option_chain_refresh_job` | every `OPTION_CHAIN_JOB_INTERVAL_MINUTES` (15m) | Snapshot option chains in the database so `/plan` and `/iv` have recent legs. |
+| `iv_metric_job` | every `IV_METRICS_JOB_INTERVAL_MINUTES` (30m) | Derive IV/IVR metrics from the latest option chains. |
+| `refresh_sp500_job` | weekly (Mon 06:00 UTC) | Refresh S&P 500 constituents for autocomplete and market endpoints. |
+
+**Recommended usage:** keep the scheduler off for lightweight Discord usage and rely on the GitHub Actions watchlist refresher plus on-demand command refresh. Re-enable it later when launching features that rely on continuously updated datasets (e.g., real-time anomaly detection).
 ### Production Checklist
 
 - [ ] Choose deployment option (worker vs background task)
