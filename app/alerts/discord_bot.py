@@ -1024,6 +1024,783 @@ async def run_bot():
             embed.add_field(name="API Status", value=f"❌ Error: {str(e)}", inline=False)
             await interaction.followup.send(embed=embed)
 
+    # /price command - Current stock price
+    @bot.tree.command(name="price", description="Get current stock price and % change")
+    @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
+    async def price(interaction: discord.Interaction, symbol: str):
+        """Get current stock price."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get current price
+            url = f"{bot.api_client.base_url}/api/v1/market/price/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            current_price = data.get("price", 0)
+            previous_close = data.get("previous_close", current_price)
+            change = current_price - previous_close
+            change_pct = (change / previous_close * 100) if previous_close else 0
+
+            # Determine color based on change
+            if change > 0:
+                color = discord.Color.green()
+                change_emoji = "📈"
+            elif change < 0:
+                color = discord.Color.red()
+                change_emoji = "📉"
+            else:
+                color = discord.Color.greyple()
+                change_emoji = "➡️"
+
+            embed = discord.Embed(
+                title=f"{change_emoji} {symbol} Price",
+                color=color
+            )
+
+            embed.add_field(name="Current Price", value=f"**${current_price:.2f}**", inline=True)
+            embed.add_field(name="Change", value=f"${change:+.2f} ({change_pct:+.2f}%)", inline=True)
+            embed.add_field(name="Previous Close", value=f"${previous_close:.2f}", inline=True)
+
+            if data.get("volume"):
+                embed.add_field(name="Volume", value=f"{data['volume']:,}", inline=True)
+
+            embed.set_footer(text=f"Real-time data • {symbol}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /price: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /pop command - Probability of profit from delta
+    @bot.tree.command(name="pop", description="Calculate probability of profit from delta")
+    @app_commands.describe(delta="Option delta (0.0 to 1.0)")
+    async def pop(interaction: discord.Interaction, delta: float):
+        """Calculate POP from delta."""
+        await interaction.response.defer()
+
+        try:
+            if delta < 0 or delta > 1:
+                await interaction.followup.send("❌ Delta must be between 0.0 and 1.0")
+                return
+
+            # POP approximation: For short options, POP ≈ 100 - (delta * 100)
+            # For long options, POP ≈ delta * 100 (ITM probability)
+            pop_short = 100 - (delta * 100)
+            pop_long = delta * 100
+
+            embed = discord.Embed(
+                title="📊 Probability of Profit Calculator",
+                color=discord.Color.blue()
+            )
+
+            embed.add_field(name="Delta", value=f"{delta:.3f}", inline=True)
+            embed.add_field(name="Short Option POP", value=f"**{pop_short:.1f}%**", inline=True)
+            embed.add_field(name="Long Option POP", value=f"**{pop_long:.1f}%**", inline=True)
+
+            embed.add_field(
+                name="ℹ️ Explanation",
+                value=(
+                    f"• **Selling** an option with Δ={delta:.2f} → ~{pop_short:.0f}% chance it expires OTM (profit)\n"
+                    f"• **Buying** an option with Δ={delta:.2f} → ~{pop_long:.0f}% chance it expires ITM\n"
+                    f"• Lower delta = Higher POP for credit strategies\n"
+                    f"• Common targets: Δ0.30 (70% POP), Δ0.20 (80% POP), Δ0.16 (84% POP)"
+                ),
+                inline=False
+            )
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /pop: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /contracts command - Calculate number of contracts for risk amount
+    @bot.tree.command(name="contracts", description="Calculate contracts needed for target risk amount")
+    @app_commands.describe(
+        risk="Target risk amount in dollars (e.g., 500 for $500 max risk)",
+        premium="Premium per contract (for spreads: max loss per contract)"
+    )
+    async def contracts(interaction: discord.Interaction, risk: float, premium: float):
+        """Calculate number of contracts for risk."""
+        await interaction.response.defer()
+
+        try:
+            if risk <= 0 or premium <= 0:
+                await interaction.followup.send("❌ Risk and premium must be positive numbers")
+                return
+
+            # Calculate contracts
+            num_contracts = int(risk / premium)
+            actual_risk = num_contracts * premium
+            remaining = risk - actual_risk
+
+            embed = discord.Embed(
+                title="📐 Contract Calculator",
+                color=discord.Color.gold()
+            )
+
+            embed.add_field(name="Target Risk", value=f"${risk:,.2f}", inline=True)
+            embed.add_field(name="Premium/Contract", value=f"${premium:.2f}", inline=True)
+            embed.add_field(name="📊 Contracts", value=f"**{num_contracts}**", inline=True)
+
+            embed.add_field(name="Actual Risk", value=f"${actual_risk:,.2f}", inline=True)
+            embed.add_field(name="Remaining", value=f"${remaining:.2f}", inline=True)
+            embed.add_field(name="Risk %", value=f"{(actual_risk/risk*100):.1f}%", inline=True)
+
+            if num_contracts == 0:
+                embed.add_field(
+                    name="⚠️ Warning",
+                    value=f"Premium too high for target risk. Need ${premium:.2f} minimum.",
+                    inline=False
+                )
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /contracts: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /risk command - Calculate total risk for contracts
+    @bot.tree.command(name="risk", description="Calculate total risk for number of contracts")
+    @app_commands.describe(
+        contracts="Number of contracts",
+        premium="Premium per contract (for spreads: max loss per contract)"
+    )
+    async def risk_calc(interaction: discord.Interaction, contracts: int, premium: float):
+        """Calculate total risk."""
+        await interaction.response.defer()
+
+        try:
+            if contracts <= 0 or premium <= 0:
+                await interaction.followup.send("❌ Contracts and premium must be positive numbers")
+                return
+
+            total_risk = contracts * premium
+
+            embed = discord.Embed(
+                title="💰 Risk Calculator",
+                color=discord.Color.red()
+            )
+
+            embed.add_field(name="Contracts", value=f"{contracts}", inline=True)
+            embed.add_field(name="Premium/Contract", value=f"${premium:.2f}", inline=True)
+            embed.add_field(name="💸 Total Risk", value=f"**${total_risk:,.2f}**", inline=True)
+
+            # Add account size context
+            for account_size in [5000, 10000, 25000, 50000]:
+                risk_pct = (total_risk / account_size) * 100
+                if risk_pct <= 15:  # Show relevant account sizes
+                    embed.add_field(
+                        name=f"${account_size:,} Account",
+                        value=f"{risk_pct:.1f}% of account",
+                        inline=True
+                    )
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /risk: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /dte command - Days to expiration calculator
+    @bot.tree.command(name="dte", description="Calculate days to expiration from date")
+    @app_commands.describe(expiration_date="Expiration date (YYYY-MM-DD or MM/DD/YYYY)")
+    async def dte(interaction: discord.Interaction, expiration_date: str):
+        """Calculate DTE."""
+        await interaction.response.defer()
+
+        try:
+            from datetime import datetime, date
+
+            # Try parsing different date formats
+            exp_date = None
+            for fmt in ["%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y", "%Y/%m/%d"]:
+                try:
+                    exp_date = datetime.strptime(expiration_date, fmt).date()
+                    break
+                except ValueError:
+                    continue
+
+            if not exp_date:
+                await interaction.followup.send("❌ Invalid date format. Use YYYY-MM-DD or MM/DD/YYYY")
+                return
+
+            today = date.today()
+            days_remaining = (exp_date - today).days
+
+            # Determine color and emoji
+            if days_remaining < 0:
+                color = discord.Color.greyple()
+                emoji = "⏰"
+                status = "Expired"
+            elif days_remaining <= 7:
+                color = discord.Color.red()
+                emoji = "⚡"
+                status = "Short-dated (0-7 DTE)"
+            elif days_remaining <= 45:
+                color = discord.Color.gold()
+                emoji = "📅"
+                status = "Medium-dated (8-45 DTE)"
+            else:
+                color = discord.Color.blue()
+                emoji = "📆"
+                status = "Long-dated (45+ DTE)"
+
+            embed = discord.Embed(
+                title=f"{emoji} Days to Expiration",
+                color=color
+            )
+
+            embed.add_field(name="Expiration Date", value=exp_date.strftime("%B %d, %Y"), inline=True)
+            embed.add_field(name="Today", value=today.strftime("%B %d, %Y"), inline=True)
+            embed.add_field(name="DTE", value=f"**{days_remaining}** days", inline=True)
+
+            embed.add_field(name="Classification", value=status, inline=False)
+
+            # Add strategy suggestion
+            if days_remaining >= 1 and days_remaining <= 7:
+                strategy = "Credit spreads (high theta decay, defined risk)"
+            elif days_remaining >= 8 and days_remaining <= 45:
+                strategy = "Credit/debit spreads (balance of theta and directional edge)"
+            elif days_remaining > 45:
+                strategy = "Longer-term strategies (less theta decay, more directional)"
+            else:
+                strategy = "N/A (expired)"
+
+            if days_remaining >= 0:
+                embed.add_field(name="💡 ICT Strategy", value=strategy, inline=False)
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /dte: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /iv command - Implied volatility metrics
+    @bot.tree.command(name="iv", description="Get IV, IV rank, and IV percentile for a stock")
+    @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
+    async def iv(interaction: discord.Interaction, symbol: str):
+        """Get IV metrics."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get IV metrics
+            url = f"{bot.api_client.base_url}/api/v1/market/iv/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            current_iv = data.get("current_iv", 0)
+            iv_rank = data.get("iv_rank", 0)
+            iv_percentile = data.get("iv_percentile", 0)
+            iv_regime = data.get("regime", "unknown")
+
+            # Determine color based on IV regime
+            if iv_regime == "high":
+                color = discord.Color.red()
+                emoji = "🔥"
+            elif iv_regime == "low":
+                color = discord.Color.green()
+                emoji = "❄️"
+            else:
+                color = discord.Color.gold()
+                emoji = "📊"
+
+            embed = discord.Embed(
+                title=f"{emoji} {symbol} Implied Volatility",
+                color=color
+            )
+
+            embed.add_field(name="Current IV", value=f"**{current_iv:.1f}%**", inline=True)
+            embed.add_field(name="IV Rank", value=f"{iv_rank:.1f}%", inline=True)
+            embed.add_field(name="IV Percentile", value=f"{iv_percentile:.1f}%", inline=True)
+
+            embed.add_field(name="IV Regime", value=f"**{iv_regime.upper()}**", inline=False)
+
+            # Add strategy suggestion
+            if iv_regime == "high":
+                strategy = "Favor credit spreads (sell premium, high IV = high premiums)"
+            elif iv_regime == "low":
+                strategy = "Favor debit spreads/long options (buy premium, low cost)"
+            else:
+                strategy = "Neutral - both credit and debit strategies viable"
+
+            embed.add_field(name="💡 Strategy Suggestion", value=strategy, inline=False)
+
+            embed.set_footer(text=f"IV Rank: % of days in past year IV was lower • {symbol}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /iv: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /quote command - Full quote with bid/ask
+    @bot.tree.command(name="quote", description="Get full quote with price, volume, and bid/ask")
+    @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
+    async def quote(interaction: discord.Interaction, symbol: str):
+        """Get full quote."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get quote
+            url = f"{bot.api_client.base_url}/api/v1/market/quote/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            price = data.get("price", 0)
+            bid = data.get("bid", 0)
+            ask = data.get("ask", 0)
+            volume = data.get("volume", 0)
+            avg_volume = data.get("avg_volume", volume)
+            change_pct = data.get("change_pct", 0)
+
+            # Determine color based on change
+            if change_pct > 0:
+                color = discord.Color.green()
+            elif change_pct < 0:
+                color = discord.Color.red()
+            else:
+                color = discord.Color.greyple()
+
+            embed = discord.Embed(
+                title=f"📋 {symbol} Quote",
+                color=color
+            )
+
+            embed.add_field(name="Last Price", value=f"**${price:.2f}**", inline=True)
+            embed.add_field(name="Bid", value=f"${bid:.2f}", inline=True)
+            embed.add_field(name="Ask", value=f"${ask:.2f}", inline=True)
+
+            spread = ask - bid
+            spread_pct = (spread / price * 100) if price > 0 else 0
+            embed.add_field(name="Bid-Ask Spread", value=f"${spread:.2f} ({spread_pct:.2f}%)", inline=True)
+            embed.add_field(name="Change", value=f"{change_pct:+.2f}%", inline=True)
+            embed.add_field(name="Volume", value=f"{volume:,}", inline=True)
+
+            if avg_volume > 0:
+                volume_ratio = volume / avg_volume
+                embed.add_field(name="Avg Volume", value=f"{avg_volume:,}", inline=True)
+                embed.add_field(name="Volume Ratio", value=f"{volume_ratio:.2f}x", inline=True)
+
+            embed.set_footer(text=f"Real-time quote • {symbol}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /quote: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /delta command - Get delta for specific strike
+    @bot.tree.command(name="delta", description="Get delta for a specific option strike")
+    @app_commands.describe(
+        symbol="Ticker symbol (e.g., SPY)",
+        strike="Strike price",
+        option_type="Call or Put",
+        dte="Days to expiration (approximate)"
+    )
+    @app_commands.choices(
+        option_type=[
+            app_commands.Choice(name="Call", value="call"),
+            app_commands.Choice(name="Put", value="put"),
+        ]
+    )
+    async def delta(
+        interaction: discord.Interaction,
+        symbol: str,
+        strike: float,
+        option_type: str,
+        dte: int
+    ):
+        """Get delta for strike."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get delta
+            url = f"{bot.api_client.base_url}/api/v1/market/delta/{symbol}/{strike}/{option_type}/{dte}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            delta_value = data.get("delta", 0)
+            pop = (100 - abs(delta_value) * 100) if option_type == "call" else (100 - delta_value * 100)
+
+            embed = discord.Embed(
+                title=f"📐 {symbol} ${strike:.0f} {option_type.upper()} Delta",
+                color=discord.Color.blue()
+            )
+
+            embed.add_field(name="Strike", value=f"${strike:.2f}", inline=True)
+            embed.add_field(name="Type", value=option_type.upper(), inline=True)
+            embed.add_field(name="DTE", value=f"{dte} days", inline=True)
+
+            embed.add_field(name="Delta", value=f"**{delta_value:.3f}**", inline=True)
+            embed.add_field(name="POP (Short)", value=f"~{pop:.0f}%", inline=True)
+
+            # Add context
+            if abs(delta_value) >= 0.7:
+                context = "Deep ITM (high directional risk)"
+            elif abs(delta_value) >= 0.5:
+                context = "ATM (balanced risk/reward)"
+            elif abs(delta_value) >= 0.3:
+                context = "OTM (good for credit spreads)"
+            else:
+                context = "Far OTM (low premium, high POP)"
+
+            embed.add_field(name="Classification", value=context, inline=False)
+
+            embed.set_footer(text=f"{symbol} • Delta approximation")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /delta: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /spread command - Validate spread width
+    @bot.tree.command(name="spread", description="Validate if spread width is appropriate for a stock")
+    @app_commands.describe(
+        symbol="Ticker symbol (e.g., SPY)",
+        width="Spread width in points (e.g., 5 for a 5-point spread)"
+    )
+    async def spread(interaction: discord.Interaction, symbol: str, width: int):
+        """Validate spread width."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Get current price
+            url = f"{bot.api_client.base_url}/api/v1/market/price/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            price = data.get("price", 0)
+
+            # Validate spread width based on price
+            if price < 100:
+                min_width, max_width = 2, 5
+                price_tier = "Low-priced (<$100)"
+            elif price < 300:
+                min_width, max_width = 5, 10
+                price_tier = "Mid-priced ($100-$300)"
+            else:
+                min_width, max_width = 5, 15
+                price_tier = "High-priced (>$300)"
+
+            is_valid = min_width <= width <= max_width
+
+            # Determine color
+            if is_valid:
+                color = discord.Color.green()
+                emoji = "✅"
+                verdict = "Optimal width"
+            elif width < min_width:
+                color = discord.Color.orange()
+                emoji = "⚠️"
+                verdict = "Too narrow (low credit)"
+            else:
+                color = discord.Color.red()
+                emoji = "❌"
+                verdict = "Too wide (high risk)"
+
+            embed = discord.Embed(
+                title=f"{emoji} {symbol} Spread Width Validator",
+                color=color
+            )
+
+            embed.add_field(name="Current Price", value=f"${price:.2f}", inline=True)
+            embed.add_field(name="Your Width", value=f"**{width} points**", inline=True)
+            embed.add_field(name="Verdict", value=verdict, inline=True)
+
+            embed.add_field(name="Price Tier", value=price_tier, inline=True)
+            embed.add_field(name="Recommended Range", value=f"{min_width}-{max_width} points", inline=True)
+
+            # Add explanation
+            if is_valid:
+                explanation = f"✅ {width}-point spread is optimal for {symbol} (${price:.0f}). Good balance of credit and risk."
+            elif width < min_width:
+                explanation = f"⚠️ {width}-point spread may be too narrow. Consider {min_width}-{max_width} points for better credit."
+            else:
+                explanation = f"❌ {width}-point spread is too wide. Stick to {min_width}-{max_width} points for better risk management."
+
+            embed.add_field(name="💡 Recommendation", value=explanation, inline=False)
+
+            embed.set_footer(text=f"Spread width guidelines • {symbol}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /spread: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /earnings command - Next earnings date
+    @bot.tree.command(name="earnings", description="Get next earnings date for a stock")
+    @app_commands.describe(symbol="Ticker symbol (e.g., AAPL)")
+    async def earnings(interaction: discord.Interaction, symbol: str):
+        """Get earnings date."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get earnings
+            url = f"{bot.api_client.base_url}/api/v1/market/earnings/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            from datetime import datetime, date
+            earnings_date_str = data.get("earnings_date")
+            if earnings_date_str:
+                earnings_date = datetime.fromisoformat(earnings_date_str.replace('Z', '+00:00')).date()
+                today = date.today()
+                days_until = (earnings_date - today).days
+
+                if days_until < 0:
+                    color = discord.Color.greyple()
+                    emoji = "📅"
+                    status = "Past"
+                elif days_until <= 7:
+                    color = discord.Color.red()
+                    emoji = "⚠️"
+                    status = "Imminent (Avoid trades)"
+                elif days_until <= 30:
+                    color = discord.Color.gold()
+                    emoji = "📊"
+                    status = "Upcoming (Use caution)"
+                else:
+                    color = discord.Color.green()
+                    emoji = "✅"
+                    status = "Far out (Safe to trade)"
+
+                embed = discord.Embed(
+                    title=f"{emoji} {symbol} Earnings",
+                    color=color
+                )
+
+                embed.add_field(name="Next Earnings", value=earnings_date.strftime("%B %d, %Y"), inline=True)
+                embed.add_field(name="Days Until", value=f"**{days_until}** days", inline=True)
+                embed.add_field(name="Status", value=status, inline=True)
+
+                # Add trading recommendation
+                if days_until <= 7:
+                    recommendation = "❌ Avoid new positions (high IV crush risk, unpredictable moves)"
+                elif days_until <= 30:
+                    recommendation = "⚠️ Use shorter DTE or wait (IV may be elevated)"
+                else:
+                    recommendation = "✅ Safe to trade (no immediate earnings risk)"
+
+                embed.add_field(name="💡 Trading Recommendation", value=recommendation, inline=False)
+
+                embed.set_footer(text=f"Earnings data • {symbol}")
+
+                await interaction.followup.send(embed=embed)
+            else:
+                await interaction.followup.send(f"❌ No earnings date available for {symbol}")
+
+        except Exception as e:
+            logger.error(f"Error in /earnings: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /range command - 52-week high/low
+    @bot.tree.command(name="range", description="Get 52-week high/low and current position")
+    @app_commands.describe(symbol="Ticker symbol (e.g., SPY)")
+    async def range_cmd(interaction: discord.Interaction, symbol: str):
+        """Get 52-week range."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get range
+            url = f"{bot.api_client.base_url}/api/v1/market/range/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            price = data.get("current_price", 0)
+            high_52w = data.get("high_52w", 0)
+            low_52w = data.get("low_52w", 0)
+
+            # Calculate position in range
+            range_size = high_52w - low_52w
+            position_pct = ((price - low_52w) / range_size * 100) if range_size > 0 else 50
+
+            # Determine color and context
+            if position_pct >= 80:
+                color = discord.Color.red()
+                emoji = "🔴"
+                context = "Near 52W high (overbought zone)"
+            elif position_pct >= 60:
+                color = discord.Color.orange()
+                emoji = "🟠"
+                context = "Upper range (bullish territory)"
+            elif position_pct >= 40:
+                color = discord.Color.blue()
+                emoji = "🔵"
+                context = "Mid-range (neutral)"
+            elif position_pct >= 20:
+                color = discord.Color.gold()
+                emoji = "🟡"
+                context = "Lower range (bearish territory)"
+            else:
+                color = discord.Color.green()
+                emoji = "🟢"
+                context = "Near 52W low (oversold zone)"
+
+            embed = discord.Embed(
+                title=f"{emoji} {symbol} 52-Week Range",
+                color=color
+            )
+
+            embed.add_field(name="Current Price", value=f"**${price:.2f}**", inline=True)
+            embed.add_field(name="52W High", value=f"${high_52w:.2f}", inline=True)
+            embed.add_field(name="52W Low", value=f"${low_52w:.2f}", inline=True)
+
+            embed.add_field(name="Range Position", value=f"**{position_pct:.0f}%**", inline=True)
+            embed.add_field(name="Context", value=context, inline=False)
+
+            # Add ICT context
+            if position_pct >= 80:
+                ict_context = "Look for BSL sweeps above highs for bearish reversals"
+            elif position_pct <= 20:
+                ict_context = "Look for SSL sweeps below lows for bullish reversals"
+            else:
+                ict_context = "Monitor for liquidity sweeps at swing highs/lows"
+
+            embed.add_field(name="💡 ICT Context", value=ict_context, inline=False)
+
+            embed.set_footer(text=f"52-week range data • {symbol}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /range: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
+    # /volume command - Volume vs average
+    @bot.tree.command(name="volume", description="Compare today's volume to 30-day average")
+    @app_commands.describe(symbol="Ticker symbol (e.g., SPY)")
+    async def volume(interaction: discord.Interaction, symbol: str):
+        """Get volume comparison."""
+        await interaction.response.defer()
+
+        try:
+            symbol = symbol.upper().strip()
+
+            # Call API to get volume data
+            url = f"{bot.api_client.base_url}/api/v1/market/volume/{symbol}"
+            async with aiohttp.ClientSession(timeout=bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        await interaction.followup.send(f"❌ API error: {error_text}")
+                        return
+
+                    data = await response.json()
+
+            current_volume = data.get("current_volume", 0)
+            avg_volume = data.get("avg_volume_30d", 0)
+            volume_ratio = (current_volume / avg_volume) if avg_volume > 0 else 1
+
+            # Determine color and context
+            if volume_ratio >= 2.0:
+                color = discord.Color.red()
+                emoji = "🚀"
+                context = "Exceptionally high (2x+ average)"
+            elif volume_ratio >= 1.5:
+                color = discord.Color.orange()
+                emoji = "📈"
+                context = "Above average (1.5-2x)"
+            elif volume_ratio >= 0.75:
+                color = discord.Color.blue()
+                emoji = "➡️"
+                context = "Normal (0.75-1.5x)"
+            else:
+                color = discord.Color.greyple()
+                emoji = "📉"
+                context = "Below average (<0.75x)"
+
+            embed = discord.Embed(
+                title=f"{emoji} {symbol} Volume Analysis",
+                color=color
+            )
+
+            embed.add_field(name="Today's Volume", value=f"**{current_volume:,}**", inline=True)
+            embed.add_field(name="30D Avg Volume", value=f"{avg_volume:,}", inline=True)
+            embed.add_field(name="Ratio", value=f"**{volume_ratio:.2f}x**", inline=True)
+
+            embed.add_field(name="Context", value=context, inline=False)
+
+            # Add trading implication
+            if volume_ratio >= 2.0:
+                implication = "High volume confirms strong moves. Good for momentum trades."
+            elif volume_ratio >= 1.5:
+                implication = "Above-average participation. Moves may have follow-through."
+            elif volume_ratio >= 0.75:
+                implication = "Normal volume. Standard liquidity conditions."
+            else:
+                implication = "Low volume. Be cautious with wide bid-ask spreads."
+
+            embed.add_field(name="💡 Trading Implication", value=implication, inline=False)
+
+            embed.set_footer(text=f"Volume data • {symbol}")
+
+            await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Error in /volume: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
+
     # /help command - Command reference
     @bot.tree.command(name="help", description="Show all available commands and usage")
     async def help_command(interaction: discord.Interaction):
@@ -1034,91 +1811,81 @@ async def run_bot():
             color=discord.Color.blue()
         )
 
-        # /plan command
+        # Strategy Commands
         embed.add_field(
-            name="📊 /plan",
+            name="📊 Strategy Planning",
             value=(
-                "**Full strategy recommendations with ICT context**\n"
-                "• Parameters: symbol, bias, dte, mode (optional), max_risk (optional), account_size (optional), bias_reason (optional)\n"
-                "• Returns: Top 3 ranked strategies with detailed metrics\n"
-                "• Features: 515 symbol autocomplete, DTE preferences, account sizing\n"
-                "• Example: `/plan SPY bullish 7 auto 500 25000`"
+                "**`/plan`** - Full strategy recommendations with ICT context\n"
+                "**`/calc`** - Quick P/L calculator for specific strikes/strategies"
             ),
             inline=False
         )
 
-        # /calc command
+        # Market Data Commands
         embed.add_field(
-            name="🧮 /calc",
+            name="📈 Market Data",
             value=(
-                "**Quick P/L calculator for specific strategies**\n"
-                "• Parameters: strategy, symbol, strikes, dte, premium (optional)\n\n"
-                "**Strike Formats:**\n"
-                "• Bull Call Spread (Debit): `lower/higher` → 1st=long, 2nd=short\n"
-                "• Bear Put Spread (Debit): `higher/lower` → 1st=long, 2nd=short\n"
-                "• Bull Put Spread (Credit): `higher/lower` → 1st=short, 2nd=long\n"
-                "• Bear Call Spread (Credit): `lower/higher` → 1st=short, 2nd=long\n"
-                "• Long Call/Put: single strike (e.g., `450`)\n\n"
-                "**Examples:**\n"
-                "• `/calc bull_call_spread SPY 540/545 7` (buy 540, sell 545)\n"
-                "• `/calc bull_put_spread SPY 450/445 7` (sell 450, buy 445)\n"
-                "• `/calc long_call SPY 540 7`"
+                "**`/price <symbol>`** - Current price + % change\n"
+                "**`/quote <symbol>`** - Full quote (bid/ask, volume, spread)\n"
+                "**`/iv <symbol>`** - IV, IV rank, IV percentile + regime\n"
+                "**`/range <symbol>`** - 52-week high/low + current position\n"
+                "**`/volume <symbol>`** - Volume vs 30-day average\n"
+                "**`/earnings <symbol>`** - Next earnings date + days until"
             ),
             inline=False
         )
 
-        # /size command
+        # Quick Calculators
         embed.add_field(
-            name="📐 /size",
+            name="🧮 Quick Calculators",
             value=(
-                "**Position sizing calculator**\n"
-                "• Parameters: account_size, max_risk_pct, strategy_cost\n"
-                "• Returns: Recommended contracts, total position size, risk %\n"
-                "• Example: `/size 25000 2 350` (2% risk on $350 strategy)"
+                "**`/pop <delta>`** - Probability of profit from delta\n"
+                "**`/delta <symbol> <strike> <type> <dte>`** - Get delta for strike\n"
+                "**`/contracts <risk> <premium>`** - Contracts for target risk\n"
+                "**`/risk <contracts> <premium>`** - Total risk calculation\n"
+                "**`/dte <date>`** - Days to expiration (YYYY-MM-DD)\n"
+                "**`/size <account> <risk%> <cost>`** - Position sizing\n"
+                "**`/breakeven <strategy> <strikes> <cost>`** - Breakeven price"
             ),
             inline=False
         )
 
-        # /breakeven command
+        # Validators & Tools
         embed.add_field(
-            name="🎯 /breakeven",
+            name="✅ Validators & Tools",
             value=(
-                "**Quick breakeven calculator**\n"
-                "• Parameters: strategy, strikes, cost\n"
-                "• Strategies: bull_call, bear_put, bull_put_credit, bear_call_credit, long_call, long_put\n"
-                "• Example: `/breakeven bull_put_credit 540/545 125`"
+                "**`/spread <symbol> <width>`** - Validate spread width\n"
+                "**`/check`** - System health check\n"
+                "**`/help`** - Show this help message"
             ),
             inline=False
         )
 
-        # /check command
+        # Examples
         embed.add_field(
-            name="🏥 /check",
+            name="💡 Quick Examples",
             value=(
-                "**System health check**\n"
-                "• Shows: Bot status, API status, database, Redis, response time\n"
-                "• No parameters required"
+                "• `/price SPY` - Get SPY current price\n"
+                "• `/pop 0.30` - POP for Δ0.30 (70% for shorts)\n"
+                "• `/contracts 500 125` - Contracts for $500 risk at $1.25 premium\n"
+                "• `/iv AAPL` - Check AAPL IV regime\n"
+                "• `/spread QQQ 5` - Validate 5-wide spread on QQQ\n"
+                "• `/earnings TSLA` - When is TSLA earnings?\n"
+                "• `/calc bull_put_spread SPY 540/535 7` - Calculate 540/535 BPS"
             ),
             inline=False
         )
 
-        # Additional info
+        # ICT Context
         embed.add_field(
-            name="ℹ️ Additional Info",
+            name="🎯 ICT Bias Reasons (/plan advanced)",
             value=(
-                "**ICT Bias Reasons** (advanced /plan parameter):\n"
-                "• `ssl_sweep` - Sell-side liquidity swept, bullish reversal\n"
-                "• `bsl_sweep` - Buy-side liquidity swept, bearish reversal\n"
-                "• `fvg_retest` - Fair Value Gap retest continuation\n"
-                "• `structure_shift` - Market Structure Shift (MSS)\n"
-                "• `user_manual` - Manual bias selection (default)\n\n"
-                "**Rate Limits:** 3 commands per minute per user\n"
-                "**DTE Range:** 1-365 days"
+                "`ssl_sweep` • `bsl_sweep` • `fvg_retest` • `structure_shift` • `user_manual`"
             ),
             inline=False
         )
 
-        embed.set_footer(text="Volaris Trading Intelligence Platform | Phase 3 Complete")
+        embed.set_footer(text="Volaris Trading Intelligence • 18 Commands Available")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 

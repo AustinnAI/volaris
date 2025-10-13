@@ -208,7 +208,66 @@
   - Shows: Command descriptions, parameter formats, usage examples, rate limits, DTE ranges
   - **Status:** LIVE - Ephemeral response (visible only to requester)
 
-**Analysis Tools (Priority 2 - 5-6 hours):**
+**Market Data Commands (Complete) ✅:**
+- [x] `/price <symbol>` - Current stock price + % change
+  - Response: Current price, previous close, change ($), change (%), volume
+  - API: `/api/v1/market/price/{symbol}` (Schwab fallback)
+
+- [x] `/quote <symbol>` - Full quote with bid/ask/volume
+  - Response: Last price, bid, ask, bid-ask spread, volume, avg volume, volume ratio
+  - API: `/api/v1/market/quote/{symbol}` (Schwab)
+
+- [x] `/iv <symbol>` - IV metrics (IV, IVR, IV percentile)
+  - Response: Current IV, IV rank, IV percentile, regime (high/low/neutral), strategy suggestion
+  - API: `/api/v1/market/iv/{symbol}` (database + fallback)
+
+- [x] `/range <symbol>` - 52-week high/low + position
+  - Response: Current price, 52W high/low, position % in range, ICT context
+  - API: `/api/v1/market/range/{symbol}` (database)
+
+- [x] `/volume <symbol>` - Volume vs 30-day average
+  - Response: Current volume, 30D avg volume, volume ratio, trading implication
+  - API: `/api/v1/market/volume/{symbol}` (database)
+
+- [x] `/earnings <symbol>` - Next earnings date
+  - Response: Earnings date, days until, status, trading recommendation
+  - API: `/api/v1/market/earnings/{symbol}` (Finnhub)
+
+**Quick Calculators (Complete) ✅:**
+- [x] `/pop <delta>` - Probability of profit from delta
+  - Response: Short option POP, long option POP, explanation, common targets
+  - Pure calculation (no API call)
+
+- [x] `/delta <symbol> <strike> <type> <dte>` - Get delta for strike
+  - Response: Delta, POP (short), classification (ITM/ATM/OTM)
+  - API: `/api/v1/market/delta/{symbol}/{strike}/{type}/{dte}` (database)
+
+- [x] `/contracts <risk> <premium>` - Contracts for target risk
+  - Response: Number of contracts, actual risk, remaining budget, risk %
+  - Pure calculation (no API call)
+
+- [x] `/risk <contracts> <premium>` - Total risk calculation
+  - Response: Total risk, % of various account sizes
+  - Pure calculation (no API call)
+
+- [x] `/dte <date>` - Days to expiration calculator
+  - Response: DTE, classification (0-7/8-45/45+), ICT strategy suggestion
+  - Pure calculation (no API call)
+
+**Validators & Tools (Complete) ✅:**
+- [x] `/spread <symbol> <width>` - Validate spread width
+  - Response: Verdict (optimal/too narrow/too wide), recommended range, price tier
+  - API: `/api/v1/market/price/{symbol}` + validation logic
+
+**Summary:**
+- **Total Commands:** 18 (6 original + 12 new)
+- **Market Data:** 6 commands (price, quote, iv, range, volume, earnings)
+- **Quick Calculators:** 5 commands (pop, delta, contracts, risk, dte)
+- **Validators:** 1 command (spread)
+- **API Endpoints:** 8 new endpoints in `/api/v1/market/*`
+- **Impact:** Complete suite of quick reference and validation tools for faster trading workflow
+
+**Analysis Tools (Priority 2 - Future):**
 - [ ] `/strikes` - Show available strikes and premiums
   - Parameters: symbol, dte, type (calls/puts/both), range (atm/otm/itm/all)
   - Response: List of strikes with premium, delta, OI, volume; highlights ATM
@@ -219,14 +278,80 @@
   - Response: Table comparing max profit/loss, breakeven, R:R, POP, cost + recommendation
   - Calls multiple Phase 3 endpoints and formats comparison
 
-**Advanced (Priority 3 - 4-5 hours):**
+**Advanced (Priority 3 - Future):**
 - [ ] `/greek` - Greeks summary for potential position
   - Parameters: symbol, strategy, strikes, position, contracts
   - Response: Delta, gamma, theta, vega with explanations
   - Requires Greek calculation implementation
 
-**Total Effort:** 14-18 hours (staggered implementation recommended)
-**Impact:** Significantly improves UX, makes Phase 3 more accessible, faster trade planning workflow
+### 3.7 Discord Bot Refactoring (Technical Debt) 🔧
+**Priority:** 🟡 MEDIUM (Technical Improvement)
+**Status:** ⏰ Deferred - Tests Created, Refactor Pending
+
+**Current State:**
+- `app/alerts/discord_bot.py`: **1912 lines** (exceeds 600-line industry guideline)
+- All 18 commands in single file
+- ✅ **Test coverage: 24 tests passing** (`tests/test_discord_commands.py`)
+- Working code deployed on Render
+
+**Refactoring Plan (Discord.py Cog Pattern):**
+
+**Proposed Structure:**
+```
+app/alerts/
+├── discord_bot.py                 # 100-150 lines - Bot setup + cog loading
+├── helpers/
+│   ├── __init__.py
+│   ├── autocomplete.py           # Symbol autocomplete (65 lines)
+│   ├── api_client.py             # API wrapper (95 lines)
+│   └── embeds.py                 # Embed builders (150 lines)
+└── cogs/
+    ├── __init__.py
+    ├── strategy.py               # /plan, /calc, /size, /breakeven (~250 lines)
+    ├── market_data.py            # /price, /quote, /iv, /range, /volume, /earnings, /spread (~400 lines)
+    ├── calculators.py            # /pop, /delta, /contracts, /risk, /dte (~300 lines)
+    └── utilities.py              # /check, /help (~200 lines)
+```
+
+**Benefits:**
+- ✅ Each file < 600 lines (meets industry standards)
+- ✅ Hot-reload individual cogs during development (`bot.reload_extension('cogs.strategy')`)
+- ✅ Clear separation of concerns (one file per command category)
+- ✅ Easier testing (test individual cogs in isolation)
+- ✅ Standard Discord.py pattern (idiomatic)
+- ✅ Parallel development (multiple devs can work on different cogs)
+
+**Risks & Mitigation:**
+- ⚠️ Refactoring 1912 lines could introduce bugs
+  - **Mitigation:** 24 existing tests verify command logic
+- ⚠️ Shared state (rate limiter, API client) needs careful handling
+  - **Mitigation:** Use cog `__init__` to pass bot instance
+- ⚠️ Discord.py cog lifecycle (async setup, extension loading)
+  - **Mitigation:** Follow official Discord.py cog documentation
+
+**Implementation Steps:**
+1. ✅ **Create tests first** (COMPLETED - 24 tests passing)
+2. [ ] Create cog files alongside existing bot.py (keep as fallback)
+3. [ ] Test cogs thoroughly with pytest
+4. [ ] Update bot.py to load cogs
+5. [ ] Deploy to Render and verify all 18 commands work
+6. [ ] Remove old bot.py once stable
+
+**Effort:** 2-3 hours (with testing)
+**Timeline:** Defer to end of Phase 3 or start of Phase 4
+**Dependencies:** None (tests already created)
+
+**Testing Strategy:**
+```bash
+# Run unit tests
+pytest tests/test_discord_commands.py -v
+
+# Test individual cog loading
+pytest tests/test_strategy_cog.py -v
+
+# Integration test (requires running bot)
+pytest tests/test_discord_commands.py -m integration
+```
 
 ---
 

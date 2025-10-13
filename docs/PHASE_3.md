@@ -1157,3 +1157,95 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 ---
 
 **Phase 3 Status:** ✅ **3.1 COMPLETE** | ✅ **3.2 COMPLETE** | ✅ **3.3 COMPLETE**
+
+---
+
+## Deployment & Configuration
+
+### Scheduler Setup (Auto-Fetch)
+
+To enable auto-fetching of option chains and market data:
+
+**Option 1: Single Worker (Recommended - $7/month)**
+```bash
+# On Render: volaris-bot service
+SCHEDULER_ENABLED=true
+```
+
+The Discord bot automatically starts the scheduler when this flag is enabled.
+
+**Option 2: Separate Worker ($14/month)**
+- Create new Background Worker on Render
+- Start command: `cd /opt/render/project/src && python -m app.workers`
+- Set `SCHEDULER_ENABLED=true` on worker only
+
+**Scheduler Jobs:**
+- Option chains: Every 15 minutes (Schwab)
+- Real-time prices: Every 1m/5m (Schwab)
+- IV metrics: Every 30 minutes
+- EOD data: Daily at 10:15pm UTC (Tiingo)
+- Historical backfill: Daily at 3am UTC (Databento)
+
+### Database Seeding
+
+Seed tickers before enabling scheduler:
+
+```bash
+python scripts/seed_tickers.py
+```
+
+This seeds 12 essential tickers (SPY, QQQ, IWM, DIA, AAPL, MSFT, NVDA, TSLA, AMZN, GOOGL, META, JPM).
+
+### Discord Commands
+
+**18 Commands Available:**
+
+**Strategy Planning (2):**
+- `/plan` - Full recommendations with ICT context
+- `/calc` - Quick P/L calculator
+
+**Market Data (6):**
+- `/price <symbol>` - Current price + % change
+- `/quote <symbol>` - Full quote (bid/ask, volume)
+- `/iv <symbol>` - IV, IVR, IV percentile
+- `/range <symbol>` - 52-week high/low
+- `/volume <symbol>` - Volume vs 30D average
+- `/earnings <symbol>` - Next earnings date
+
+**Calculators (5):**
+- `/pop <delta>` - Probability from delta
+- `/delta <symbol> <strike> <type> <dte>` - Get delta
+- `/contracts <risk> <premium>` - Contracts for risk
+- `/risk <contracts> <premium>` - Total risk
+- `/dte <date>` - Days to expiration
+
+**Tools (5):**
+- `/spread <symbol> <width>` - Validate width
+- `/size` - Position sizing
+- `/breakeven` - Breakeven calculator
+- `/check` - Health check
+- `/help` - Command reference
+
+**Example Workflow:**
+```
+/price SPY                    # Check price
+/iv SPY                       # Check IV regime
+/earnings SPY                 # Check earnings
+/spread SPY 5                 # Validate 5-wide spread
+/calc bull_put_spread SPY 540/535 7
+/contracts 500 125            # Calculate contracts
+```
+
+### Strike Format Reference
+
+**Debit Spreads:**
+- Bull Call: `lower/higher` (1st=long, 2nd=short) → `445/450`
+- Bear Put: `higher/lower` (1st=long, 2nd=short) → `450/445`
+
+**Credit Spreads:**
+- Bull Put: `higher/lower` (1st=short, 2nd=long) → `450/445`
+- Bear Call: `lower/higher` (1st=short, 2nd=long) → `445/450`
+
+**Long Options:**
+- Single strike: `450`
+
