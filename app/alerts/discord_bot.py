@@ -71,12 +71,33 @@ class VolarisBot(commands.Bot):
         # Now sync commands to Discord after all cogs are loaded
         if self.guild_id:
             guild = discord.Object(id=self.guild_id)
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
-            self.logger.info("Synced commands to guild %s", self.guild_id)
+            # Log commands before sync
+            all_commands = self.tree.get_commands(type=discord.AppCommandType.chat_input)
+            self.logger.info("Commands in tree before sync: %d", len(all_commands))
+            for cmd in all_commands[:5]:  # Log first 5
+                self.logger.info("  - %s", cmd.name)
+
+            try:
+                # Clear global commands on Discord by syncing empty tree
+                self.tree.clear_commands(guild=None)
+                cleared = await self.tree.sync()
+                self.logger.info("Cleared %d global commands from Discord", len(cleared))
+
+                # Reload cogs to repopulate tree (since we just cleared it)
+                for extension in ["app.alerts.cogs.strategy", "app.alerts.cogs.market_data",
+                                 "app.alerts.cogs.calculators", "app.alerts.cogs.utilities"]:
+                    await self.reload_extension(extension)
+
+                # Now sync to guild
+                synced = await asyncio.wait_for(self.tree.sync(guild=guild), timeout=30.0)
+                self.logger.info("✅ Synced %d commands to guild %s", len(synced), self.guild_id)
+            except asyncio.TimeoutError:
+                self.logger.error("❌ Command sync timed out after 30s")
+            except Exception as e:
+                self.logger.error("❌ Command sync failed: %s", e, exc_info=True)
         else:
-            await self.tree.sync()
-            self.logger.info("Synced commands globally")
+            synced = await self.tree.sync()
+            self.logger.info("Synced %d commands globally", len(synced))
 
         await self.refresh_symbol_cache()
 

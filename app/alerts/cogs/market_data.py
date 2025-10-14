@@ -282,6 +282,9 @@ class MarketDataCog(commands.Cog):
             await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/quote/{symbol_clean}"
 
+            # DEBUG: Log the URL being called
+            self.bot.logger.info(f"Calling quote API: {url}")
+
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
                 async with session.get(url) as response:
                     if response.status != 200:
@@ -296,6 +299,9 @@ class MarketDataCog(commands.Cog):
             volume = data.get("volume", 0)
             avg_volume = data.get("avg_volume", volume)
             change_pct = data.get("change_pct", 0.0)
+
+            # DEBUG: Log what API returned
+            self.bot.logger.info(f"Quote API response for {symbol_clean}: change_pct={change_pct}, data={data}")
 
             if change_pct > 0:
                 color = discord.Color.green()

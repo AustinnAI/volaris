@@ -275,19 +275,37 @@ async def get_quote(symbol: str):
         if not quote:
             raise HTTPException(status_code=502, detail="Malformed Schwab quote payload")
 
-        # Prefer closePrice for accuracy after market close, fallback to lastPrice during market hours
-        close_price = quote.get("closePrice") or 0
+        # DEBUG: Log raw Schwab response
+        import logging
+        logger = logging.getLogger("volaris.market_data")
+        logger.info(f"Schwab raw quote for {symbol}: {quote}")
+
+        # Extract price fields from Schwab's quote structure (see Schwab API docs)
         last_price = quote.get("lastPrice") or 0
         mark_price = quote.get("mark") or 0
+        close_price = quote.get("closePrice") or 0
 
-        # Use closePrice if available and lastPrice differs significantly (after-hours scenario)
-        if close_price and last_price and abs(last_price - close_price) < (close_price * 0.01):
-            current_price = close_price  # Within 1%, use official close
+        # Use lastPrice during market hours, closePrice after market close
+        current_price = last_price or mark_price or close_price or 0
+
+        # Schwab provides netChange and netPercentChange directly in the quote object
+        net_change = quote.get("netChange")
+        net_change_pct = quote.get("netPercentChange")
+
+        # Calculate previous close: previousClose = closePrice - netChange
+        # (Schwab doesn't include previousClose field, but we can derive it)
+        if net_change is not None and close_price:
+            previous_close = close_price - net_change
         else:
-            current_price = last_price or mark_price or close_price or 0
+            previous_close = 0
 
-        previous_close = quote.get("previousClose") or quote.get("previousClosePrice") or current_price
-        change_pct = ((current_price - previous_close) / previous_close * 100) if previous_close else 0
+        # Use Schwab's provided percent change if available, otherwise calculate
+        if net_change_pct is not None:
+            change_pct = float(net_change_pct)
+        elif previous_close and previous_close > 0:
+            change_pct = ((current_price - previous_close) / previous_close * 100)
+        else:
+            change_pct = 0.0
 
         return {
             "symbol": symbol,
