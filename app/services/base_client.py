@@ -134,9 +134,7 @@ class BaseAPIClient:
 
         except httpx.NetworkError as e:
             app_logger.error(f"{self.provider_name} network error: {url}")
-            raise NetworkError(
-                f"Network error: {str(e)}", provider=self.provider_name
-            ) from e
+            raise NetworkError(f"Network error: {str(e)}", provider=self.provider_name) from e
 
         except httpx.HTTPStatusError as e:
             # Already handled 429 and 5xx above
@@ -200,7 +198,5 @@ class BaseAPIClient:
             await self.client.get(self.base_url, timeout=5.0)
             return True
         except Exception as e:
-            app_logger.warning(
-                f"{self.provider_name} health check failed: {str(e)}"
-            )
+            app_logger.warning(f"{self.provider_name} health check failed: {str(e)}")
             return False

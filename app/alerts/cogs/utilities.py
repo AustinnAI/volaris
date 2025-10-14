@@ -44,7 +44,9 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
     ) -> None:
         """Create a new price alert for the server."""
         if target_price <= 0:
-            await interaction.response.send_message("❌ Target price must be greater than 0.", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ Target price must be greater than 0.", ephemeral=True
+            )
             return
 
         await interaction.response.defer(ephemeral=True)
@@ -122,7 +124,9 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
             if creator:
                 metadata_parts.append(f"by <@{creator}>")
             metadata = " • ".join(metadata_parts)
-            lines.append(f"#{alert['id']} • {alert['symbol']} {direction} ${target:,.2f} {metadata}".strip())
+            lines.append(
+                f"#{alert['id']} • {alert['symbol']} {direction} ${target:,.2f} {metadata}".strip()
+            )
 
         if len(alerts) > 25:
             lines.append(f"… and {len(alerts) - 25} more alerts")
@@ -137,7 +141,9 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 
-class StreamsCog(commands.GroupCog, name="streams", group_description="Manage recurring price streams"):
+class StreamsCog(
+    commands.GroupCog, name="streams", group_description="Manage recurring price streams"
+):
     """Slash command group for scheduled price stream management."""
 
     def __init__(self, bot: "VolarisBot") -> None:
@@ -251,7 +257,9 @@ class UtilitiesCog(commands.Cog):
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
                 async with session.get(url) as response:
                     health_data = await response.json() if response.status == 200 else {}
-                    api_status = "✅ Healthy" if response.status == 200 else f"❌ Error ({response.status})"
+                    api_status = (
+                        "✅ Healthy" if response.status == 200 else f"❌ Error ({response.status})"
+                    )
 
             response_time = (time.time() - start_time) * 1000
 
@@ -264,8 +272,12 @@ class UtilitiesCog(commands.Cog):
             embed.add_field(name="Response Time", value=f"{response_time:.0f}ms", inline=True)
 
             if health_data:
-                embed.add_field(name="Database", value=health_data.get("database", "Unknown"), inline=True)
-                embed.add_field(name="Redis", value=health_data.get("redis", "Unknown"), inline=True)
+                embed.add_field(
+                    name="Database", value=health_data.get("database", "Unknown"), inline=True
+                )
+                embed.add_field(
+                    name="Redis", value=health_data.get("redis", "Unknown"), inline=True
+                )
                 version = health_data.get("version")
                 if version:
                     embed.add_field(name="Version", value=version, inline=True)

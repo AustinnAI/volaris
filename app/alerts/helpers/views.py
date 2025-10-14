@@ -37,7 +37,9 @@ class MoreCandidatesView(discord.ui.View):
     ) -> None:
         """Send the next set of recommendation embeds as an ephemeral response."""
         if len(self._recommendations) <= 1:
-            await interaction.response.send_message("No additional candidates available.", ephemeral=True)
+            await interaction.response.send_message(
+                "No additional candidates available.", ephemeral=True
+            )
             return
 
         embeds = [

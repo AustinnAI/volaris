@@ -113,15 +113,18 @@ class FinnhubClient(BaseAPIClient):
         # Default to last 30 days if not specified
         if not from_date:
             from datetime import timedelta
+
             from_date = date.today() - timedelta(days=30)
         if not to_date:
             to_date = date.today()
 
-        params = self._get_params({
-            "symbol": symbol.upper(),
-            "from": from_date.isoformat(),
-            "to": to_date.isoformat(),
-        })
+        params = self._get_params(
+            {
+                "symbol": symbol.upper(),
+                "from": from_date.isoformat(),
+                "to": to_date.isoformat(),
+            }
+        )
 
         return await self.get(endpoint, params=params)
 
@@ -182,10 +185,12 @@ class FinnhubClient(BaseAPIClient):
             }
         """
         endpoint = "/stock/metric"
-        params = self._get_params({
-            "symbol": symbol.upper(),
-            "metric": metric,
-        })
+        params = self._get_params(
+            {
+                "symbol": symbol.upper(),
+                "metric": metric,
+            }
+        )
         return await self.get(endpoint, params=params)
 
     async def get_earnings_calendar(

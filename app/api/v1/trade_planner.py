@@ -197,12 +197,14 @@ async def calculate_strategy_unified(
     try:
         if request.strategy_type == "vertical_spread":
             # Validate required fields
-            if not all([
-                request.long_strike,
-                request.short_strike,
-                request.long_premium,
-                request.short_premium,
-            ]):
+            if not all(
+                [
+                    request.long_strike,
+                    request.short_strike,
+                    request.long_premium,
+                    request.short_premium,
+                ]
+            ):
                 raise HTTPException(
                     status_code=400,
                     detail="vertical_spread requires long_strike, short_strike, long_premium, short_premium",

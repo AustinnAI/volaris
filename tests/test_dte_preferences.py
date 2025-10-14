@@ -1,6 +1,7 @@
 """
 Tests for Phase 3.4 DTE-based strategy preferences.
 """
+
 import pytest
 from decimal import Decimal
 

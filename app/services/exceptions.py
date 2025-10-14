@@ -25,9 +25,7 @@ class AuthenticationError(APIClientError):
 class RateLimitError(APIClientError):
     """Rate limit exceeded"""
 
-    def __init__(
-        self, message: str, provider: str, retry_after: Optional[int] = None, **kwargs
-    ):
+    def __init__(self, message: str, provider: str, retry_after: Optional[int] = None, **kwargs):
         self.retry_after = retry_after
         super().__init__(message, provider, **kwargs)
 

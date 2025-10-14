@@ -90,9 +90,7 @@ class AlpacaClient(BaseAPIClient):
         }
 
         if start:
-            params["start"] = (
-                start.isoformat() if isinstance(start, datetime) else start
-            )
+            params["start"] = start.isoformat() if isinstance(start, datetime) else start
         if end:
             params["end"] = end.isoformat() if isinstance(end, datetime) else end
 
@@ -209,9 +207,7 @@ class AlpacaClient(BaseAPIClient):
         }
 
         if start:
-            params["start"] = (
-                start.isoformat() if isinstance(start, datetime) else start
-            )
+            params["start"] = start.isoformat() if isinstance(start, datetime) else start
         if end:
             params["end"] = end.isoformat() if isinstance(end, datetime) else end
 
@@ -229,8 +225,4 @@ class AlpacaClient(BaseAPIClient):
 
 
 # Global client instance
-alpaca_client = (
-    AlpacaClient()
-    if (settings.ALPACA_API_KEY and settings.ALPACA_API_SECRET)
-    else None
-)
+alpaca_client = AlpacaClient() if (settings.ALPACA_API_KEY and settings.ALPACA_API_SECRET) else None

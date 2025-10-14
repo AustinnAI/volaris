@@ -69,12 +69,12 @@ def mock_api_response():
                 "reasons": [
                     "High probability credit spread",
                     "IV regime supports selling premium",
-                    "Optimal risk/reward for account size"
+                    "Optimal risk/reward for account size",
                 ],
-                "warnings": []
+                "warnings": [],
             }
         ],
-        "warnings": []
+        "warnings": [],
     }
 
 

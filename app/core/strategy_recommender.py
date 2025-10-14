@@ -28,6 +28,7 @@ from app.core.trade_planner import (
 
 class StrategyFamily(str, Enum):
     """Strategy family classification."""
+
     VERTICAL_CREDIT = "vertical_credit"
     VERTICAL_DEBIT = "vertical_debit"
     LONG_CALL = "long_call"
@@ -38,6 +39,7 @@ class StrategyFamily(str, Enum):
 @dataclass
 class StrategyObjectives:
     """Trading objectives and preferences."""
+
     max_risk_per_trade: Optional[Decimal] = None  # Max $ risk per trade
     min_pop_pct: Optional[Decimal] = None  # Minimum probability of profit %
     min_risk_reward: Optional[Decimal] = None  # Minimum R:R ratio
@@ -50,6 +52,7 @@ class StrategyObjectives:
 @dataclass
 class StrategyConstraints:
     """Strategy constraints and filters."""
+
     min_credit_pct: Optional[Decimal] = None  # Min credit as % of spread width
     max_spread_width: Optional[int] = None  # Max spread width in points
     iv_regime_override: Optional[str] = None  # Force specific IV regime
@@ -61,6 +64,7 @@ class StrategyConstraints:
 @dataclass
 class ScoringWeights:
     """Configurable weights for composite scoring."""
+
     pop_weight: Decimal = Decimal("0.30")  # Probability of profit
     rr_weight: Decimal = Decimal("0.30")  # Risk/reward ratio
     credit_weight: Decimal = Decimal("0.25")  # Credit quality (for credits)
@@ -71,6 +75,7 @@ class ScoringWeights:
 @dataclass
 class StrategyRecommendation:
     """A ranked strategy recommendation with reasoning."""
+
     rank: int
     strategy_family: StrategyFamily
     option_type: str  # "call" or "put"
@@ -127,6 +132,7 @@ class StrategyRecommendation:
 @dataclass
 class StrategyRecommendationResult:
     """Complete recommendation result."""
+
     underlying_symbol: str
     underlying_price: Decimal
     chosen_strategy_family: StrategyFamily
@@ -167,17 +173,37 @@ def select_strategy_family(
         if objectives.prefer_credit:
             # Force credit spreads
             if bias == "bullish":
-                return StrategyFamily.VERTICAL_CREDIT, "put", "Explicit preference for credit spreads (bull put)"
+                return (
+                    StrategyFamily.VERTICAL_CREDIT,
+                    "put",
+                    "Explicit preference for credit spreads (bull put)",
+                )
             elif bias == "bearish":
-                return StrategyFamily.VERTICAL_CREDIT, "call", "Explicit preference for credit spreads (bear call)"
+                return (
+                    StrategyFamily.VERTICAL_CREDIT,
+                    "call",
+                    "Explicit preference for credit spreads (bear call)",
+                )
             else:
-                return StrategyFamily.VERTICAL_CREDIT, "call", "Explicit preference for credit spreads"
+                return (
+                    StrategyFamily.VERTICAL_CREDIT,
+                    "call",
+                    "Explicit preference for credit spreads",
+                )
         else:
             # Force debit spreads or long options
             if bias == "bullish":
-                return StrategyFamily.VERTICAL_DEBIT, "call", "Explicit preference for debit spreads (bull call)"
+                return (
+                    StrategyFamily.VERTICAL_DEBIT,
+                    "call",
+                    "Explicit preference for debit spreads (bull call)",
+                )
             elif bias == "bearish":
-                return StrategyFamily.VERTICAL_DEBIT, "put", "Explicit preference for debit spreads (bear put)"
+                return (
+                    StrategyFamily.VERTICAL_DEBIT,
+                    "put",
+                    "Explicit preference for debit spreads (bear put)",
+                )
 
     # IV-based selection
     if iv_regime == IVRegime.HIGH:
@@ -186,19 +212,19 @@ def select_strategy_family(
             return (
                 StrategyFamily.VERTICAL_CREDIT,
                 "put",
-                f"High IV ({iv_regime.value}) regime favors selling premium - bull put credit spread"
+                f"High IV ({iv_regime.value}) regime favors selling premium - bull put credit spread",
             )
         elif bias == "bearish":
             return (
                 StrategyFamily.VERTICAL_CREDIT,
                 "call",
-                f"High IV ({iv_regime.value}) regime favors selling premium - bear call credit spread"
+                f"High IV ({iv_regime.value}) regime favors selling premium - bear call credit spread",
             )
         else:  # neutral
             return (
                 StrategyFamily.VERTICAL_CREDIT,
                 "call",
-                f"High IV ({iv_regime.value}) regime favors selling premium - credit spread"
+                f"High IV ({iv_regime.value}) regime favors selling premium - credit spread",
             )
 
     elif iv_regime == IVRegime.LOW:
@@ -207,20 +233,20 @@ def select_strategy_family(
             return (
                 StrategyFamily.LONG_CALL,
                 "call",
-                f"Low IV ({iv_regime.value}) regime favors buying cheap premium - long call"
+                f"Low IV ({iv_regime.value}) regime favors buying cheap premium - long call",
             )
         elif bias == "bearish":
             return (
                 StrategyFamily.LONG_PUT,
                 "put",
-                f"Low IV ({iv_regime.value}) regime favors buying cheap premium - long put"
+                f"Low IV ({iv_regime.value}) regime favors buying cheap premium - long put",
             )
         else:  # neutral
             # Neutral with low IV → use debit spread for defined risk
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "call",
-                f"Low IV ({iv_regime.value}) with neutral bias - defined risk debit spread"
+                f"Low IV ({iv_regime.value}) with neutral bias - defined risk debit spread",
             )
 
     else:  # NEUTRAL or None
@@ -229,19 +255,19 @@ def select_strategy_family(
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "call",
-                f"Neutral IV regime - balanced bull call debit spread"
+                f"Neutral IV regime - balanced bull call debit spread",
             )
         elif bias == "bearish":
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "put",
-                f"Neutral IV regime - balanced bear put debit spread"
+                f"Neutral IV regime - balanced bear put debit spread",
             )
         else:  # neutral bias
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "call",
-                f"Neutral IV and bias - balanced vertical debit spread"
+                f"Neutral IV and bias - balanced vertical debit spread",
             )
 
 
@@ -303,9 +329,7 @@ def apply_dte_preferences(
                 else:  # neutral
                     new_family = StrategyFamily.VERTICAL_CREDIT
                     new_type = "call"
-                    new_reasoning = (
-                        f"0-7 DTE + {account_tier} account: Credit spread prioritized for capital efficiency. {reasoning}"
-                    )
+                    new_reasoning = f"0-7 DTE + {account_tier} account: Credit spread prioritized for capital efficiency. {reasoning}"
                 return new_family, new_type, new_reasoning
             else:
                 # Large account: allow long options but add context
@@ -317,14 +341,14 @@ def apply_dte_preferences(
 
         # If already credit spread, enhance reasoning
         elif strategy_family == StrategyFamily.VERTICAL_CREDIT:
-            updated_reasoning = (
-                f"0-7 DTE: Credit spread optimal (capital efficient, high theta decay, defined risk). {reasoning}"
-            )
+            updated_reasoning = f"0-7 DTE: Credit spread optimal (capital efficient, high theta decay, defined risk). {reasoning}"
             return strategy_family, option_type, updated_reasoning
 
         # If debit spread, add DTE context
         elif strategy_family == StrategyFamily.VERTICAL_DEBIT:
-            updated_reasoning = f"0-7 DTE: Debit spread for defined risk directional play. {reasoning}"
+            updated_reasoning = (
+                f"0-7 DTE: Debit spread for defined risk directional play. {reasoning}"
+            )
             return strategy_family, option_type, updated_reasoning
 
     # 14-45 DTE: Prefer spreads over naked, but allow long options for large accounts
@@ -350,9 +374,7 @@ def apply_dte_preferences(
                 else:
                     new_family = StrategyFamily.VERTICAL_DEBIT
                     new_type = "call"
-                    new_reasoning = (
-                        f"14-45 DTE + {account_tier} account: Debit spread for defined risk. {reasoning}"
-                    )
+                    new_reasoning = f"14-45 DTE + {account_tier} account: Debit spread for defined risk. {reasoning}"
                 return new_family, new_type, new_reasoning
             else:
                 # Large account: allow but add context
@@ -364,9 +386,7 @@ def apply_dte_preferences(
 
         # Spreads in this DTE range: enhance reasoning
         elif strategy_family == StrategyFamily.VERTICAL_CREDIT:
-            updated_reasoning = (
-                f"14-45 DTE: Credit spread well-suited (neutral/range setup, less IV crush impact). {reasoning}"
-            )
+            updated_reasoning = f"14-45 DTE: Credit spread well-suited (neutral/range setup, less IV crush impact). {reasoning}"
             return strategy_family, option_type, updated_reasoning
         elif strategy_family == StrategyFamily.VERTICAL_DEBIT:
             updated_reasoning = (
@@ -386,7 +406,9 @@ def apply_dte_preferences(
     return strategy_family, option_type, reasoning
 
 
-def get_bias_context_reasoning(bias_reason: Optional[str], bias: str, strategy_family: StrategyFamily) -> str:
+def get_bias_context_reasoning(
+    bias_reason: Optional[str], bias: str, strategy_family: StrategyFamily
+) -> str:
     """
     Generate reasoning context based on bias_reason (Phase 3.5).
 
@@ -407,25 +429,33 @@ def get_bias_context_reasoning(bias_reason: Optional[str], bias: str, strategy_f
     # ICT setup context
     if bias_reason == "ssl_sweep":
         if bias == "bullish":
-            return ("ICT Setup: SSL swept (sell-side liquidity taken) → Bullish reversal expected. "
-                   "Price grabbed liquidity below swing low, now targeting opposite BSL (buy-side). ")
+            return (
+                "ICT Setup: SSL swept (sell-side liquidity taken) → Bullish reversal expected. "
+                "Price grabbed liquidity below swing low, now targeting opposite BSL (buy-side). "
+            )
         else:
             return "Note: SSL sweep typically indicates bullish bias, but bearish bias selected. "
 
     elif bias_reason == "bsl_sweep":
         if bias == "bearish":
-            return ("ICT Setup: BSL swept (buy-side liquidity taken) → Bearish reversal expected. "
-                   "Price grabbed liquidity above swing high, now targeting opposite SSL (sell-side). ")
+            return (
+                "ICT Setup: BSL swept (buy-side liquidity taken) → Bearish reversal expected. "
+                "Price grabbed liquidity above swing high, now targeting opposite SSL (sell-side). "
+            )
         else:
             return "Note: BSL sweep typically indicates bearish bias, but bullish bias selected. "
 
     elif bias_reason == "fvg_retest":
-        return (f"ICT Setup: FVG retest (Fair Value Gap) detected → {bias.capitalize()} continuation expected. "
-               "Price returning to imbalance zone for potential continuation move. ")
+        return (
+            f"ICT Setup: FVG retest (Fair Value Gap) detected → {bias.capitalize()} continuation expected. "
+            "Price returning to imbalance zone for potential continuation move. "
+        )
 
     elif bias_reason == "structure_shift":
-        return (f"ICT Setup: Market Structure Shift (MSS) confirmed → {bias.capitalize()} trend change. "
-               "Higher highs/lows pattern established, displacement validated. ")
+        return (
+            f"ICT Setup: Market Structure Shift (MSS) confirmed → {bias.capitalize()} trend change. "
+            "Higher highs/lows pattern established, displacement validated. "
+        )
 
     return ""  # Unknown bias_reason
 
@@ -469,7 +499,9 @@ def calculate_composite_score(
     # Credit quality score (0-25 points) - for credit spreads only
     if strategy_family == StrategyFamily.VERTICAL_CREDIT and recommendation.is_credit:
         if recommendation.width_dollars and recommendation.width_dollars > 0:
-            credit_pct = (abs(recommendation.net_premium or 0) / recommendation.width_dollars) * Decimal(100)
+            credit_pct = (
+                abs(recommendation.net_premium or 0) / recommendation.width_dollars
+            ) * Decimal(100)
             # Normalize: 25% credit = 0.5, 50% credit = 1.0
             credit_normalized = min(credit_pct / Decimal(50), Decimal(1))
             score += credit_normalized * weights.credit_weight * Decimal(100)
@@ -522,13 +554,17 @@ def apply_constraints(
         # Max risk constraint
         if objectives.max_risk_per_trade is not None:
             if candidate.max_loss > objectives.max_risk_per_trade:
-                warnings.append(f"Max loss ${candidate.max_loss} exceeds limit ${objectives.max_risk_per_trade}")
+                warnings.append(
+                    f"Max loss ${candidate.max_loss} exceeds limit ${objectives.max_risk_per_trade}"
+                )
                 return False, warnings
 
         # Min POP constraint
         if objectives.min_pop_pct is not None and candidate.pop_proxy is not None:
             if candidate.pop_proxy < objectives.min_pop_pct:
-                warnings.append(f"POP {candidate.pop_proxy:.1f}% below minimum {objectives.min_pop_pct}%")
+                warnings.append(
+                    f"POP {candidate.pop_proxy:.1f}% below minimum {objectives.min_pop_pct}%"
+                )
                 return False, warnings
 
         # Min R:R constraint
@@ -544,7 +580,9 @@ def apply_constraints(
         # Min credit for credit spreads
         if constraints.min_credit_pct is not None and candidate.is_credit:
             if candidate.width_dollars and candidate.width_dollars > 0:
-                credit_pct = (abs(candidate.net_premium or 0) / candidate.width_dollars) * Decimal(100)
+                credit_pct = (abs(candidate.net_premium or 0) / candidate.width_dollars) * Decimal(
+                    100
+                )
                 if credit_pct < constraints.min_credit_pct:
                     warnings.append(
                         f"Credit {credit_pct:.1f}% below minimum {constraints.min_credit_pct}%"
@@ -553,13 +591,20 @@ def apply_constraints(
 
         # Liquidity constraints
         if constraints.min_open_interest is not None:
-            if candidate.avg_open_interest is not None and candidate.avg_open_interest < constraints.min_open_interest:
-                warnings.append(f"Open interest {candidate.avg_open_interest} below minimum {constraints.min_open_interest}")
+            if (
+                candidate.avg_open_interest is not None
+                and candidate.avg_open_interest < constraints.min_open_interest
+            ):
+                warnings.append(
+                    f"Open interest {candidate.avg_open_interest} below minimum {constraints.min_open_interest}"
+                )
                 return False, warnings
 
         if constraints.min_volume is not None:
             if candidate.avg_volume is not None and candidate.avg_volume < constraints.min_volume:
-                warnings.append(f"Volume {candidate.avg_volume} below minimum {constraints.min_volume}")
+                warnings.append(
+                    f"Volume {candidate.avg_volume} below minimum {constraints.min_volume}"
+                )
                 return False, warnings
 
     return True, warnings
@@ -592,7 +637,9 @@ def build_reasoning(
 
     # Position context
     position_map = {"itm": "In-the-money", "atm": "At-the-money", "otm": "Out-of-the-money"}
-    reasons.append(f"{position_map.get(recommendation.position, recommendation.position)} {recommendation.option_type}")
+    reasons.append(
+        f"{position_map.get(recommendation.position, recommendation.position)} {recommendation.option_type}"
+    )
 
     # Risk/reward context
     if recommendation.risk_reward_ratio is not None:
@@ -608,12 +655,16 @@ def build_reasoning(
         elif recommendation.pop_proxy >= Decimal("40"):
             reasons.append(f"Moderate probability (~{recommendation.pop_proxy:.0f}% POP)")
         else:
-            reasons.append(f"Lower probability, higher reward (~{recommendation.pop_proxy:.0f}% POP)")
+            reasons.append(
+                f"Lower probability, higher reward (~{recommendation.pop_proxy:.0f}% POP)"
+            )
 
     # Credit quality for credit spreads
     if strategy_family == StrategyFamily.VERTICAL_CREDIT and recommendation.is_credit:
         if recommendation.width_dollars and recommendation.width_dollars > 0:
-            credit_pct = (abs(recommendation.net_premium or 0) / recommendation.width_dollars) * Decimal(100)
+            credit_pct = (
+                abs(recommendation.net_premium or 0) / recommendation.width_dollars
+            ) * Decimal(100)
             if credit_pct >= Decimal("30"):
                 reasons.append(f"Strong credit collection ({credit_pct:.0f}% of width)")
             else:
@@ -621,7 +672,9 @@ def build_reasoning(
 
     # Width efficiency
     if recommendation.width_points is not None:
-        reasons.append(f"${recommendation.width_points:.0f} spread width for {recommendation.position.upper()}")
+        reasons.append(
+            f"${recommendation.width_points:.0f} spread width for {recommendation.position.upper()}"
+        )
 
     # Liquidity
     if recommendation.avg_open_interest is not None and recommendation.avg_open_interest >= 100:
@@ -776,7 +829,11 @@ def recommend_strategies(
                 breakeven=candidate.breakeven,
                 max_profit=candidate.max_profit,
                 max_loss=candidate.max_loss,
-                risk_reward_ratio=candidate.max_profit / candidate.max_loss if candidate.max_profit and candidate.max_loss > 0 else None,
+                risk_reward_ratio=(
+                    candidate.max_profit / candidate.max_loss
+                    if candidate.max_profit and candidate.max_loss > 0
+                    else None
+                ),
                 pop_proxy=candidate.pop_proxy,
                 delta=candidate.delta,
             )
@@ -827,7 +884,11 @@ def recommend_strategies(
     config_used = {
         "iv_high_threshold": float(settings.IV_HIGH_THRESHOLD),
         "iv_low_threshold": float(settings.IV_LOW_THRESHOLD),
-        "min_credit_pct": float(constraints.min_credit_pct) if constraints and constraints.min_credit_pct else float(settings.MIN_CREDIT_PCT * 100),
+        "min_credit_pct": (
+            float(constraints.min_credit_pct)
+            if constraints and constraints.min_credit_pct
+            else float(settings.MIN_CREDIT_PCT * 100)
+        ),
         "spread_width": spread_width,
         "scoring_weights": {
             "pop": float(scoring_weights.pop_weight),

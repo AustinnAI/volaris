@@ -97,7 +97,9 @@ class SymbolService:
         Args:
             initial_symbols: Optional seed list of symbols.
         """
-        self._symbols: list[str] = list(initial_symbols) if initial_symbols else load_sp500_symbols()
+        self._symbols: list[str] = (
+            list(initial_symbols) if initial_symbols else load_sp500_symbols()
+        )
 
     @property
     def symbols(self) -> list[str]:

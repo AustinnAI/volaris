@@ -12,9 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import settings
+
 try:
     from itertools import batched  # Python 3.12+
 except ImportError:  # pragma: no cover
+
     def batched(iterable, n):
         it = iter(iterable)
         while True:
@@ -28,6 +30,8 @@ except ImportError:  # pragma: no cover
                 break
             if batch:
                 yield tuple(batch)
+
+
 from app.db.models import (
     DataProvider,
     IVMetric,
@@ -140,7 +144,9 @@ async def refresh_sp500_constituents_task(session: AsyncSession) -> int:
         app_logger.error("Failed to refresh S&P 500 constituents", extra={"error": str(exc)})
     except Exception as exc:  # pylint: disable=broad-except
         await session.rollback()
-        app_logger.error("Unexpected error refreshing S&P 500 constituents", extra={"error": str(exc)})
+        app_logger.error(
+            "Unexpected error refreshing S&P 500 constituents", extra={"error": str(exc)}
+        )
     return 0
 
 
@@ -170,7 +176,9 @@ async def backfill_historical_prices(
 
     for ticker in tickers:
         try:
-            response = await _fetch_historical_payload(provider, ticker.symbol, timeframe, start, end)
+            response = await _fetch_historical_payload(
+                provider, ticker.symbol, timeframe, start, end
+            )
             for candle in normalize_price_points(response):
                 if await _upsert_price_bar(session, ticker, timeframe, candle, provider_enum):
                     added += 1
@@ -282,7 +290,9 @@ async def fetch_option_chains(
             as_of=now,
             expiration=expiration,
             dte=_compute_dte(now.date(), expiration),
-            underlying_price=to_decimal(response.get("underlyingPrice") if isinstance(response, dict) else None),
+            underlying_price=to_decimal(
+                response.get("underlyingPrice") if isinstance(response, dict) else None
+            ),
             data_provider=provider_enum,
         )
         session.add(snapshot)
@@ -395,7 +405,9 @@ async def _fetch_historical_payload(
     end: date,
 ):
     if hasattr(provider, "get_ohlcv_bars"):
-        return await provider.get_ohlcv_bars(symbol, start=start, end=end, timeframe=timeframe.value)
+        return await provider.get_ohlcv_bars(
+            symbol, start=start, end=end, timeframe=timeframe.value
+        )
 
     if hasattr(provider, "get_bars"):
         timeframe_label = TIMEFRAME_TO_PROVIDER_ARGS.get(timeframe, {}).get("timeframe", "1Day")
@@ -491,8 +503,11 @@ async def _calculate_iv_rank(
 
     # Fetch historical metrics excluding the current observation so far.
     history = await session.execute(
-        select(IVMetric.implied_vol)
-        .where(IVMetric.ticker_id == ticker_id, IVMetric.term == term, IVMetric.implied_vol.is_not(None))
+        select(IVMetric.implied_vol).where(
+            IVMetric.ticker_id == ticker_id,
+            IVMetric.term == term,
+            IVMetric.implied_vol.is_not(None),
+        )
     )
     historical_vals = [row[0] for row in history.fetchall() if row[0] is not None]
     if not historical_vals:

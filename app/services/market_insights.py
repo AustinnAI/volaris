@@ -91,22 +91,16 @@ async def get_top_movers(limit: int, sp500_symbols: Set[str]) -> Dict[str, List[
     def _map(entry: Dict) -> Dict:
         return {
             "symbol": entry.get("ticker"),
-            "price": _to_float(entry.get("lastTrade", {}).get("p") or entry.get("lastQuote", {}).get("p")),
+            "price": _to_float(
+                entry.get("lastTrade", {}).get("p") or entry.get("lastQuote", {}).get("p")
+            ),
             "change": _to_float(entry.get("todaysChange")),
             "percent": _to_float(entry.get("todaysChangePerc")),
             "volume": entry.get("day", {}).get("v"),
         }
 
-    gainers = [
-        _map(item)
-        for item in raw_gainers
-        if item.get("ticker") in sp500_symbols
-    ][:limit]
+    gainers = [_map(item) for item in raw_gainers if item.get("ticker") in sp500_symbols][:limit]
 
-    losers = [
-        _map(item)
-        for item in raw_losers
-        if item.get("ticker") in sp500_symbols
-    ][:limit]
+    losers = [_map(item) for item in raw_losers if item.get("ticker") in sp500_symbols][:limit]
 
     return {"gainers": gainers, "losers": losers}

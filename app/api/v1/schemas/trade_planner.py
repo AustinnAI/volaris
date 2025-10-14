@@ -22,8 +22,12 @@ class VerticalSpreadRequest(BaseModel):
     dte: Optional[int] = Field(default=None, description="Days to expiration", ge=0)
     long_delta: Optional[Decimal] = Field(default=None, description="Delta of the long option")
     short_delta: Optional[Decimal] = Field(default=None, description="Delta of the short option")
-    account_size: Optional[Decimal] = Field(default=None, description="Account size for position sizing", gt=0)
-    risk_percentage: Decimal = Field(default=Decimal("2.0"), description="Risk percentage", gt=0, le=100)
+    account_size: Optional[Decimal] = Field(
+        default=None, description="Account size for position sizing", gt=0
+    )
+    risk_percentage: Decimal = Field(
+        default=Decimal("2.0"), description="Risk percentage", gt=0, le=100
+    )
 
     @field_validator("option_type")
     @classmethod
@@ -56,8 +60,12 @@ class LongOptionRequest(BaseModel):
     contracts: int = Field(default=1, description="Number of contracts", ge=1)
     dte: Optional[int] = Field(default=None, description="Days to expiration", ge=0)
     delta: Optional[Decimal] = Field(default=None, description="Delta of the option")
-    account_size: Optional[Decimal] = Field(default=None, description="Account size for position sizing", gt=0)
-    risk_percentage: Decimal = Field(default=Decimal("2.0"), description="Risk percentage", gt=0, le=100)
+    account_size: Optional[Decimal] = Field(
+        default=None, description="Account size for position sizing", gt=0
+    )
+    risk_percentage: Decimal = Field(
+        default=Decimal("2.0"), description="Risk percentage", gt=0, le=100
+    )
 
     @field_validator("option_type")
     @classmethod
@@ -81,13 +89,12 @@ class LongOptionRequest(BaseModel):
 class PositionSizeRequest(BaseModel):
     """Request model for position size calculation."""
 
-    max_loss_per_contract: Decimal = Field(..., description="Maximum loss per contract (dollars)", gt=0)
+    max_loss_per_contract: Decimal = Field(
+        ..., description="Maximum loss per contract (dollars)", gt=0
+    )
     account_size: Decimal = Field(..., description="Total account size", gt=0)
     risk_percentage: Decimal = Field(
-        default=Decimal("2.0"),
-        description="Max risk as % of account",
-        gt=0,
-        le=100
+        default=Decimal("2.0"), description="Max risk as % of account", gt=0, le=100
     )
 
 
@@ -151,7 +158,9 @@ class StrategyCalculateRequest(BaseModel):
     Determines strategy type from provided fields.
     """
 
-    strategy_type: str = Field(..., description="Strategy type: 'vertical_spread', 'long_call', 'long_put'")
+    strategy_type: str = Field(
+        ..., description="Strategy type: 'vertical_spread', 'long_call', 'long_put'"
+    )
 
     # Common fields
     underlying_symbol: str

@@ -41,10 +41,7 @@ class RateLimiter:
         # Refill tokens based on elapsed time
         elapsed = current_time - last_update
         refill_rate = self.max_requests / self.window_seconds
-        tokens = min(
-            self.max_requests,
-            tokens + (elapsed * refill_rate)
-        )
+        tokens = min(self.max_requests, tokens + (elapsed * refill_rate))
 
         # Check if we have tokens available
         if tokens >= 1:

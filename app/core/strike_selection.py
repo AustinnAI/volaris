@@ -14,6 +14,7 @@ from app.config import settings
 
 class StrikePosition(str, Enum):
     """Strike position relative to underlying."""
+
     ITM = "itm"  # In the money
     ATM = "atm"  # At the money
     OTM = "otm"  # Out of the money
@@ -21,14 +22,16 @@ class StrikePosition(str, Enum):
 
 class IVRegime(str, Enum):
     """Implied volatility regime classification."""
-    HIGH = "high"      # IV Rank > 50
+
+    HIGH = "high"  # IV Rank > 50
     NEUTRAL = "neutral"  # IV Rank 25-50
-    LOW = "low"       # IV Rank < 25
+    LOW = "low"  # IV Rank < 25
 
 
 @dataclass
 class OptionContractData:
     """Data for a single option contract from database."""
+
     strike: Decimal
     option_type: str  # "call" or "put"
     bid: Optional[Decimal]
@@ -43,6 +46,7 @@ class OptionContractData:
 @dataclass
 class SpreadCandidate:
     """A candidate vertical spread recommendation."""
+
     position: StrikePosition
     long_strike: Decimal
     short_strike: Decimal
@@ -69,6 +73,7 @@ class SpreadCandidate:
 @dataclass
 class LongOptionCandidate:
     """A candidate long option recommendation."""
+
     position: StrikePosition
     strike: Decimal
     premium: Decimal
@@ -83,6 +88,7 @@ class LongOptionCandidate:
 @dataclass
 class StrikeRecommendation:
     """Complete recommendation result."""
+
     underlying_symbol: str
     underlying_price: Decimal
     strategy_type: str
@@ -425,14 +431,15 @@ def recommend_vertical_spreads(
     positions = [StrikePosition.ITM, StrikePosition.ATM, StrikePosition.OTM]
 
     # Determine if debit or credit based on bias and option type
-    is_debit_strategy = (
-        (bias == "bullish" and option_type == "call") or
-        (bias == "bearish" and option_type == "put")
+    is_debit_strategy = (bias == "bullish" and option_type == "call") or (
+        bias == "bearish" and option_type == "put"
     )
 
     for position in positions:
         # Find anchor strike based on position
-        anchor_contracts = find_nearest_strikes(contracts, underlying_price, option_type, [position])
+        anchor_contracts = find_nearest_strikes(
+            contracts, underlying_price, option_type, [position]
+        )
         anchor_contract = anchor_contracts.get(position)
 
         if not anchor_contract or not anchor_contract.mark:
@@ -472,7 +479,9 @@ def recommend_vertical_spreads(
             # We'll swap after finding the other contract
 
         # Find the other strike
-        eligible_contracts = [c for c in contracts if c.option_type == option_type and c.mark is not None]
+        eligible_contracts = [
+            c for c in contracts if c.option_type == option_type and c.mark is not None
+        ]
         if apply_liquidity_filter:
             eligible_contracts = [c for c in eligible_contracts if passes_liquidity_filter(c)[0]]
 
@@ -480,9 +489,7 @@ def recommend_vertical_spreads(
             continue
 
         other_contract = min(
-            eligible_contracts,
-            key=lambda c: abs(c.strike - target_other_strike),
-            default=None
+            eligible_contracts, key=lambda c: abs(c.strike - target_other_strike), default=None
         )
 
         if not other_contract or not other_contract.mark:

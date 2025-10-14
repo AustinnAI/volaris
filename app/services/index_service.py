@@ -74,9 +74,9 @@ async def refresh_index_constituents(
         await db.execute(
             delete(IndexConstituent)
             .where(IndexConstituent.index_symbol == index_symbol)
-            .where(IndexConstituent.ticker_id.in_(
-                [existing_map[s].ticker_id for s in stale_symbols]
-            ))
+            .where(
+                IndexConstituent.ticker_id.in_([existing_map[s].ticker_id for s in stale_symbols])
+            )
         )
 
     app_logger.info(
@@ -145,7 +145,9 @@ async def is_sp500_member(db: AsyncSession, symbol: str) -> bool:
     return symbol.upper() in symbols
 
 
-async def ensure_sp500_constituents(db: AsyncSession, index_symbol: str = SP500_SYMBOL) -> List[str]:
+async def ensure_sp500_constituents(
+    db: AsyncSession, index_symbol: str = SP500_SYMBOL
+) -> List[str]:
     """Ensure the database has at least one batch of S&P 500 constituents."""
     existing = await get_index_constituents_symbols(db, index_symbol)
     if existing:

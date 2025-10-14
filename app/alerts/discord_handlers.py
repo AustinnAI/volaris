@@ -162,7 +162,9 @@ def format_calculation_for_discord(result: StrategyCalculationResult) -> str:
         premium = leg["premium"]
         opt_type = leg["option_type"].title()
         contracts = leg["contracts"]
-        lines.append(f"• {position} {strike} {opt_type} @ ${premium} ({contracts} contract{'s' if contracts > 1 else ''})")
+        lines.append(
+            f"• {position} {strike} {opt_type} @ ${premium} ({contracts} contract{'s' if contracts > 1 else ''})"
+        )
     lines.append("")
 
     # Risk/Reward metrics
@@ -176,7 +178,9 @@ def format_calculation_for_discord(result: StrategyCalculationResult) -> str:
     lines.append("")
 
     # Position sizing & probability
-    lines.append(f"**Position Size:** {result.position_size_contracts} contract{'s' if result.position_size_contracts > 1 else ''} (${result.position_size_dollars:.2f} at risk)")
+    lines.append(
+        f"**Position Size:** {result.position_size_contracts} contract{'s' if result.position_size_contracts > 1 else ''} (${result.position_size_dollars:.2f} at risk)"
+    )
 
     if result.win_probability:
         lines.append(f"**Win Probability:** ~{result.win_probability:.0f}% (delta-based estimate)")

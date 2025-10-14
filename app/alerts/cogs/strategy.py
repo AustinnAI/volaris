@@ -32,9 +32,13 @@ class StrategyCog(commands.Cog):
             await self.bot.market_api.refresh_option_chain(symbol)
             await self.bot.market_api.refresh_iv_metrics(symbol)
         except aiohttp.ClientError as exc:
-            self.bot.logger.warning("Trade context refresh failed", extra={"symbol": symbol, "error": str(exc)})
+            self.bot.logger.warning(
+                "Trade context refresh failed", extra={"symbol": symbol, "error": str(exc)}
+            )
         except Exception:  # pylint: disable=broad-except
-            self.bot.logger.exception("Unexpected trade context refresh failure", extra={"symbol": symbol})
+            self.bot.logger.exception(
+                "Unexpected trade context refresh failure", extra={"symbol": symbol}
+            )
 
     async def _refresh_price_only(self, symbol: str) -> None:
         if settings.SCHEDULER_ENABLED:
@@ -42,7 +46,9 @@ class StrategyCog(commands.Cog):
         try:
             await self.bot.market_api.refresh_price(symbol)
         except aiohttp.ClientError as exc:
-            self.bot.logger.warning("Price refresh failed", extra={"symbol": symbol, "error": str(exc)})
+            self.bot.logger.warning(
+                "Price refresh failed", extra={"symbol": symbol, "error": str(exc)}
+            )
         except Exception:  # pylint: disable=broad-except
             self.bot.logger.exception("Unexpected price refresh failure", extra={"symbol": symbol})
 
@@ -243,7 +249,9 @@ class StrategyCog(commands.Cog):
 
                 strike_parts = strikes.split("/")
                 if len(strike_parts) != 2:
-                    await interaction.followup.send("❌ Invalid format. Use 'long/short' (e.g., '445/450')")
+                    await interaction.followup.send(
+                        "❌ Invalid format. Use 'long/short' (e.g., '445/450')"
+                    )
                     return
 
                 first_strike = float(strike_parts[0])
@@ -357,7 +365,9 @@ class StrategyCog(commands.Cog):
                 )
 
             embed.add_field(
-                name="📈 Max Profit", value=f"${float(result.get('max_profit', 0)):.2f}", inline=True
+                name="📈 Max Profit",
+                value=f"${float(result.get('max_profit', 0)):.2f}",
+                inline=True,
             )
             embed.add_field(
                 name="📉 Max Loss", value=f"${float(result['max_loss']):.2f}", inline=True
@@ -372,7 +382,9 @@ class StrategyCog(commands.Cog):
             )
 
             if result.get("pop_proxy"):
-                embed.add_field(name="📊 POP", value=f"{float(result['pop_proxy']):.0f}%", inline=True)
+                embed.add_field(
+                    name="📊 POP", value=f"{float(result['pop_proxy']):.0f}%", inline=True
+                )
 
             if is_spread:
                 ict_context = {
@@ -437,7 +449,9 @@ class StrategyCog(commands.Cog):
             embed.add_field(name="Max Risk $", value=f"${max_risk_dollars:,.2f}", inline=True)
             embed.add_field(name="Cost/Contract", value=f"${strategy_cost:.2f}", inline=True)
             embed.add_field(name="✅ Contracts", value=f"**{recommended_contracts}**", inline=True)
-            embed.add_field(name="Total Position", value=f"${total_position_size:,.2f}", inline=True)
+            embed.add_field(
+                name="Total Position", value=f"${total_position_size:,.2f}", inline=True
+            )
             embed.add_field(name="Actual Risk %", value=f"{actual_risk_pct:.2f}%", inline=True)
             embed.add_field(name="Max Loss", value=f"${total_position_size:,.2f}", inline=True)
 
@@ -489,15 +503,25 @@ class StrategyCog(commands.Cog):
             if "/" in strikes:
                 strike_parts = strikes.split("/")
                 if len(strike_parts) != 2:
-                    await interaction.followup.send("❌ Invalid strikes format. Use '540/545' for spreads.")
+                    await interaction.followup.send(
+                        "❌ Invalid strikes format. Use '540/545' for spreads."
+                    )
                     return
                 long_strike = float(strike_parts[0])
                 short_strike = float(strike_parts[1])
 
                 if strategy in ("bull_call", "bear_put"):
-                    breakeven = long_strike + abs(cost) if strategy == "bull_call" else long_strike - abs(cost)
+                    breakeven = (
+                        long_strike + abs(cost)
+                        if strategy == "bull_call"
+                        else long_strike - abs(cost)
+                    )
                 else:
-                    breakeven = short_strike - abs(cost) if strategy == "bull_put" else short_strike + abs(cost)
+                    breakeven = (
+                        short_strike - abs(cost)
+                        if strategy == "bull_put"
+                        else short_strike + abs(cost)
+                    )
             else:
                 strike = float(strikes)
                 breakeven = strike + abs(cost) if strategy == "long_call" else strike - abs(cost)
@@ -508,7 +532,9 @@ class StrategyCog(commands.Cog):
             )
 
             if "/" in strikes:
-                embed.add_field(name="Strikes", value=f"{long_strike:.2f}/{short_strike:.2f}", inline=True)
+                embed.add_field(
+                    name="Strikes", value=f"{long_strike:.2f}/{short_strike:.2f}", inline=True
+                )
             else:
                 embed.add_field(name="Strike", value=f"${strike:.2f}", inline=True)
 

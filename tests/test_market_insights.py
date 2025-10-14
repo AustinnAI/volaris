@@ -53,12 +53,33 @@ async def test_get_top_movers_filters_sp500(monkeypatch):
     mock_polygon = AsyncMock()
     mock_polygon.get_top_movers.side_effect = [
         [
-            {"ticker": "AAPL", "todaysChangePerc": 3.2, "todaysChange": 6.0, "lastTrade": {"p": 190.0}, "day": {"v": 100000}},
-            {"ticker": "XYZ", "todaysChangePerc": 15.0, "todaysChange": 1.5, "lastTrade": {"p": 10.0}},
+            {
+                "ticker": "AAPL",
+                "todaysChangePerc": 3.2,
+                "todaysChange": 6.0,
+                "lastTrade": {"p": 190.0},
+                "day": {"v": 100000},
+            },
+            {
+                "ticker": "XYZ",
+                "todaysChangePerc": 15.0,
+                "todaysChange": 1.5,
+                "lastTrade": {"p": 10.0},
+            },
         ],
         [
-            {"ticker": "MSFT", "todaysChangePerc": -2.0, "todaysChange": -6.4, "lastTrade": {"p": 320.0}},
-            {"ticker": "PENN", "todaysChangePerc": -5.0, "todaysChange": -1.0, "lastTrade": {"p": 20.0}},
+            {
+                "ticker": "MSFT",
+                "todaysChangePerc": -2.0,
+                "todaysChange": -6.4,
+                "lastTrade": {"p": 320.0},
+            },
+            {
+                "ticker": "PENN",
+                "todaysChangePerc": -5.0,
+                "todaysChange": -1.0,
+                "lastTrade": {"p": 20.0},
+            },
         ],
     ]
     monkeypatch.setattr(market_insights, "polygon_client", mock_polygon)

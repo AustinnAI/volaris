@@ -31,7 +31,9 @@ class MarketDataCog(commands.Cog):
         try:
             await self.bot.market_api.refresh_price(symbol)
         except aiohttp.ClientError as exc:
-            self.bot.logger.warning("Price refresh failed", extra={"symbol": symbol, "error": str(exc)})
+            self.bot.logger.warning(
+                "Price refresh failed", extra={"symbol": symbol, "error": str(exc)}
+            )
         except Exception:  # pylint: disable=broad-except
             self.bot.logger.exception("Unexpected price refresh failure", extra={"symbol": symbol})
 
@@ -52,7 +54,9 @@ class MarketDataCog(commands.Cog):
     # -------------------------------------------------------------------------
     # Sentiment
     # -------------------------------------------------------------------------
-    @app_commands.command(name="sentiment", description="Show sentiment metrics for an S&P 500 stock")
+    @app_commands.command(
+        name="sentiment", description="Show sentiment metrics for an S&P 500 stock"
+    )
     @app_commands.describe(symbol="Ticker symbol (S&P 500 only)")
     async def sentiment(self, interaction: discord.Interaction, symbol: str) -> None:
         """Return aggregated sentiment metrics."""
@@ -172,7 +176,9 @@ class MarketDataCog(commands.Cog):
 
             embed = discord.Embed(title=f"{emoji} {symbol_clean} Price", color=color)
             embed.add_field(name="Current Price", value=f"**${current_price:.2f}**", inline=True)
-            embed.add_field(name="Change", value=f"${change:+.2f} ({change_pct:+.2f}%)", inline=True)
+            embed.add_field(
+                name="Change", value=f"${change:+.2f} ({change_pct:+.2f}%)", inline=True
+            )
             embed.add_field(name="Previous Close", value=f"${previous_close:.2f}", inline=True)
 
             volume = data.get("volume")
@@ -271,7 +277,9 @@ class MarketDataCog(commands.Cog):
     # -------------------------------------------------------------------------
     # Quote
     # -------------------------------------------------------------------------
-    @app_commands.command(name="quote", description="Get full quote with price, volume, and bid/ask")
+    @app_commands.command(
+        name="quote", description="Get full quote with price, volume, and bid/ask"
+    )
     @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
     async def quote(self, interaction: discord.Interaction, symbol: str) -> None:
         """Return a richer quote with bid/ask context."""
@@ -301,7 +309,9 @@ class MarketDataCog(commands.Cog):
             change_pct = data.get("change_pct", 0.0)
 
             # DEBUG: Log what API returned
-            self.bot.logger.info(f"Quote API response for {symbol_clean}: change_pct={change_pct}, data={data}")
+            self.bot.logger.info(
+                f"Quote API response for {symbol_clean}: change_pct={change_pct}, data={data}"
+            )
 
             if change_pct > 0:
                 color = discord.Color.green()
@@ -317,7 +327,9 @@ class MarketDataCog(commands.Cog):
 
             spread = ask - bid
             spread_pct = (spread / price * 100) if price > 0 else 0
-            embed.add_field(name="Bid-Ask Spread", value=f"${spread:.2f} ({spread_pct:.2f}%)", inline=True)
+            embed.add_field(
+                name="Bid-Ask Spread", value=f"${spread:.2f} ({spread_pct:.2f}%)", inline=True
+            )
             embed.add_field(name="Change", value=f"{change_pct:+.2f}%", inline=True)
             embed.add_field(name="Volume", value=f"{volume:,}", inline=True)
 
@@ -393,7 +405,9 @@ class MarketDataCog(commands.Cog):
                 status = "Far out (Safe to trade)"
 
             embed = discord.Embed(title=f"{emoji} {symbol_clean} Earnings", color=color)
-            embed.add_field(name="Next Earnings", value=earnings_date.strftime("%B %d, %Y"), inline=True)
+            embed.add_field(
+                name="Next Earnings", value=earnings_date.strftime("%B %d, %Y"), inline=True
+            )
             embed.add_field(name="Days Until", value=f"**{days_until}** days", inline=True)
             embed.add_field(name="Status", value=status, inline=True)
 

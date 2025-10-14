@@ -42,13 +42,13 @@ class TestStrategyRecommendationAPI:
                     "pop_proxy": 65.0,
                     "composite_score": 85.0,
                     "reasons": ["High IV favors credit spreads"],
-                    "warnings": []
+                    "warnings": [],
                 }
             ],
-            "warnings": []
+            "warnings": [],
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response_obj = AsyncMock()
             mock_response_obj.status = 200
             mock_response_obj.json = AsyncMock(return_value=mock_response)
@@ -69,7 +69,7 @@ class TestStrategyRecommendationAPI:
                 dte=30,
                 mode="auto",
                 max_risk=500.0,
-                account_size=25000.0
+                account_size=25000.0,
             )
 
         assert result["underlying_symbol"] == "SPY"
@@ -103,15 +103,15 @@ class TestStrategyRecommendationAPI:
                     "composite_score": 88.0,
                     "reasons": [
                         "ICT Setup: SSL swept (sell-side liquidity taken) → Bullish reversal expected.",
-                        "0-7 DTE: Credit spread prioritized (capital efficient, 70% POP)"
+                        "0-7 DTE: Credit spread prioritized (capital efficient, 70% POP)",
                     ],
-                    "warnings": []
+                    "warnings": [],
                 }
             ],
-            "warnings": []
+            "warnings": [],
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response_obj = AsyncMock()
             mock_response_obj.status = 200
             mock_response_obj.json = AsyncMock(return_value=mock_response)
@@ -132,15 +132,15 @@ class TestStrategyRecommendationAPI:
                 dte=7,
                 mode="auto",
                 account_size=10000.0,
-                bias_reason="ssl_sweep"
+                bias_reason="ssl_sweep",
             )
 
         # Verify bias_reason context appears in reasoning
         reasons = result["recommendations"][0]["reasons"]
-        assert any("SSL swept" in reason for reason in reasons), \
-            "Expected ICT bias_reason context in recommendation reasoning"
-        assert any("0-7 DTE" in reason for reason in reasons), \
-            "Expected DTE preference reasoning"
+        assert any(
+            "SSL swept" in reason for reason in reasons
+        ), "Expected ICT bias_reason context in recommendation reasoning"
+        assert any("0-7 DTE" in reason for reason in reasons), "Expected DTE preference reasoning"
 
     @pytest.mark.skip(reason="Async HTTP mocking needs aioresponses library")
     @pytest.mark.asyncio
@@ -148,7 +148,7 @@ class TestStrategyRecommendationAPI:
         """Test handling of 404 errors (ticker not found)."""
         api = StrategyRecommendationAPI(base_url="http://localhost:8000")
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response_obj = AsyncMock()
             mock_response_obj.status = 404
             mock_response_obj.json = AsyncMock(return_value={"detail": "Ticker INVALID not found"})
@@ -164,11 +164,7 @@ class TestStrategyRecommendationAPI:
             mock_session.return_value = mock_session_context
 
             with pytest.raises(ValueError, match="Ticker INVALID not found"):
-                await api.recommend_strategy(
-                    symbol="INVALID",
-                    bias="bullish",
-                    dte=30
-                )
+                await api.recommend_strategy(symbol="INVALID", bias="bullish", dte=30)
 
     @pytest.mark.skip(reason="Async HTTP mocking needs aioresponses library")
     @pytest.mark.asyncio
@@ -176,7 +172,7 @@ class TestStrategyRecommendationAPI:
         """Test handling of 500 server errors."""
         api = StrategyRecommendationAPI(base_url="http://localhost:8000")
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response_obj = AsyncMock()
             mock_response_obj.status = 500
             mock_response_obj.json = AsyncMock(return_value={"detail": "Internal server error"})
@@ -193,11 +189,7 @@ class TestStrategyRecommendationAPI:
             mock_session.return_value = mock_session_context
 
             with pytest.raises(Exception):
-                await api.recommend_strategy(
-                    symbol="SPY",
-                    bias="bullish",
-                    dte=30
-                )
+                await api.recommend_strategy(symbol="SPY", bias="bullish", dte=30)
 
 
 class TestCreditSpreadLogic:
@@ -210,8 +202,9 @@ class TestCreditSpreadLogic:
         long_strike = 445.0
         short_strike = 450.0
 
-        is_credit = (position == "put" and short_strike > long_strike) or \
-                    (position == "call" and short_strike < long_strike)
+        is_credit = (position == "put" and short_strike > long_strike) or (
+            position == "call" and short_strike < long_strike
+        )
 
         assert is_credit is True, "Bull put credit spread should be identified as credit"
 
@@ -222,8 +215,9 @@ class TestCreditSpreadLogic:
         long_strike = 455.0
         short_strike = 450.0
 
-        is_credit = (position == "put" and short_strike > long_strike) or \
-                    (position == "call" and short_strike < long_strike)
+        is_credit = (position == "put" and short_strike > long_strike) or (
+            position == "call" and short_strike < long_strike
+        )
 
         assert is_credit is True, "Bear call credit spread should be identified as credit"
 
@@ -234,8 +228,9 @@ class TestCreditSpreadLogic:
         long_strike = 450.0
         short_strike = 455.0
 
-        is_credit = (position == "put" and short_strike > long_strike) or \
-                    (position == "call" and short_strike < long_strike)
+        is_credit = (position == "put" and short_strike > long_strike) or (
+            position == "call" and short_strike < long_strike
+        )
 
         assert is_credit is False, "Bull call debit spread should be identified as debit"
 
@@ -246,8 +241,9 @@ class TestCreditSpreadLogic:
         long_strike = 450.0
         short_strike = 445.0
 
-        is_credit = (position == "put" and short_strike > long_strike) or \
-                    (position == "call" and short_strike < long_strike)
+        is_credit = (position == "put" and short_strike > long_strike) or (
+            position == "call" and short_strike < long_strike
+        )
 
         assert is_credit is False, "Bear put debit spread should be identified as debit"
 
@@ -282,13 +278,7 @@ class TestBiasReasonIntegration:
 
     def test_bias_reason_values(self):
         """Test all valid bias_reason values."""
-        valid_reasons = {
-            "ssl_sweep",
-            "bsl_sweep",
-            "fvg_retest",
-            "structure_shift",
-            "user_manual"
-        }
+        valid_reasons = {"ssl_sweep", "bsl_sweep", "fvg_retest", "structure_shift", "user_manual"}
 
         # Test each value
         for reason in valid_reasons:

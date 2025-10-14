@@ -104,11 +104,7 @@ async def test_databento_list_datasets():
     """Test Databento dataset listing"""
     from app.services.databento import DatabentoClient
 
-    mock_response = {
-        "datasets": [
-            {"dataset": "XNAS.ITCH", "description": "NASDAQ ITCH data"}
-        ]
-    }
+    mock_response = {"datasets": [{"dataset": "XNAS.ITCH", "description": "NASDAQ ITCH data"}]}
 
     with patch("app.services.databento.settings") as mock_settings:
         mock_settings.DATABENTO_API_KEY = "test_key"

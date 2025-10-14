@@ -84,8 +84,12 @@ class VolarisBot(commands.Bot):
                 self.logger.info("Cleared %d global commands from Discord", len(cleared))
 
                 # Reload cogs to repopulate tree (since we just cleared it)
-                for extension in ["app.alerts.cogs.strategy", "app.alerts.cogs.market_data",
-                                 "app.alerts.cogs.calculators", "app.alerts.cogs.utilities"]:
+                for extension in [
+                    "app.alerts.cogs.strategy",
+                    "app.alerts.cogs.market_data",
+                    "app.alerts.cogs.calculators",
+                    "app.alerts.cogs.utilities",
+                ]:
                     await self.reload_extension(extension)
 
                 # Now sync to guild
@@ -189,7 +193,9 @@ class VolarisBot(commands.Bot):
             embed.add_field(name="Target", value=f"${target_price:,.2f}", inline=True)
             embed.add_field(name="Last Price", value=f"${current_price:,.2f}", inline=True)
             if created_by:
-                embed.set_footer(text=f"Created by <@{created_by}> • Fires when price {direction_text} target")
+                embed.set_footer(
+                    text=f"Created by <@{created_by}> • Fires when price {direction_text} target"
+                )
             else:
                 embed.set_footer(text=f"Fires when price {direction_text} target")
 
@@ -227,7 +233,8 @@ class VolarisBot(commands.Bot):
                     channel = await self.fetch_channel(channel_id)
                 except Exception:  # pylint: disable=broad-except
                     self.logger.warning(
-                        "Unable to locate channel for price stream", extra={"channel_id": channel_id}
+                        "Unable to locate channel for price stream",
+                        extra={"channel_id": channel_id},
                     )
                     continue
 
@@ -255,7 +262,9 @@ class VolarisBot(commands.Bot):
             embed.add_field(name="Last", value=f"${price:,.2f}", inline=True)
             embed.add_field(name="Change", value=f"{change:+.2f} ({change_pct:+.2f}%)", inline=True)
             embed.add_field(name="Prev Close", value=f"${prev_close:,.2f}", inline=True)
-            embed.set_footer(text=f"Interval: {stream['interval_seconds']//60} min • Stream #{stream['id']}")
+            embed.set_footer(
+                text=f"Interval: {stream['interval_seconds']//60} min • Stream #{stream['id']}"
+            )
 
             try:
                 await channel.send(embed=embed)
@@ -299,7 +308,8 @@ class VolarisBot(commands.Bot):
                     channel = await self.fetch_channel(int(channel_id))
                 except Exception:  # pylint: disable=broad-except
                     self.logger.warning(
-                        "Unable to locate channel for daily digest", extra={"channel_id": channel_id}
+                        "Unable to locate channel for daily digest",
+                        extra={"channel_id": channel_id},
                     )
                     return
 

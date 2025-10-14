@@ -33,17 +33,13 @@ def test_ticker_symbol_unique_constraint() -> None:
 def test_price_bar_unique_key() -> None:
     """Each price bar is uniquely identified by ticker, timeframe, and timestamp."""
 
-    assert _has_unique_constraint(
-        PriceBar.__table__, {"ticker_id", "timestamp", "timeframe"}
-    )
+    assert _has_unique_constraint(PriceBar.__table__, {"ticker_id", "timestamp", "timeframe"})
 
 
 def test_watchlist_item_prevents_duplicate_membership() -> None:
     """A ticker can only appear once per watchlist."""
 
-    assert _has_unique_constraint(
-        WatchlistItem.__table__, {"watchlist_id", "ticker_id"}
-    )
+    assert _has_unique_constraint(WatchlistItem.__table__, {"watchlist_id", "ticker_id"})
 
 
 def test_option_contract_unique_per_snapshot() -> None:

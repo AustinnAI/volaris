@@ -39,7 +39,9 @@ class CalculatorsCog(commands.Cog):
             pop_short = 100 - (delta * 100)
             pop_long = delta * 100
 
-            embed = discord.Embed(title="📊 Probability of Profit Calculator", color=discord.Color.blue())
+            embed = discord.Embed(
+                title="📊 Probability of Profit Calculator", color=discord.Color.blue()
+            )
             embed.add_field(name="Delta", value=f"{delta:.3f}", inline=True)
             embed.add_field(name="Short Option POP", value=f"**{pop_short:.1f}%**", inline=True)
             embed.add_field(name="Long Option POP", value=f"**{pop_long:.1f}%**", inline=True)
@@ -63,12 +65,16 @@ class CalculatorsCog(commands.Cog):
     # -----------------------------------------------------------------------------
     # Contracts from risk
     # -----------------------------------------------------------------------------
-    @app_commands.command(name="contracts", description="Calculate contracts needed for target risk amount")
+    @app_commands.command(
+        name="contracts", description="Calculate contracts needed for target risk amount"
+    )
     @app_commands.describe(
         risk="Target risk amount in dollars (e.g., 500 for $500 max risk)",
         premium="Premium per contract (for spreads: max loss per contract)",
     )
-    async def contracts(self, interaction: discord.Interaction, risk: float, premium: float) -> None:
+    async def contracts(
+        self, interaction: discord.Interaction, risk: float, premium: float
+    ) -> None:
         """Determine contract count given a risk budget and per-contract premium."""
         await interaction.response.defer()
 
@@ -110,7 +116,9 @@ class CalculatorsCog(commands.Cog):
         contracts="Number of contracts",
         premium="Premium per contract (for spreads: max loss per contract)",
     )
-    async def risk_calc(self, interaction: discord.Interaction, contracts: int, premium: float) -> None:
+    async def risk_calc(
+        self, interaction: discord.Interaction, contracts: int, premium: float
+    ) -> None:
         """Return total risk given a contract count."""
         await interaction.response.defer()
 
@@ -156,7 +164,9 @@ class CalculatorsCog(commands.Cog):
                     continue
 
             if exp_date is None:
-                await interaction.followup.send("❌ Invalid date format. Use YYYY-MM-DD or MM/DD/YYYY")
+                await interaction.followup.send(
+                    "❌ Invalid date format. Use YYYY-MM-DD or MM/DD/YYYY"
+                )
                 return
 
             today = date.today()
@@ -180,7 +190,9 @@ class CalculatorsCog(commands.Cog):
                 status = "Long-dated (45+ DTE)"
 
             embed = discord.Embed(title=f"{emoji} Days to Expiration", color=color)
-            embed.add_field(name="Expiration Date", value=exp_date.strftime("%B %d, %Y"), inline=True)
+            embed.add_field(
+                name="Expiration Date", value=exp_date.strftime("%B %d, %Y"), inline=True
+            )
             embed.add_field(name="Today", value=today.strftime("%B %d, %Y"), inline=True)
             embed.add_field(name="DTE", value=f"**{days_remaining}** days", inline=True)
             embed.add_field(name="Classification", value=status, inline=False)
@@ -284,7 +296,9 @@ class CalculatorsCog(commands.Cog):
     # -----------------------------------------------------------------------------
     # Spread width guidance
     # -----------------------------------------------------------------------------
-    @app_commands.command(name="spread", description="Validate if spread width is appropriate for a stock")
+    @app_commands.command(
+        name="spread", description="Validate if spread width is appropriate for a stock"
+    )
     @app_commands.describe(
         symbol="Ticker symbol (e.g., SPY)",
         width="Spread width in points (e.g., 5 for a 5-point spread)",
@@ -332,12 +346,16 @@ class CalculatorsCog(commands.Cog):
                 emoji = "❌"
                 verdict = "Too wide (high risk)"
 
-            embed = discord.Embed(title=f"{emoji} {symbol_clean} Spread Width Validator", color=color)
+            embed = discord.Embed(
+                title=f"{emoji} {symbol_clean} Spread Width Validator", color=color
+            )
             embed.add_field(name="Current Price", value=f"${price:.2f}", inline=True)
             embed.add_field(name="Your Width", value=f"**{width} points**", inline=True)
             embed.add_field(name="Verdict", value=verdict, inline=True)
             embed.add_field(name="Price Tier", value=price_tier, inline=True)
-            embed.add_field(name="Recommended Range", value=f"{min_width}-{max_width} points", inline=True)
+            embed.add_field(
+                name="Recommended Range", value=f"{min_width}-{max_width} points", inline=True
+            )
 
             if is_valid:
                 explanation = (
@@ -350,9 +368,7 @@ class CalculatorsCog(commands.Cog):
                     "to collect sufficient credit."
                 )
             else:
-                explanation = (
-                    f"❌ Width too wide. Consider narrowing to {max_width} points to stay within risk tolerance."
-                )
+                explanation = f"❌ Width too wide. Consider narrowing to {max_width} points to stay within risk tolerance."
             embed.add_field(name="Explanation", value=explanation, inline=False)
 
             await interaction.followup.send(embed=embed)

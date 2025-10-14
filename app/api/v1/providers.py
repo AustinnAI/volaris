@@ -126,9 +126,7 @@ async def get_provider_capabilities() -> Dict:
     available = provider_manager.get_available_data_types()
 
     # Convert enum keys to strings
-    capabilities = {
-        data_type.value: providers for data_type, providers in available.items()
-    }
+    capabilities = {data_type.value: providers for data_type, providers in available.items()}
 
     return {"capabilities": capabilities}
 
@@ -189,9 +187,7 @@ async def check_provider_health(provider_name: str) -> Dict:
     provider_name = provider_name.lower()
 
     if provider_name not in provider_manager.providers:
-        raise HTTPException(
-            status_code=404, detail=f"Provider '{provider_name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found")
 
     client = provider_manager.providers[provider_name]
 

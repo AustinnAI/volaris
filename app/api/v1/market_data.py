@@ -248,7 +248,7 @@ async def get_iv(symbol: str, db: AsyncSession = Depends(get_db)):
     # No IV data in database
     raise HTTPException(
         status_code=404,
-        detail=f"No IV data available for {symbol}. Enable scheduler to populate data."
+        detail=f"No IV data available for {symbol}. Enable scheduler to populate data.",
     )
 
 
@@ -277,6 +277,7 @@ async def get_quote(symbol: str):
 
         # DEBUG: Log raw Schwab response
         import logging
+
         logger = logging.getLogger("volaris.market_data")
         logger.info(f"Schwab raw quote for {symbol}: {quote}")
 
@@ -303,7 +304,7 @@ async def get_quote(symbol: str):
         if net_change_pct is not None:
             change_pct = float(net_change_pct)
         elif previous_close and previous_close > 0:
-            change_pct = ((current_price - previous_close) / previous_close * 100)
+            change_pct = (current_price - previous_close) / previous_close * 100
         else:
             change_pct = 0.0
 
@@ -313,7 +314,10 @@ async def get_quote(symbol: str):
             "bid": quote.get("bidPrice") or 0,
             "ask": quote.get("askPrice") or 0,
             "volume": quote.get("totalVolume") or quote.get("realTimeVolume") or 0,
-            "avg_volume": quote.get("averageVolume") or quote.get("avgVolume") or quote.get("totalVolume") or 0,
+            "avg_volume": quote.get("averageVolume")
+            or quote.get("avgVolume")
+            or quote.get("totalVolume")
+            or 0,
             "change_pct": change_pct,
         }
     except HTTPException:
@@ -333,7 +337,9 @@ async def get_sentiment(symbol: str, db: AsyncSession = Depends(get_db)):
         except DataNotFoundError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
         except Exception as exc:  # pylint: disable=broad-except
-            raise HTTPException(status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}") from exc
+            raise HTTPException(
+                status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}"
+            ) from exc
 
     if symbol_upper not in sp500_symbols:
         raise HTTPException(status_code=400, detail="Symbol must be part of the S&P 500 list")
@@ -343,7 +349,9 @@ async def get_sentiment(symbol: str, db: AsyncSession = Depends(get_db)):
     except DataNotFoundError as exc:
         raise HTTPException(status_code=501, detail=str(exc)) from exc
     except Exception as exc:  # pylint: disable=broad-except
-        raise HTTPException(status_code=500, detail=f"Failed to fetch sentiment: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch sentiment: {str(exc)}"
+        ) from exc
 
     return sentiment
 
@@ -360,14 +368,18 @@ async def get_top_movers_endpoint(
         except DataNotFoundError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
         except Exception as exc:  # pylint: disable=broad-except
-            raise HTTPException(status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}") from exc
+            raise HTTPException(
+                status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}"
+            ) from exc
 
     try:
         movers = await get_top_movers(limit=limit, sp500_symbols=sp500_symbols)
     except DataNotFoundError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception as exc:  # pylint: disable=broad-except
-        raise HTTPException(status_code=500, detail=f"Failed to fetch top movers: {str(exc)}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch top movers: {str(exc)}"
+        ) from exc
 
     return {
         "index": SP500_SYMBOL,
@@ -386,7 +398,9 @@ async def get_sp500_constituents(db: AsyncSession = Depends(get_db)):
         except DataNotFoundError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
         except Exception as exc:  # pylint: disable=broad-except
-            raise HTTPException(status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}") from exc
+            raise HTTPException(
+                status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}"
+            ) from exc
     return {
         "index": SP500_SYMBOL,
         "symbols": sorted(symbols),
@@ -416,11 +430,7 @@ async def refresh_iv_metrics(symbol: str, db: AsyncSession = Depends(get_db)) ->
 
 @router.get("/delta/{symbol}/{strike}/{option_type}/{dte}")
 async def get_delta(
-    symbol: str,
-    strike: float,
-    option_type: str,
-    dte: int,
-    db: AsyncSession = Depends(get_db)
+    symbol: str, strike: float, option_type: str, dte: int, db: AsyncSession = Depends(get_db)
 ):
     """
     Get delta for a specific option strike.
@@ -465,7 +475,7 @@ async def get_delta(
     # For now, return error asking for real data
     raise HTTPException(
         status_code=404,
-        detail=f"No option data for {symbol} ${strike} {option_type} ~{dte}DTE. Enable scheduler to populate data."
+        detail=f"No option data for {symbol} ${strike} {option_type} ~{dte}DTE. Enable scheduler to populate data.",
     )
 
 
@@ -538,10 +548,7 @@ async def get_range(symbol: str, db: AsyncSession = Depends(get_db)):
     one_year_ago = datetime.now() - timedelta(days=365)
 
     stmt = (
-        select(
-            func.max(PriceBar.high).label("high_52w"),
-            func.min(PriceBar.low).label("low_52w")
-        )
+        select(func.max(PriceBar.high).label("high_52w"), func.min(PriceBar.low).label("low_52w"))
         .join(Ticker)
         .where(Ticker.symbol == symbol)
         .where(PriceBar.timeframe == Timeframe.DAILY)
@@ -580,7 +587,7 @@ async def get_range(symbol: str, db: AsyncSession = Depends(get_db)):
 
     raise HTTPException(
         status_code=404,
-        detail=f"No 52-week range data for {symbol}. Enable scheduler to populate data."
+        detail=f"No 52-week range data for {symbol}. Enable scheduler to populate data.",
     )
 
 
@@ -635,6 +642,5 @@ async def get_volume(symbol: str, db: AsyncSession = Depends(get_db)):
         }
 
     raise HTTPException(
-        status_code=404,
-        detail=f"No volume data for {symbol}. Enable scheduler to populate data."
+        status_code=404, detail=f"No volume data for {symbol}. Enable scheduler to populate data."
     )

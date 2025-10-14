@@ -129,11 +129,7 @@ async def _fetch_prices(symbols: Iterable[str]) -> Dict[str, Decimal]:
             quote = _extract_schwab_quote(raw_quote, symbol)
             if not quote:
                 continue
-            price_value = (
-                quote.get("lastPrice")
-                or quote.get("mark")
-                or quote.get("closePrice")
-            )
+            price_value = quote.get("lastPrice") or quote.get("mark") or quote.get("closePrice")
             if price_value is None:
                 continue
             prices[symbol] = Decimal(str(price_value))

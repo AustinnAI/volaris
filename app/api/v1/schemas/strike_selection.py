@@ -14,37 +14,24 @@ class StrikeRecommendationRequest(BaseModel):
     underlying_symbol: str = Field(..., description="Ticker symbol")
     bias: str = Field(..., description="Directional bias: 'bullish', 'bearish', or 'neutral'")
     strategy_type: str = Field(
-        ...,
-        description="Strategy type: 'vertical_spread', 'long_call', 'long_put', or 'auto'"
+        ..., description="Strategy type: 'vertical_spread', 'long_call', 'long_put', or 'auto'"
     )
     target_dte: int = Field(..., description="Target days to expiration", ge=1, le=365)
-    dte_tolerance: int = Field(
-        default=3,
-        description="DTE tolerance window in days",
-        ge=0,
-        le=10
-    )
+    dte_tolerance: int = Field(default=3, description="DTE tolerance window in days", ge=0, le=10)
     target_move_pct: Optional[Decimal] = Field(
-        default=None,
-        description="Expected move as % of current price",
-        ge=0,
-        le=100
+        default=None, description="Expected move as % of current price", ge=0, le=100
     )
     min_credit_pct: Decimal = Field(
         default=Decimal("25.0"),
         description="Minimum credit as % of spread width for credit spreads",
         ge=0,
-        le=100
+        le=100,
     )
     max_spread_width: int = Field(
-        default=10,
-        description="Maximum spread width in dollars",
-        ge=1,
-        le=50
+        default=10, description="Maximum spread width in dollars", ge=1, le=50
     )
     iv_regime_override: Optional[str] = Field(
-        default=None,
-        description="Override IV regime: 'high', 'neutral', or 'low'"
+        default=None, description="Override IV regime: 'high', 'neutral', or 'low'"
     )
 
     @field_validator("bias")

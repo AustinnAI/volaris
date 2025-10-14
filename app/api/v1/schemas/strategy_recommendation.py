@@ -10,38 +10,26 @@ from pydantic import BaseModel, Field, field_validator
 
 class StrategyObjectivesRequest(BaseModel):
     """Trading objectives."""
+
     max_risk_per_trade: Optional[Decimal] = Field(
-        default=None,
-        description="Maximum risk per trade in dollars",
-        ge=0
+        default=None, description="Maximum risk per trade in dollars", ge=0
     )
     min_pop_pct: Optional[Decimal] = Field(
-        default=None,
-        description="Minimum probability of profit %",
-        ge=0,
-        le=100
+        default=None, description="Minimum probability of profit %", ge=0, le=100
     )
     min_risk_reward: Optional[Decimal] = Field(
-        default=None,
-        description="Minimum risk/reward ratio",
-        ge=0
+        default=None, description="Minimum risk/reward ratio", ge=0
     )
     prefer_credit: Optional[bool] = Field(
-        default=None,
-        description="Prefer credit spreads if True, debit if False, auto if None"
+        default=None, description="Prefer credit spreads if True, debit if False, auto if None"
     )
-    avoid_earnings: bool = Field(
-        default=False,
-        description="Avoid trades during earnings window"
-    )
+    avoid_earnings: bool = Field(default=False, description="Avoid trades during earnings window")
     account_size: Optional[Decimal] = Field(
-        default=None,
-        description="Account size for position sizing",
-        ge=0
+        default=None, description="Account size for position sizing", ge=0
     )
     bias_reason: Optional[str] = Field(
         default="user_manual",
-        description="Reason for bias: 'ssl_sweep', 'bsl_sweep', 'fvg_retest', 'structure_shift', 'user_manual'"
+        description="Reason for bias: 'ssl_sweep', 'bsl_sweep', 'fvg_retest', 'structure_shift', 'user_manual'",
     )
 
     @field_validator("bias_reason")
@@ -52,45 +40,27 @@ class StrategyObjectivesRequest(BaseModel):
             return "user_manual"
         allowed_values = {"ssl_sweep", "bsl_sweep", "fvg_retest", "structure_shift", "user_manual"}
         if v.lower() not in allowed_values:
-            raise ValueError(
-                f"bias_reason must be one of: {', '.join(allowed_values)}"
-            )
+            raise ValueError(f"bias_reason must be one of: {', '.join(allowed_values)}")
         return v.lower()
 
 
 class StrategyConstraintsRequest(BaseModel):
     """Strategy constraints."""
+
     min_credit_pct: Optional[Decimal] = Field(
-        default=None,
-        description="Minimum credit as % of spread width",
-        ge=0,
-        le=100
+        default=None, description="Minimum credit as % of spread width", ge=0, le=100
     )
     max_spread_width: Optional[int] = Field(
-        default=None,
-        description="Maximum spread width in points",
-        ge=1,
-        le=50
+        default=None, description="Maximum spread width in points", ge=1, le=50
     )
     iv_regime_override: Optional[str] = Field(
-        default=None,
-        description="Override IV regime: 'high', 'neutral', or 'low'"
+        default=None, description="Override IV regime: 'high', 'neutral', or 'low'"
     )
     min_open_interest: Optional[int] = Field(
-        default=None,
-        description="Minimum open interest",
-        ge=0
+        default=None, description="Minimum open interest", ge=0
     )
-    min_volume: Optional[int] = Field(
-        default=None,
-        description="Minimum daily volume",
-        ge=0
-    )
-    min_mark_price: Optional[Decimal] = Field(
-        default=None,
-        description="Minimum mark price",
-        ge=0
-    )
+    min_volume: Optional[int] = Field(default=None, description="Minimum daily volume", ge=0)
+    min_mark_price: Optional[Decimal] = Field(default=None, description="Minimum mark price", ge=0)
 
     @field_validator("iv_regime_override")
     @classmethod
@@ -106,28 +76,19 @@ class StrategyConstraintsRequest(BaseModel):
 
 class StrategyRecommendationRequest(BaseModel):
     """Request model for strategy recommendations."""
+
     underlying_symbol: str = Field(..., description="Ticker symbol")
     bias: str = Field(..., description="Directional bias: 'bullish', 'bearish', or 'neutral'")
     target_dte: int = Field(..., description="Target days to expiration", ge=1, le=365)
-    dte_tolerance: int = Field(
-        default=3,
-        description="DTE tolerance window in days",
-        ge=0,
-        le=10
-    )
+    dte_tolerance: int = Field(default=3, description="DTE tolerance window in days", ge=0, le=10)
     target_move_pct: Optional[Decimal] = Field(
-        default=None,
-        description="Expected move as % of current price",
-        ge=0,
-        le=100
+        default=None, description="Expected move as % of current price", ge=0, le=100
     )
     objectives: Optional[StrategyObjectivesRequest] = Field(
-        default=None,
-        description="Trading objectives and preferences"
+        default=None, description="Trading objectives and preferences"
     )
     constraints: Optional[StrategyConstraintsRequest] = Field(
-        default=None,
-        description="Strategy constraints and filters"
+        default=None, description="Strategy constraints and filters"
     )
 
     @field_validator("bias")
@@ -142,6 +103,7 @@ class StrategyRecommendationRequest(BaseModel):
 
 class StrategyRecommendationResponse(BaseModel):
     """Individual strategy recommendation."""
+
     rank: int = Field(..., description="Ranking (1=best)")
     strategy_family: str = Field(..., description="Strategy family")
     option_type: str = Field(..., description="'call' or 'put'")
@@ -180,8 +142,12 @@ class StrategyRecommendationResponse(BaseModel):
     short_delta: Optional[Decimal] = Field(default=None, description="Short delta for spreads")
 
     # Position sizing
-    recommended_contracts: Optional[int] = Field(default=None, description="Recommended contract count")
-    position_size_dollars: Optional[Decimal] = Field(default=None, description="Position size in dollars")
+    recommended_contracts: Optional[int] = Field(
+        default=None, description="Recommended contract count"
+    )
+    position_size_dollars: Optional[Decimal] = Field(
+        default=None, description="Position size in dollars"
+    )
 
     # Scoring
     composite_score: Decimal = Field(..., description="Composite ranking score (0-100)")
@@ -197,6 +163,7 @@ class StrategyRecommendationResponse(BaseModel):
 
 class StrategyRecommendationResultResponse(BaseModel):
     """Complete recommendation result."""
+
     underlying_symbol: str = Field(..., description="Ticker symbol")
     underlying_price: Decimal = Field(..., description="Current underlying price")
     chosen_strategy_family: str = Field(..., description="Selected strategy family")
@@ -208,8 +175,7 @@ class StrategyRecommendationResultResponse(BaseModel):
 
     # Recommendations
     recommendations: List[StrategyRecommendationResponse] = Field(
-        ...,
-        description="Ranked recommendations (top 2-3)"
+        ..., description="Ranked recommendations (top 2-3)"
     )
 
     # Configuration

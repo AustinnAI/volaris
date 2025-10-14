@@ -149,7 +149,10 @@ def normalize_option_contracts(raw: Any) -> List[Dict[str, Any]]:
                                     if not isinstance(contract, dict):
                                         continue
                                     enriched = dict(contract)
-                                    if "expirationDate" not in enriched and "expiration" not in enriched:
+                                    if (
+                                        "expirationDate" not in enriched
+                                        and "expiration" not in enriched
+                                    ):
                                         enriched["expiration"] = expiration_value
                                     combined.append(enriched)
             raw_list = combined

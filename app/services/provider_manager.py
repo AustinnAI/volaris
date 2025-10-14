@@ -25,14 +25,15 @@ from app.utils.logger import app_logger
 
 class DataType(str, Enum):
     """Types of market data"""
+
     REALTIME_MINUTE = "realtime_minute"  # 1m/5m real-time
-    MINUTE_DELAYED = "minute_delayed"    # Minute bars (delayed)
-    EOD = "eod"                          # End of day
-    HISTORICAL = "historical"            # Historical backfills
-    FUNDAMENTALS = "fundamentals"        # Company data
-    NEWS = "news"                        # News & sentiment
-    QUOTE = "quote"                      # Real-time quotes
-    OPTIONS = "options"                  # Options chains
+    MINUTE_DELAYED = "minute_delayed"  # Minute bars (delayed)
+    EOD = "eod"  # End of day
+    HISTORICAL = "historical"  # Historical backfills
+    FUNDAMENTALS = "fundamentals"  # Company data
+    NEWS = "news"  # News & sentiment
+    QUOTE = "quote"  # Real-time quotes
+    OPTIONS = "options"  # Options chains
 
 
 class ProviderManager:
@@ -101,9 +102,7 @@ class ProviderManager:
         for provider_name in provider_list:
             client = self.providers.get(provider_name)
             if client:
-                app_logger.info(
-                    f"Selected provider for {data_type.value}: {provider_name}"
-                )
+                app_logger.info(f"Selected provider for {data_type.value}: {provider_name}")
                 return client
 
         app_logger.warning(f"No provider available for {data_type.value}")
@@ -159,9 +158,7 @@ class ProviderManager:
         available = {}
 
         for data_type, provider_list in self.hierarchy.items():
-            available_providers = [
-                p for p in provider_list if self.providers.get(p) is not None
-            ]
+            available_providers = [p for p in provider_list if self.providers.get(p) is not None]
             if available_providers:
                 available[data_type] = available_providers
 

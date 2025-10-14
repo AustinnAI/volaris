@@ -89,20 +89,18 @@ async def recommend_strategy(
         # Check for critical errors
         if not ticker:
             raise HTTPException(
-                status_code=404,
-                detail=f"Ticker {request.underlying_symbol} not found"
+                status_code=404, detail=f"Ticker {request.underlying_symbol} not found"
             )
 
         if not underlying_price:
             raise HTTPException(
-                status_code=404,
-                detail=f"No price data available for {request.underlying_symbol}"
+                status_code=404, detail=f"No price data available for {request.underlying_symbol}"
             )
 
         if not snapshot or not snapshot.contracts:
             raise HTTPException(
                 status_code=404,
-                detail=f"No option chain data for {request.underlying_symbol} at DTE {request.target_dte} (±{request.dte_tolerance} days)"
+                detail=f"No option chain data for {request.underlying_symbol} at DTE {request.target_dte} (±{request.dte_tolerance} days)",
             )
 
         # Get IV rank
@@ -212,6 +210,5 @@ async def recommend_strategy(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error generating strategy recommendations: {str(e)}"
+            status_code=500, detail=f"Error generating strategy recommendations: {str(e)}"
         )

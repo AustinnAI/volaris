@@ -11,6 +11,7 @@ from typing import Optional
 
 class StrategyType(str, Enum):
     """Supported strategy types for calculation."""
+
     VERTICAL_DEBIT = "vertical_debit"
     VERTICAL_CREDIT = "vertical_credit"
     LONG_CALL = "long_call"
@@ -19,6 +20,7 @@ class StrategyType(str, Enum):
 
 class TradeBias(str, Enum):
     """Directional bias."""
+
     BULLISH = "bullish"
     BEARISH = "bearish"
     NEUTRAL = "neutral"
@@ -27,6 +29,7 @@ class TradeBias(str, Enum):
 @dataclass
 class LegInput:
     """Represents a single option leg."""
+
     strike: Decimal
     premium: Decimal
     option_type: str  # "call" or "put"
@@ -37,6 +40,7 @@ class LegInput:
 @dataclass
 class StrategyCalculationResult:
     """Output of strategy calculation."""
+
     strategy_type: str
     bias: str
     underlying_symbol: str

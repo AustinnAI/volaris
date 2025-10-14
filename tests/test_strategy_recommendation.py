@@ -30,8 +30,20 @@ def sample_contracts():
     contracts = []
 
     # Call chain around $450 with realistic pricing
-    call_prices = {440: Decimal("12.50"), 445: Decimal("9.00"), 450: Decimal("6.00"), 455: Decimal("3.50"), 460: Decimal("1.75")}
-    call_deltas = {440: Decimal("0.75"), 445: Decimal("0.65"), 450: Decimal("0.50"), 455: Decimal("0.35"), 460: Decimal("0.20")}
+    call_prices = {
+        440: Decimal("12.50"),
+        445: Decimal("9.00"),
+        450: Decimal("6.00"),
+        455: Decimal("3.50"),
+        460: Decimal("1.75"),
+    }
+    call_deltas = {
+        440: Decimal("0.75"),
+        445: Decimal("0.65"),
+        450: Decimal("0.50"),
+        455: Decimal("0.35"),
+        460: Decimal("0.20"),
+    }
 
     for strike in [440, 445, 450, 455, 460]:
         contracts.append(
@@ -49,8 +61,20 @@ def sample_contracts():
         )
 
     # Put chain around $450 with realistic pricing
-    put_prices = {440: Decimal("1.75"), 445: Decimal("3.50"), 450: Decimal("6.00"), 455: Decimal("9.00"), 460: Decimal("12.50")}
-    put_deltas = {440: Decimal("-0.20"), 445: Decimal("-0.35"), 450: Decimal("-0.50"), 455: Decimal("-0.65"), 460: Decimal("-0.75")}
+    put_prices = {
+        440: Decimal("1.75"),
+        445: Decimal("3.50"),
+        450: Decimal("6.00"),
+        455: Decimal("9.00"),
+        460: Decimal("12.50"),
+    }
+    put_deltas = {
+        440: Decimal("-0.20"),
+        445: Decimal("-0.35"),
+        450: Decimal("-0.50"),
+        455: Decimal("-0.65"),
+        460: Decimal("-0.75"),
+    }
 
     for strike in [440, 445, 450, 455, 460]:
         contracts.append(
@@ -75,54 +99,42 @@ class TestStrategySelection:
 
     def test_high_iv_bullish_selects_bull_put_credit(self):
         """High IV + bullish should select bull put credit spread."""
-        family, option_type, reason = select_strategy_family(
-            IVRegime.HIGH, "bullish"
-        )
+        family, option_type, reason = select_strategy_family(IVRegime.HIGH, "bullish")
         assert family == StrategyFamily.VERTICAL_CREDIT
         assert option_type == "put"
         assert "bull put credit" in reason.lower()
 
     def test_high_iv_bearish_selects_bear_call_credit(self):
         """High IV + bearish should select bear call credit spread."""
-        family, option_type, reason = select_strategy_family(
-            IVRegime.HIGH, "bearish"
-        )
+        family, option_type, reason = select_strategy_family(IVRegime.HIGH, "bearish")
         assert family == StrategyFamily.VERTICAL_CREDIT
         assert option_type == "call"
         assert "bear call credit" in reason.lower()
 
     def test_low_iv_bullish_selects_long_call(self):
         """Low IV + bullish should select long call."""
-        family, option_type, reason = select_strategy_family(
-            IVRegime.LOW, "bullish"
-        )
+        family, option_type, reason = select_strategy_family(IVRegime.LOW, "bullish")
         assert family == StrategyFamily.LONG_CALL
         assert option_type == "call"
         assert "long call" in reason.lower()
 
     def test_low_iv_bearish_selects_long_put(self):
         """Low IV + bearish should select long put."""
-        family, option_type, reason = select_strategy_family(
-            IVRegime.LOW, "bearish"
-        )
+        family, option_type, reason = select_strategy_family(IVRegime.LOW, "bearish")
         assert family == StrategyFamily.LONG_PUT
         assert option_type == "put"
         assert "long put" in reason.lower()
 
     def test_neutral_iv_bullish_selects_bull_call_debit(self):
         """Neutral IV + bullish should select bull call debit spread."""
-        family, option_type, reason = select_strategy_family(
-            IVRegime.NEUTRAL, "bullish"
-        )
+        family, option_type, reason = select_strategy_family(IVRegime.NEUTRAL, "bullish")
         assert family == StrategyFamily.VERTICAL_DEBIT
         assert option_type == "call"
         assert "bull call" in reason.lower()
 
     def test_neutral_iv_bearish_selects_bear_put_debit(self):
         """Neutral IV + bearish should select bear put debit spread."""
-        family, option_type, reason = select_strategy_family(
-            IVRegime.NEUTRAL, "bearish"
-        )
+        family, option_type, reason = select_strategy_family(IVRegime.NEUTRAL, "bearish")
         assert family == StrategyFamily.VERTICAL_DEBIT
         assert option_type == "put"
         assert "bear put" in reason.lower()
@@ -131,9 +143,7 @@ class TestStrategySelection:
         """Explicit prefer_credit should override IV regime."""
         objectives = StrategyObjectives(prefer_credit=True)
         family, option_type, reason = select_strategy_family(
-            IVRegime.LOW,  # Would normally select long options
-            "bullish",
-            objectives
+            IVRegime.LOW, "bullish", objectives  # Would normally select long options
         )
         assert family == StrategyFamily.VERTICAL_CREDIT
         assert option_type == "put"
@@ -143,9 +153,7 @@ class TestStrategySelection:
         """Explicit prefer_debit should override IV regime."""
         objectives = StrategyObjectives(prefer_credit=False)
         family, option_type, reason = select_strategy_family(
-            IVRegime.HIGH,  # Would normally select credit spreads
-            "bullish",
-            objectives
+            IVRegime.HIGH, "bullish", objectives  # Would normally select credit spreads
         )
         assert family == StrategyFamily.VERTICAL_DEBIT
         assert option_type == "call"
@@ -171,11 +179,7 @@ class TestCompositeScoring:
             composite_score=Decimal(0),
         )
 
-        score = calculate_composite_score(
-            rec,
-            ScoringWeights(),
-            StrategyFamily.VERTICAL_DEBIT
-        )
+        score = calculate_composite_score(rec, ScoringWeights(), StrategyFamily.VERTICAL_DEBIT)
 
         # Should score well (high POP, good R:R, ATM, good liquidity)
         assert score > Decimal("70")
@@ -196,11 +200,7 @@ class TestCompositeScoring:
             composite_score=Decimal(0),
         )
 
-        score = calculate_composite_score(
-            rec,
-            ScoringWeights(),
-            StrategyFamily.VERTICAL_DEBIT
-        )
+        score = calculate_composite_score(rec, ScoringWeights(), StrategyFamily.VERTICAL_DEBIT)
 
         # Should score poorly (low POP, poor R:R, ITM, low liquidity)
         assert score < Decimal("40")
@@ -224,11 +224,7 @@ class TestCompositeScoring:
             composite_score=Decimal(0),
         )
 
-        score = calculate_composite_score(
-            rec,
-            ScoringWeights(),
-            StrategyFamily.VERTICAL_CREDIT
-        )
+        score = calculate_composite_score(rec, ScoringWeights(), StrategyFamily.VERTICAL_CREDIT)
 
         # 40% credit ($2/$5) should contribute to score
         # With high POP (70%), decent R:R, ATM position, and good liquidity
@@ -353,11 +349,7 @@ class TestReasoning:
 
         strategy_reason = "High IV regime favors selling premium"
         reasons = build_reasoning(
-            rec,
-            StrategyFamily.VERTICAL_CREDIT,
-            IVRegime.HIGH,
-            "bullish",
-            strategy_reason
+            rec, StrategyFamily.VERTICAL_CREDIT, IVRegime.HIGH, "bullish", strategy_reason
         )
 
         assert strategy_reason in reasons
@@ -379,7 +371,7 @@ class TestReasoning:
             StrategyFamily.VERTICAL_DEBIT,
             IVRegime.NEUTRAL,
             "bullish",
-            "Neutral IV - balanced debit spread"
+            "Neutral IV - balanced debit spread",
         )
 
         assert any("at-the-money" in r.lower() for r in reasons)
@@ -399,11 +391,7 @@ class TestReasoning:
         )
 
         reasons = build_reasoning(
-            rec,
-            StrategyFamily.VERTICAL_DEBIT,
-            IVRegime.NEUTRAL,
-            "bullish",
-            "Neutral IV"
+            rec, StrategyFamily.VERTICAL_DEBIT, IVRegime.NEUTRAL, "bullish", "Neutral IV"
         )
 
         assert any("Attractive R:R" in r for r in reasons)
@@ -471,7 +459,10 @@ class TestEndToEndRecommendations:
 
         # Check scores are descending
         for i in range(len(result.recommendations) - 1):
-            assert result.recommendations[i].composite_score >= result.recommendations[i + 1].composite_score
+            assert (
+                result.recommendations[i].composite_score
+                >= result.recommendations[i + 1].composite_score
+            )
 
     def test_constraints_filter_candidates(self, sample_contracts):
         """Constraints should filter out non-compliant candidates."""
@@ -520,9 +511,7 @@ class TestEndToEndRecommendations:
 
     def test_iv_regime_override(self, sample_contracts):
         """IV regime override should force strategy selection."""
-        constraints = StrategyConstraints(
-            iv_regime_override="high"  # Force high IV treatment
-        )
+        constraints = StrategyConstraints(iv_regime_override="high")  # Force high IV treatment
 
         result = recommend_strategies(
             contracts=sample_contracts,
@@ -553,4 +542,7 @@ class TestEndToEndRecommendations:
         for rec in result.recommendations:
             assert len(rec.reasons) > 0
             # Should have IV justification
-            assert any("iv" in r.lower() or "regime" in r.lower() or "neutral" in r.lower() for r in rec.reasons)
+            assert any(
+                "iv" in r.lower() or "regime" in r.lower() or "neutral" in r.lower()
+                for r in rec.reasons
+            )

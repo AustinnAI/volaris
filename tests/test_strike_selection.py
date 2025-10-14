@@ -26,65 +26,115 @@ def spy_contracts():
     return [
         # Calls
         OptionContractData(
-            strike=Decimal("440"), option_type="call",
-            bid=Decimal("12.50"), ask=Decimal("13.00"), mark=Decimal("12.75"),
-            delta=Decimal("0.75"), implied_vol=Decimal("0.18"),
-            volume=1000, open_interest=5000
+            strike=Decimal("440"),
+            option_type="call",
+            bid=Decimal("12.50"),
+            ask=Decimal("13.00"),
+            mark=Decimal("12.75"),
+            delta=Decimal("0.75"),
+            implied_vol=Decimal("0.18"),
+            volume=1000,
+            open_interest=5000,
         ),
         OptionContractData(
-            strike=Decimal("445"), option_type="call",
-            bid=Decimal("8.50"), ask=Decimal("9.00"), mark=Decimal("8.75"),
-            delta=Decimal("0.65"), implied_vol=Decimal("0.17"),
-            volume=2000, open_interest=8000
+            strike=Decimal("445"),
+            option_type="call",
+            bid=Decimal("8.50"),
+            ask=Decimal("9.00"),
+            mark=Decimal("8.75"),
+            delta=Decimal("0.65"),
+            implied_vol=Decimal("0.17"),
+            volume=2000,
+            open_interest=8000,
         ),
         OptionContractData(
-            strike=Decimal("450"), option_type="call",
-            bid=Decimal("5.00"), ask=Decimal("5.50"), mark=Decimal("5.25"),
-            delta=Decimal("0.50"), implied_vol=Decimal("0.16"),
-            volume=5000, open_interest=15000
+            strike=Decimal("450"),
+            option_type="call",
+            bid=Decimal("5.00"),
+            ask=Decimal("5.50"),
+            mark=Decimal("5.25"),
+            delta=Decimal("0.50"),
+            implied_vol=Decimal("0.16"),
+            volume=5000,
+            open_interest=15000,
         ),
         OptionContractData(
-            strike=Decimal("455"), option_type="call",
-            bid=Decimal("2.50"), ask=Decimal("3.00"), mark=Decimal("2.75"),
-            delta=Decimal("0.35"), implied_vol=Decimal("0.17"),
-            volume=3000, open_interest=10000
+            strike=Decimal("455"),
+            option_type="call",
+            bid=Decimal("2.50"),
+            ask=Decimal("3.00"),
+            mark=Decimal("2.75"),
+            delta=Decimal("0.35"),
+            implied_vol=Decimal("0.17"),
+            volume=3000,
+            open_interest=10000,
         ),
         OptionContractData(
-            strike=Decimal("460"), option_type="call",
-            bid=Decimal("1.00"), ask=Decimal("1.50"), mark=Decimal("1.25"),
-            delta=Decimal("0.20"), implied_vol=Decimal("0.18"),
-            volume=1500, open_interest=6000
+            strike=Decimal("460"),
+            option_type="call",
+            bid=Decimal("1.00"),
+            ask=Decimal("1.50"),
+            mark=Decimal("1.25"),
+            delta=Decimal("0.20"),
+            implied_vol=Decimal("0.18"),
+            volume=1500,
+            open_interest=6000,
         ),
         # Puts
         OptionContractData(
-            strike=Decimal("440"), option_type="put",
-            bid=Decimal("1.00"), ask=Decimal("1.50"), mark=Decimal("1.25"),
-            delta=Decimal("-0.25"), implied_vol=Decimal("0.18"),
-            volume=1500, open_interest=6000
+            strike=Decimal("440"),
+            option_type="put",
+            bid=Decimal("1.00"),
+            ask=Decimal("1.50"),
+            mark=Decimal("1.25"),
+            delta=Decimal("-0.25"),
+            implied_vol=Decimal("0.18"),
+            volume=1500,
+            open_interest=6000,
         ),
         OptionContractData(
-            strike=Decimal("445"), option_type="put",
-            bid=Decimal("2.50"), ask=Decimal("3.00"), mark=Decimal("2.75"),
-            delta=Decimal("-0.35"), implied_vol=Decimal("0.17"),
-            volume=2000, open_interest=8000
+            strike=Decimal("445"),
+            option_type="put",
+            bid=Decimal("2.50"),
+            ask=Decimal("3.00"),
+            mark=Decimal("2.75"),
+            delta=Decimal("-0.35"),
+            implied_vol=Decimal("0.17"),
+            volume=2000,
+            open_interest=8000,
         ),
         OptionContractData(
-            strike=Decimal("450"), option_type="put",
-            bid=Decimal("5.00"), ask=Decimal("5.50"), mark=Decimal("5.25"),
-            delta=Decimal("-0.50"), implied_vol=Decimal("0.16"),
-            volume=5000, open_interest=15000
+            strike=Decimal("450"),
+            option_type="put",
+            bid=Decimal("5.00"),
+            ask=Decimal("5.50"),
+            mark=Decimal("5.25"),
+            delta=Decimal("-0.50"),
+            implied_vol=Decimal("0.16"),
+            volume=5000,
+            open_interest=15000,
         ),
         OptionContractData(
-            strike=Decimal("455"), option_type="put",
-            bid=Decimal("8.50"), ask=Decimal("9.00"), mark=Decimal("8.75"),
-            delta=Decimal("-0.65"), implied_vol=Decimal("0.17"),
-            volume=3000, open_interest=10000
+            strike=Decimal("455"),
+            option_type="put",
+            bid=Decimal("8.50"),
+            ask=Decimal("9.00"),
+            mark=Decimal("8.75"),
+            delta=Decimal("-0.65"),
+            implied_vol=Decimal("0.17"),
+            volume=3000,
+            open_interest=10000,
         ),
         OptionContractData(
-            strike=Decimal("460"), option_type="put",
-            bid=Decimal("12.50"), ask=Decimal("13.00"), mark=Decimal("12.75"),
-            delta=Decimal("-0.75"), implied_vol=Decimal("0.18"),
-            volume=1000, open_interest=5000
+            strike=Decimal("460"),
+            option_type="put",
+            bid=Decimal("12.50"),
+            ask=Decimal("13.00"),
+            mark=Decimal("12.75"),
+            delta=Decimal("-0.75"),
+            implied_vol=Decimal("0.18"),
+            volume=1000,
+            open_interest=5000,
         ),
     ]
 
@@ -185,9 +235,7 @@ class TestStrikeClassification:
 
     def test_call_atm(self):
         """Test ATM call classification."""
-        pos = classify_strike_position(
-            Decimal("450"), Decimal("450"), "call"
-        )
+        pos = classify_strike_position(Decimal("450"), Decimal("450"), "call")
         assert pos == StrikePosition.ATM
 
     def test_call_otm(self):
@@ -406,10 +454,15 @@ class TestEdgeCases:
         """Test with contracts missing mark prices."""
         contracts = [
             OptionContractData(
-                strike=Decimal("450"), option_type="call",
-                bid=None, ask=None, mark=None,
-                delta=Decimal("0.50"), implied_vol=None,
-                volume=None, open_interest=None
+                strike=Decimal("450"),
+                option_type="call",
+                bid=None,
+                ask=None,
+                mark=None,
+                delta=Decimal("0.50"),
+                implied_vol=None,
+                volume=None,
+                open_interest=None,
             ),
         ]
 

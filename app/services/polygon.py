@@ -48,7 +48,12 @@ class PolygonClient(BaseAPIClient):
         return [item.get("ticker", "").upper() for item in results if item.get("ticker")]
 
     async def get_news(self, symbol: str, limit: int = 5) -> List[Dict]:
-        params = {"ticker": symbol.upper(), "limit": limit, "order": "desc", "sort": "published_utc"}
+        params = {
+            "ticker": symbol.upper(),
+            "limit": limit,
+            "order": "desc",
+            "sort": "published_utc",
+        }
         endpoint = "/v2/reference/news"
         result = await self.get(endpoint, headers=await self._headers(), params=params)
         return result.get("results", [])

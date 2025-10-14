@@ -65,13 +65,13 @@ class SchwabClient(BaseAPIClient):
             (code_verifier, code_challenge) tuple
         """
         # Generate code verifier (43-128 chars, base64url encoded)
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8')
-        code_verifier = code_verifier.rstrip('=')
+        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8")
+        code_verifier = code_verifier.rstrip("=")
 
         # Generate code challenge (SHA256 hash of verifier)
-        challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        code_challenge = base64.urlsafe_b64encode(challenge).decode('utf-8')
-        code_challenge = code_challenge.rstrip('=')
+        challenge = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+        code_challenge = base64.urlsafe_b64encode(challenge).decode("utf-8")
+        code_challenge = code_challenge.rstrip("=")
 
         return code_verifier, code_challenge
 
@@ -395,9 +395,7 @@ class SchwabClient(BaseAPIClient):
 
         if end_date:
             params["endDate"] = (
-                int(end_date.timestamp() * 1000)
-                if isinstance(end_date, datetime)
-                else end_date
+                int(end_date.timestamp() * 1000) if isinstance(end_date, datetime) else end_date
             )
 
         headers = await self._get_headers()
@@ -477,8 +475,4 @@ class SchwabClient(BaseAPIClient):
 
 
 # Global client instance (only if credentials are configured)
-schwab_client = (
-    SchwabClient()
-    if (settings.SCHWAB_APP_KEY and settings.SCHWAB_SECRET_KEY)
-    else None
-)
+schwab_client = SchwabClient() if (settings.SCHWAB_APP_KEY and settings.SCHWAB_SECRET_KEY) else None

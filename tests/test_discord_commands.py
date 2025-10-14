@@ -17,12 +17,14 @@ class TestStrategyCommands:
     @pytest.mark.asyncio
     async def test_plan_command_success(self, mock_interaction, mock_api_response):
         """Test /plan command with successful API response."""
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             # Setup mock
             mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value.json = AsyncMock(
                 return_value=mock_api_response
             )
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value.status = 200
+            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value.status = (
+                200
+            )
 
             # Import command (we're testing logic, not Discord registration)
             # This will be implemented once we verify structure
@@ -116,7 +118,7 @@ class TestMarketDataCommands:
         """Test /spread command width validation logic."""
         # Test cases: (price, width, expected_valid)
         test_cases = [
-            (50.0, 2, True),   # Low price: 2-5 wide is valid
+            (50.0, 2, True),  # Low price: 2-5 wide is valid
             (50.0, 1, False),  # Too narrow
             (50.0, 6, False),  # Too wide
             (200.0, 5, True),  # Mid price: 5-10 wide is valid
@@ -145,7 +147,7 @@ class TestMarketDataCommands:
         low_52w = 500.0
 
         range_size = high_52w - low_52w
-        position_pct = ((current_price - low_52w) / range_size * 100)
+        position_pct = (current_price - low_52w) / range_size * 100
 
         assert range_size == 100.0
         assert position_pct == 80.0  # 80% of range
@@ -272,11 +274,7 @@ class TestUtilityCommands:
         # Expected health response structure
         expected_keys = ["status", "database", "cache"]
 
-        health_status = {
-            "status": "healthy",
-            "database": "connected",
-            "cache": "connected"
-        }
+        health_status = {"status": "healthy", "database": "connected", "cache": "connected"}
 
         for key in expected_keys:
             assert key in health_status
@@ -290,7 +288,7 @@ class TestUtilityCommands:
             "Market Data",
             "Quick Calculators",
             "Validators & Tools",
-            "Quick Examples"
+            "Quick Examples",
         ]
 
         # This would be verified against actual embed in integration test

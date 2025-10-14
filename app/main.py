@@ -104,11 +104,7 @@ async def health_check():
     from app.db.database import engine
     from sqlalchemy import text
 
-    health_status = {
-        "status": "healthy",
-        "database": "disconnected",
-        "cache": "unknown"
-    }
+    health_status = {"status": "healthy", "database": "disconnected", "cache": "unknown"}
 
     # Check database connection
     try:
@@ -122,8 +118,10 @@ async def health_check():
     # Check Redis (if configured)
     try:
         from app.config import settings
-        if hasattr(settings, 'REDIS_URL') and settings.REDIS_URL:
+
+        if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
             import redis.asyncio as aioredis
+
             redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
             await redis_client.ping()
             health_status["cache"] = "connected"

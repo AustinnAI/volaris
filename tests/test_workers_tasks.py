@@ -103,7 +103,9 @@ async def test_fetch_realtime_prices_inserts_price_bar(session: AsyncSession) ->
     await session.commit()
 
     provider = MockPriceProvider()
-    inserted = await fetch_realtime_prices(session, provider=provider, timeframe=Timeframe.ONE_MINUTE)
+    inserted = await fetch_realtime_prices(
+        session, provider=provider, timeframe=Timeframe.ONE_MINUTE
+    )
     assert inserted == 1
 
     result = await session.execute(select(PriceBar))

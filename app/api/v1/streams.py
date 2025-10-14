@@ -42,7 +42,11 @@ def _serialize_stream(stream: PriceStream) -> PriceStreamResponse:
 
 @router.get("/price", response_model=PriceStreamListResponse)
 async def list_price_streams(db: AsyncSession = Depends(get_db)) -> PriceStreamListResponse:
-    stmt = select(PriceStream).options(selectinload(PriceStream.ticker)).order_by(PriceStream.created_at.desc())
+    stmt = (
+        select(PriceStream)
+        .options(selectinload(PriceStream.ticker))
+        .order_by(PriceStream.created_at.desc())
+    )
     result = await db.execute(stmt)
     streams = result.scalars().all()
     return PriceStreamListResponse(streams=[_serialize_stream(stream) for stream in streams])
@@ -133,12 +137,11 @@ async def evaluate_price_streams(db: AsyncSession = Depends(get_db)) -> PriceStr
             if not quote:
                 continue
             current_price = float(
-                quote.get("lastPrice")
-                or quote.get("mark")
-                or quote.get("closePrice")
-                or 0.0
+                quote.get("lastPrice") or quote.get("mark") or quote.get("closePrice") or 0.0
             )
-            prev_close = float(quote.get("previousClose") or quote.get("closePrice") or current_price)
+            prev_close = float(
+                quote.get("previousClose") or quote.get("closePrice") or current_price
+            )
             change = current_price - prev_close
             change_pct = (change / prev_close * 100) if prev_close else 0.0
 
