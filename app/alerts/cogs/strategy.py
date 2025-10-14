@@ -309,17 +309,67 @@ class StrategyCog(commands.Cog):
                 single_strike = float(strikes)
                 option_type = "call" if strategy == "long_call" else "put"
 
-            payload: dict[str, float | str | int | None] = {
-                "strategy_type": strategy,
-                "symbol": symbol_clean,
-                "dte": dte,
-                "premium": premium,
-                "underlying_price": underlying_price,
-                "option_type": option_type,
-                "long_strike": long_strike,
-                "short_strike": short_strike,
-                "strike": single_strike,
-            }
+            # Map strategy to API format and determine bias
+            if is_spread:
+                api_strategy_type = "vertical_spread"
+                # Determine bias from strategy name
+                if strategy in ("bull_call_spread", "bull_put_spread"):
+                    bias = "bullish"
+                else:  # bear_put_spread, bear_call_spread
+                    bias = "bearish"
+            else:
+                # Long options
+                api_strategy_type = "long_call" if strategy == "long_call" else "long_put"
+                bias = "bullish" if strategy == "long_call" else "bearish"
+
+            # Build payload based on strategy type
+            if is_spread:
+                # For spreads, estimate individual premiums from net premium
+                if premium is not None:
+                    # Calculate spread width to estimate individual premiums
+                    spread_width = abs(float(long_strike) - float(short_strike))
+                    net_premium_abs = abs(premium)
+
+                    # Estimate individual premiums based on typical ratios
+                    # Credit spread: short_prem = net_credit + (spread_width * 0.4)
+                    # Debit spread: long_prem = net_debit + (spread_width * 0.4)
+                    if is_credit:
+                        short_premium_val = net_premium_abs + (spread_width * 0.4)
+                        long_premium_val = short_premium_val - net_premium_abs
+                    else:
+                        long_premium_val = net_premium_abs + (spread_width * 0.4)
+                        short_premium_val = long_premium_val - net_premium_abs
+                else:
+                    # Premium not provided - will error, user must provide it
+                    long_premium_val = None
+                    short_premium_val = None
+
+                payload: dict[str, float | str | int | None] = {
+                    "strategy_type": api_strategy_type,
+                    "underlying_symbol": symbol_clean,
+                    "underlying_price": underlying_price,
+                    "long_strike": long_strike,
+                    "short_strike": short_strike,
+                    "long_premium": long_premium_val,
+                    "short_premium": short_premium_val,
+                    "option_type": option_type,
+                    "bias": bias,
+                    "contracts": 1,
+                    "dte": dte,
+                }
+            else:
+                # Long option
+                payload: dict[str, float | str | int | None] = {
+                    "strategy_type": api_strategy_type,
+                    "underlying_symbol": symbol_clean,
+                    "underlying_price": underlying_price,
+                    "strike": single_strike,
+                    "premium": premium,
+                    "option_type": option_type,
+                    "bias": bias,
+                    "contracts": 1,
+                    "dte": dte,
+                }
 
             url = f"{self.bot.api_client.base_url}/api/v1/trade-planner/calculate"
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:

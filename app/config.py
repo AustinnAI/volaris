@@ -230,20 +230,20 @@ class Settings(BaseSettings):
         description="Timezone for APScheduler jobs",
     )
     REALTIME_JOB_INTERVAL_SECONDS: int = Field(
-        default=60,
-        description="Interval for 1-minute price sync job",
+        default=120,
+        description="Interval for price sync job (2 min for memory optimization)",
     )
     FIVE_MINUTE_JOB_INTERVAL_SECONDS: int = Field(
         default=300,
-        description="Interval for 5-minute price sync job",
+        description="[DEPRECATED] 5-minute job removed for memory optimization",
     )
     OPTION_CHAIN_JOB_INTERVAL_MINUTES: int = Field(
-        default=15,
-        description="Interval for option chain refresh job",
+        default=30,
+        description="Interval for option chain refresh (30 min for memory optimization)",
     )
     IV_METRICS_JOB_INTERVAL_MINUTES: int = Field(
-        default=30,
-        description="Interval for IV metric calculation job",
+        default=60,
+        description="Interval for IV metric calculation (60 min for memory optimization)",
     )
     EOD_SYNC_CRON_HOUR: int = Field(
         default=22,

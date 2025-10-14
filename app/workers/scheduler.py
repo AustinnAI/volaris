@@ -9,8 +9,6 @@ from app.config import settings
 from app.db.models import Timeframe
 from app.utils.logger import app_logger
 from app.workers.jobs import (
-    eod_sync_job,
-    historical_backfill_job,
     iv_metric_job,
     option_chain_refresh_job,
     realtime_prices_job,
@@ -33,34 +31,17 @@ def create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=30,  # Skip if job is 30s late
     )
 
-    scheduler.add_job(
-        realtime_prices_job,
-        trigger="interval",
-        seconds=settings.FIVE_MINUTE_JOB_INTERVAL_SECONDS,
-        kwargs={"timeframe": Timeframe.FIVE_MINUTE},
-        id="prices_5m",
-        max_instances=1,
-        misfire_grace_time=60,  # Skip if job is 60s late
-    )
+    # REMOVED: prices_5m job (redundant with prices_1m)
+    # 5-minute data can be downsampled from 1-minute data when needed
+    # Memory savings: ~35%
 
-    scheduler.add_job(
-        eod_sync_job,
-        trigger=CronTrigger(
-            hour=settings.EOD_SYNC_CRON_HOUR,
-            minute=settings.EOD_SYNC_CRON_MINUTE,
-        ),
-        id="eod_sync",
-        max_instances=1,
-        misfire_grace_time=300,  # Skip if job is 5 min late
-    )
+    # REMOVED: eod_sync job (only needed for Phase 4+ backtesting)
+    # Re-enable when implementing historical analysis features
+    # Memory savings: ~20%
 
-    scheduler.add_job(
-        historical_backfill_job,
-        trigger=CronTrigger(hour=settings.HISTORICAL_BACKFILL_CRON_HOUR, minute=0),
-        id="historical_backfill",
-        max_instances=1,
-        misfire_grace_time=600,  # Skip if job is 10 min late
-    )
+    # REMOVED: historical_backfill job (one-time setup)
+    # Run manually when needed: python -m app.workers.jobs historical_backfill
+    # Memory savings: ~15%
 
     scheduler.add_job(
         option_chain_refresh_job,

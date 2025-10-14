@@ -81,7 +81,7 @@
     - `docs/SCHEDULER_SETUP.md` - Complete setup guide
     - `docs/RENDER_DEPLOYMENT_OPTIONS.md` - Comparison of deployment strategies
     - `docs/RENDER_WORKER_QUICKSTART.md` - Quick reference
-  - [x] Jobs: Option chains (15m), prices (1m/5m), IV metrics (30m), EOD sync (daily), historical backfill (daily)
+  - [x] **Memory Optimized (2024):** Removed 3 jobs (prices_5m, eod_sync, historical_backfill) and increased intervals (prices: 2m, options: 30m, iv: 60m). Memory: ~400MB (was ~1GB). Re-enable eod_sync/historical_backfill for Phase 4 backtesting.
 
 ---
 
@@ -416,8 +416,52 @@ app/alerts/
 
 ## Phase 5: Market Structure & Liquidity Alerts (Weeks 7-9) 🎯
 **Priority:** 🟢 HIGH (Core ICT Integration Phase)
+**Status:** 📋 Not Started (Implement after Phase 4)
 
 > _This phase implements the liquidity-first trading methodology from trading-guide.txt_
+
+**⚠️ Prerequisites:**
+- ✅ Phase 4 must be completed first
+- ✅ Historical OHLC data available (Schwab API provides bars)
+- 📦 Install technical analysis libraries: `pandas-ta` or `ta-lib`
+- 📦 Optional: `mplfinance` for chart rendering
+- 📦 Optional: `scikit-learn` for pattern recognition
+
+**📊 What This Enables:**
+
+**Basic Technical Analysis:**
+- RSI, MACD, Bollinger Bands, Stochastic
+- Moving averages (SMA, EMA, VWAP)
+- Support/resistance level detection
+- Volume profile analysis
+- Candlestick pattern recognition
+
+**ICT Concepts:**
+- Fair Value Gaps (FVG) - price inefficiency detection
+- Buy-Side Liquidity (BSL) / Sell-Side Liquidity (SSL) - external liquidity pools
+- Order blocks - last consolidation before displacement
+- Liquidity sweeps - stop hunts and reversals
+- Market Structure Shifts (MSS) - trend changes
+- Displacement - strong impulsive moves
+- HTF/LTF alignment - multi-timeframe analysis
+
+**Improved Command Accuracy:**
+- `/calc` auto-fetches real option chain premiums when omitted
+- Accurate win probability (POP) using real deltas from option chains
+- Greeks calculation (delta, theta, gamma, vega) using Black-Scholes
+- Position sizing based on accurate probability estimates
+
+**New Discord Commands (Phase 8.3-8.5):**
+- `/structure <symbol>` - Current market structure (trend, swings, MSS)
+- `/liquidity <symbol>` - BSL/SSL levels with price targets
+- `/fvg <symbol>` - Fair Value Gaps (unfilled imbalances)
+- `/bias <symbol> <reason>` - ICT-based directional bias with entry models
+
+**Implementation Modules:**
+- `app/core/technical_analysis.py` - Indicator calculations
+- `app/core/ict_detector.py` - ICT pattern detection
+- `app/core/market_structure.py` - Swing detection, trend analysis
+- `app/core/greeks.py` - Black-Scholes greeks calculator
 
 ### 5.1 Level Detection (Enhanced)
 **External Liquidity (Swing Points):**

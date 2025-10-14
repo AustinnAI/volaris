@@ -21,7 +21,9 @@
       "Bash(export DATABASE_URL=\"postgresql://test:test@localhost:5432/test\")",
       "Bash(export UPSTASH_REDIS_REST_URL=\"http://localhost\")",
       "Bash(export UPSTASH_REDIS_REST_TOKEN=\"test\")",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

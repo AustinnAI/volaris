@@ -239,6 +239,100 @@ The bot returns a **rich embed** with comprehensive trade details:
 
 ---
 
+## Using /calc Command
+
+### Command Structure
+
+```
+/calc strategy:<STRATEGY> symbol:<TICKER> strikes:<STRIKES> dte:<DAYS> [premium] [underlying_price]
+```
+
+### Parameters
+
+| Parameter | Required | Type | Description | Example |
+|-----------|----------|------|-------------|---------|
+| `strategy` | ✅ | Choice | Strategy type | `bull_put_spread`, `long_call` |
+| `symbol` | ✅ | String | Ticker symbol | `SPY`, `AAPL` |
+| `strikes` | ✅ | String | Strike price(s) | `667/665` (spread), `450` (single) |
+| `dte` | ✅ | Integer | Days to expiration | `6`, `30`, `45` |
+| `premium` | ❌ | Number | Net premium (credit/debit) | `0.83`, `2.50` |
+| `underlying_price` | ❌ | Number | Current stock price | `665.00` |
+
+### Strike Format Convention
+
+**"Interact First" - Enter the strike you trade first:**
+
+| Strategy | Format | Example | Explanation |
+|----------|--------|---------|-------------|
+| **Bull Call Spread** (Debit) | `lower/higher` | `445/450` | BUY 445 call first, SELL 450 call |
+| **Bear Put Spread** (Debit) | `higher/lower` | `450/445` | BUY 450 put first, SELL 445 put |
+| **Bull Put Spread** (Credit) | `higher/lower` | `667/665` | SELL 667 put first, BUY 665 put |
+| **Bear Call Spread** (Credit) | `lower/higher` | `445/450` | SELL 445 call first, BUY 450 call |
+| **Long Call/Put** | `single` | `450` | Single strike |
+
+### Real Examples
+
+**1. Bull Put Spread with Net Premium**
+```
+/calc strategy:Bull Put Spread (Credit) symbol:SPY strikes:667/665 dte:6 premium:0.83 underlying_price:665
+```
+**→** Calculates P/L for 667/665 bull put with $0.83 credit
+
+**2. Long Call (Auto-Fetch Price)**
+```
+/calc strategy:Long Call symbol:AAPL strikes:180 dte:30
+```
+**→** Fetches current AAPL price and estimates P/L
+
+**3. Bear Call Spread with Manual Inputs**
+```
+/calc strategy:Bear Call Spread (Credit) symbol:QQQ strikes:490/495 dte:21 premium:1.25 underlying_price:487.50
+```
+**→** Manual override for custom scenarios
+
+---
+
+### Current Limitations ⚠️
+
+**For Spread Strategies:**
+
+When providing a single `premium` value for spreads, the bot **estimates individual leg premiums** using spread width:
+- Credit spread: `short_premium = net_credit + (spread_width × 0.4)`
+- Debit spread: `long_premium = net_debit + (spread_width × 0.4)`
+
+#### What's Accurate ✅
+- **Max profit** - Based on net premium
+- **Max loss** - Based on spread width and net premium
+- **Breakeven** - Calculated from strikes and net premium
+- **Risk/reward ratio** - Derived from max profit/loss
+- **All P/L calculations** - Dollar amounts are correct
+
+#### What's Inaccurate ❌
+- **Win probability (POP)** - Needs real deltas from individual legs
+- **Greeks** (delta, theta, gamma) - Not currently calculated, would need real premiums
+- **Position sizing based on POP** - Currently uses simplified delta proxy
+
+#### Example of Estimation Inaccuracy
+
+**Real trade:** Bull Put Spread 667/665
+- Actual: Sell 667 put @ $5.00, Buy 665 put @ $4.20 → Net: $0.80
+- Estimated: Sell 667 put @ $1.60, Buy 665 put @ $0.80 → Net: $0.80
+
+Both have the **same net premium** ($0.80), so P/L calculations are identical, but probability estimates would differ due to different deltas.
+
+#### Recommendations
+
+For **basic P/L analysis**: Current estimation is sufficient
+- Use when you just need max profit, max loss, breakeven, R:R
+
+For **probability-based decisions**: Provide actual leg premiums or use `/plan`
+- `/plan` fetches real option chain data and calculates accurate deltas
+- Better for trade selection and position sizing
+
+**Future improvement (Phase 5):** Auto-fetch individual leg premiums from option chains when `premium` is omitted.
+
+---
+
 ## Deployment Options
 
 ### Option 1: Local Development (Current)
