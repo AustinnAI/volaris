@@ -190,7 +190,11 @@ class StrategyCog(commands.Cog):
     @app_commands.describe(
         strategy="Strategy type",
         symbol="Ticker symbol",
-        strikes="Strike price(s): '540' for long, 'long/short' for spreads (e.g., '445/450')",
+        strikes=(
+            "Strike prices: '540' for single, or 'first/second' for spreads:\n"
+            "• Debit spreads: long/short (buy first, e.g., '445/450')\n"
+            "• Credit spreads: short/long (sell first, e.g., '450/445')"
+        ),
         dte="Days to expiration",
         premium="Net premium (optional - auto-fetches from API if omitted)",
         underlying_price="Current stock price (optional - auto-fetches if omitted)",
@@ -476,7 +480,11 @@ class StrategyCog(commands.Cog):
     @app_commands.command(name="breakeven", description="Calculate breakeven price")
     @app_commands.describe(
         strategy="Strategy type",
-        strikes="Strike price(s): '540' for long options, '540/545' for spreads",
+        strikes=(
+            "Strike prices: '540' for single, or 'first/second' for spreads:\n"
+            "• Debit spreads: long/short (buy first, e.g., '445/450')\n"
+            "• Credit spreads: short/long (sell first, e.g., '450/445')"
+        ),
         cost="Premium paid or received (positive for debit, negative for credit)",
     )
     @app_commands.choices(
@@ -507,21 +515,54 @@ class StrategyCog(commands.Cog):
                         "❌ Invalid strikes format. Use '540/545' for spreads."
                     )
                     return
-                long_strike = float(strike_parts[0])
-                short_strike = float(strike_parts[1])
+                first_strike = float(strike_parts[0])
+                second_strike = float(strike_parts[1])
 
-                if strategy in ("bull_call", "bear_put"):
-                    breakeven = (
-                        long_strike + abs(cost)
-                        if strategy == "bull_call"
-                        else long_strike - abs(cost)
-                    )
-                else:
-                    breakeven = (
-                        short_strike - abs(cost)
-                        if strategy == "bull_put"
-                        else short_strike + abs(cost)
-                    )
+                # Parse strikes based on strategy type (same logic as /calc)
+                if strategy == "bull_call":
+                    # Bull call: lower/higher (e.g., '445/450')
+                    if first_strike >= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bull Call Spread: Format is 'lower/higher' (e.g., '445/450')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    long_strike = first_strike
+                    short_strike = second_strike
+                    breakeven = long_strike + abs(cost)
+                elif strategy == "bear_put":
+                    # Bear put: higher/lower (e.g., '450/445')
+                    if first_strike <= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bear Put Spread: Format is 'higher/lower' (e.g., '450/445')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    long_strike = first_strike
+                    short_strike = second_strike
+                    breakeven = long_strike - abs(cost)
+                elif strategy == "bull_put":
+                    # Bull put credit: higher/lower (e.g., '450/445')
+                    if first_strike <= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bull Put Spread: Format is 'higher/lower' (e.g., '450/445')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    short_strike = first_strike
+                    long_strike = second_strike
+                    breakeven = short_strike - abs(cost)
+                else:  # bear_call
+                    # Bear call credit: lower/higher (e.g., '445/450')
+                    if first_strike >= second_strike:
+                        await interaction.followup.send(
+                            f"❌ Bear Call Spread: Format is 'lower/higher' (e.g., '445/450')\n"
+                            f"You entered: {first_strike}/{second_strike}"
+                        )
+                        return
+                    short_strike = first_strike
+                    long_strike = second_strike
+                    breakeven = short_strike + abs(cost)
             else:
                 strike = float(strikes)
                 breakeven = strike + abs(cost) if strategy == "long_call" else strike - abs(cost)
