@@ -80,11 +80,15 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
     ) -> list[app_commands.Choice[str]]:
         """Autocomplete for /alerts add ticker parameter."""
         _ = interaction
-        matches = self.bot.symbol_service.matches(current)
-        return [
-            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
-            for sym in matches
-        ]
+        try:
+            matches = self.bot.symbol_service.matches(current)
+            return [
+                app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+                for sym in matches
+            ]
+        except Exception as exc:  # pylint: disable=broad-except
+            self.bot.logger.error("Autocomplete error in /alerts add", exc_info=True)
+            return []
 
     @app_commands.command(name="remove", description="Remove a price alert by ID")
     @app_commands.describe(alert_id="Alert ID (view with /alerts list)")
@@ -199,11 +203,15 @@ class StreamsCog(
     ) -> list[app_commands.Choice[str]]:
         """Autocomplete for /streams add ticker parameter."""
         _ = interaction
-        matches = self.bot.symbol_service.matches(current)
-        return [
-            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
-            for sym in matches
-        ]
+        try:
+            matches = self.bot.symbol_service.matches(current)
+            return [
+                app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+                for sym in matches
+            ]
+        except Exception as exc:  # pylint: disable=broad-except
+            self.bot.logger.error("Autocomplete error in /streams add", exc_info=True)
+            return []
 
     @app_commands.command(name="remove", description="Stop a price stream")
     @app_commands.describe(stream_id="Stream ID (see /streams list)")

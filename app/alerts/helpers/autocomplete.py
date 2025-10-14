@@ -162,8 +162,14 @@ class SymbolService:
 
         Returns:
             Formatted string like "Nvidia (NVDA)" or just "NVDA" if name not found.
+            Truncated to 100 characters to fit Discord's autocomplete limit.
         """
         name = self._names.get(symbol)
         if name:
-            return f"{name} ({symbol})"
+            display = f"{name} ({symbol})"
+            # Discord autocomplete has a 100 character limit
+            if len(display) > 100:
+                max_name_len = 100 - len(symbol) - 4  # Account for " (" + ")"
+                display = f"{name[:max_name_len]}... ({symbol})"
+            return display
         return symbol

@@ -149,6 +149,9 @@ class PriceAlertAPI:
         async with aiohttp.ClientSession(timeout=self.timeout) as session:
             async with session.post(url) as response:
                 data = await response.json()
+                if response.status == 404:
+                    # No alerts configured - return empty list
+                    return []
                 if response.status != 200:
                     raise aiohttp.ClientError(data.get("detail", "Failed to evaluate alerts"))
                 triggered = data.get("triggered", [])
@@ -217,6 +220,9 @@ class PriceStreamAPI:
         async with aiohttp.ClientSession(timeout=self.timeout) as session:
             async with session.post(url) as response:
                 data = await response.json()
+                if response.status == 404:
+                    # No streams configured - return empty list
+                    return []
                 if response.status != 200:
                     raise aiohttp.ClientError(data.get("detail", "Failed to evaluate streams"))
                 streams = data.get("streams", [])
