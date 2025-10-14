@@ -77,21 +77,7 @@ class VolarisBot(commands.Bot):
                 self.logger.info("  - %s", cmd.name)
 
             try:
-                # Clear global commands on Discord by syncing empty tree
-                self.tree.clear_commands(guild=None)
-                cleared = await self.tree.sync()
-                self.logger.info("Cleared %d global commands from Discord", len(cleared))
-
-                # Reload cogs to repopulate tree (since we just cleared it)
-                for extension in [
-                    "app.alerts.cogs.strategy",
-                    "app.alerts.cogs.market_data",
-                    "app.alerts.cogs.calculators",
-                    "app.alerts.cogs.utilities",
-                ]:
-                    await self.reload_extension(extension)
-
-                # Now sync to guild
+                # Sync to guild (commands are already loaded)
                 synced = await asyncio.wait_for(self.tree.sync(guild=guild), timeout=30.0)
                 self.logger.info("✅ Synced %d commands to guild %s", len(synced), self.guild_id)
             except TimeoutError:
