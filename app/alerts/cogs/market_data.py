@@ -115,7 +115,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for sentiment symbol selection."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -------------------------------------------------------------------------
     # Top movers digest
@@ -212,7 +215,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for /price."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -------------------------------------------------------------------------
     # Implied volatility
@@ -282,7 +288,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for /iv."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -------------------------------------------------------------------------
     # Quote
@@ -365,7 +374,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for /quote."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -------------------------------------------------------------------------
     # Earnings
@@ -446,7 +458,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for /earnings."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -------------------------------------------------------------------------
     # 52-week range
@@ -530,7 +545,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for /range."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -------------------------------------------------------------------------
     # Volume analysis
@@ -608,7 +626,10 @@ class MarketDataCog(commands.Cog):
         """Autocomplete for /volume."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
 
 async def setup(bot: VolarisBot) -> None:

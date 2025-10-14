@@ -81,7 +81,10 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
         """Autocomplete for /alerts add symbol parameter."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     @app_commands.command(name="remove", description="Remove a price alert by ID")
     @app_commands.describe(alert_id="Alert ID (view with /alerts list)")
@@ -197,7 +200,10 @@ class StreamsCog(
         """Autocomplete for /streams add symbol parameter."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=sym, value=sym) for sym in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     @app_commands.command(name="remove", description="Stop a price stream")
     @app_commands.describe(stream_id="Stream ID (see /streams list)")

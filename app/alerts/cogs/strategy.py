@@ -181,7 +181,10 @@ class StrategyCog(commands.Cog):
         """Autocomplete for the /plan symbol argument."""
         _ = interaction  # Unused, but keeps signature consistent.
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=symbol, value=symbol) for symbol in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # =============================================================================
     # /calc
@@ -467,7 +470,10 @@ class StrategyCog(commands.Cog):
         """Autocomplete for the /calc symbol argument."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=symbol, value=symbol) for symbol in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # =============================================================================
     # /size

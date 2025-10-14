@@ -31,17 +31,19 @@ PRIORITY_SYMBOLS: list[str] = [
 ]
 
 
-def load_sp500_symbols(csv_path: Path | None = None) -> list[str]:
-    """Return the list of S&P 500 tickers from the bundled CSV.
+def load_sp500_symbols(csv_path: Path | None = None) -> tuple[list[str], dict[str, str]]:
+    """Return the list of S&P 500 tickers and their names from the bundled CSV.
 
     Args:
         csv_path: Optional override path for the CSV file.
 
     Returns:
+        Tuple of (symbols list, symbol->name mapping dict).
         Combined list of priority ETFs followed by unique S&P 500 symbols.
         Falls back to a curated subset if the CSV cannot be read.
     """
     symbols: list[str] = []
+    names: dict[str, str] = {}
     path = csv_path or Path(__file__).resolve().parents[2] / "SP500.csv"
 
     try:
@@ -50,8 +52,11 @@ def load_sp500_symbols(csv_path: Path | None = None) -> list[str]:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
                     symbol = (row.get("Symbol") or "").strip()
+                    name = (row.get("Name") or "").strip()
                     if symbol:
                         symbols.append(symbol)
+                        if name:
+                            names[symbol] = name
             logger.info("Loaded %s S&P 500 symbols from %s", len(symbols), path)
         else:
             logger.warning("SP500.csv not found at %s; fetching from Wikipedia", path)
@@ -82,9 +87,24 @@ def load_sp500_symbols(csv_path: Path | None = None) -> list[str]:
             "JNJ",
         ]
 
+    # Add priority ETF names
+    priority_names = {
+        "SPY": "S&P 500 ETF",
+        "QQQ": "Nasdaq 100 ETF",
+        "IWM": "Russell 2000 ETF",
+        "DIA": "Dow Jones ETF",
+        "VOO": "Vanguard S&P 500 ETF",
+        "VTI": "Vanguard Total Market ETF",
+        "GLD": "Gold ETF",
+        "SLV": "Silver ETF",
+        "TLT": "Treasury Bond ETF",
+        "EEM": "Emerging Markets ETF",
+    }
+    names.update(priority_names)
+
     # Deduplicate while preserving priority ordering.
     merged = PRIORITY_SYMBOLS + [s for s in symbols if s not in PRIORITY_SYMBOLS]
-    return merged
+    return merged, names
 
 
 class SymbolService:
@@ -97,9 +117,11 @@ class SymbolService:
         Args:
             initial_symbols: Optional seed list of symbols.
         """
-        self._symbols: list[str] = (
-            list(initial_symbols) if initial_symbols else load_sp500_symbols()
-        )
+        if initial_symbols:
+            self._symbols: list[str] = list(initial_symbols)
+            self._names: dict[str, str] = {}
+        else:
+            self._symbols, self._names = load_sp500_symbols()
 
     @property
     def symbols(self) -> list[str]:
@@ -131,3 +153,17 @@ class SymbolService:
 
         prefix = query.upper()
         return [symbol for symbol in self._symbols if symbol.startswith(prefix)][:limit]
+
+    def get_display_name(self, symbol: str) -> str:
+        """Get display name for a symbol in autocomplete.
+
+        Args:
+            symbol: Ticker symbol.
+
+        Returns:
+            Formatted string like "Nvidia (NVDA)" or just "NVDA" if name not found.
+        """
+        name = self._names.get(symbol)
+        if name:
+            return f"{name} ({symbol})"
+        return symbol

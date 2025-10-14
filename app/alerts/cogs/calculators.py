@@ -291,7 +291,10 @@ class CalculatorsCog(commands.Cog):
         """Autocomplete hook for /delta."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=symbol, value=symbol) for symbol in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
     # -----------------------------------------------------------------------------
     # Spread width guidance
@@ -386,7 +389,10 @@ class CalculatorsCog(commands.Cog):
         """Autocomplete hook for /spread."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
-        return [app_commands.Choice(name=symbol, value=symbol) for symbol in matches]
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
 
 
 async def setup(bot: VolarisBot) -> None:
