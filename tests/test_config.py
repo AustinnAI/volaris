@@ -10,6 +10,7 @@ from app.config import Settings
 def test_settings_validation():
     """Test settings validation"""
     settings = Settings(
+        ENVIRONMENT="development",
         DATABASE_URL="postgresql://test:test@localhost/test",
         UPSTASH_REDIS_REST_URL="https://test.upstash.io",
         UPSTASH_REDIS_REST_TOKEN="test_token",

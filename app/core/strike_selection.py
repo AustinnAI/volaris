@@ -358,7 +358,7 @@ def find_nearest_strikes(
     """
     if positions is None:
         positions = [StrikePosition.ITM, StrikePosition.ATM, StrikePosition.OTM]
-    result = {pos: None for pos in positions}
+    result = dict.fromkeys(positions)
 
     # Filter by option type
     filtered = [c for c in contracts if c.option_type == option_type]
