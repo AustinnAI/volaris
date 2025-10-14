@@ -1,50 +1,100 @@
-2025-10-13T23:41:55.989130803Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 963, in _load_from_module_spec
-2025-10-13T23:41:55.989134293Z     await setup(self)
-2025-10-13T23:41:55.989137753Z   File "/opt/render/project/src/app/alerts/cogs/utilities.py", line 385, in setup
-2025-10-13T23:41:55.989140463Z     await bot.add_cog(UtilitiesCog(bot))
-2025-10-13T23:41:55.989144153Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 799, in add_cog
-2025-10-13T23:41:55.989147793Z     cog = await cog._inject(self, override=override, guild=guild, guilds=guilds)
-2025-10-13T23:41:55.989154334Z Traceback (most recent call last):
-2025-10-13T23:41:55.989158264Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 963, in _load_from_module_spec
-2025-10-13T23:41:55.989164554Z           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-13T23:41:55.989164644Z     await setup(self)
-2025-10-13T23:41:55.989167664Z   File "/opt/render/project/src/app/alerts/cogs/utilities.py", line 385, in setup
-2025-10-13T23:41:55.989184254Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/cog.py", line 745, in _inject
-2025-10-13T23:41:55.989186734Z     bot.tree.add_command(command, override=override, guild=guild, guilds=guilds)
-2025-10-13T23:41:55.989188514Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/app_commands/tree.py", line 407, in add_command
-2025-10-13T23:41:55.989191254Z     raise CommandAlreadyRegistered(name, None)
-2025-10-13T23:41:55.989193734Z discord.app_commands.errors.CommandAlreadyRegistered: Command 'check' already registered.
-2025-10-13T23:41:55.989195325Z 
-2025-10-13T23:41:55.989197245Z The above exception was the direct cause of the following exception:
-2025-10-13T23:41:55.989198865Z 
-2025-10-13T23:41:55.989200635Z Traceback (most recent call last):
-2025-10-13T23:41:55.989202405Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 83, in setup_hook
-2025-10-13T23:41:55.989204075Z     await self.load_extension(extension)
-2025-10-13T23:41:55.989205805Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1029, in load_extension
-2025-10-13T23:41:55.989208055Z     await self._load_from_module_spec(spec, name)
-2025-10-13T23:41:55.989213985Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 968, in _load_from_module_spec
-2025-10-13T23:41:55.989217305Z     raise errors.ExtensionFailed(key, e) from e
-2025-10-13T23:41:55.989221315Z discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.utilities' raised an error: CommandAlreadyRegistered: Command 'check' already registered.
-2025-10-13T23:41:55.989228955Z     await bot.add_cog(UtilitiesCog(bot))
-2025-10-13T23:41:55.989232055Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 799, in add_cog
-2025-10-13T23:41:55.989237406Z     cog = await cog._inject(self, override=override, guild=guild, guilds=guilds)
-2025-10-13T23:41:55.989240235Z           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-13T23:41:55.989243496Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/cog.py", line 745, in _inject
-2025-10-13T23:41:55.989246366Z     bot.tree.add_command(command, override=override, guild=guild, guilds=guilds)
-2025-10-13T23:41:55.989249636Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/app_commands/tree.py", line 407, in add_command
-2025-10-13T23:41:55.989252156Z     raise CommandAlreadyRegistered(name, None)
-2025-10-13T23:41:55.989253926Z discord.app_commands.errors.CommandAlreadyRegistered: Command 'check' already registered.
-2025-10-13T23:41:55.989255536Z 
-2025-10-13T23:41:55.989257286Z The above exception was the direct cause of the following exception:
-2025-10-13T23:41:55.989258856Z 
-2025-10-13T23:41:55.989260516Z Traceback (most recent call last):
-2025-10-13T23:41:55.989262346Z   File "/opt/render/project/src/app/alerts/discord_bot.py", line 83, in setup_hook
-2025-10-13T23:41:55.989264016Z     await self.load_extension(extension)
-2025-10-13T23:41:55.989265736Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 1029, in load_extension
-2025-10-13T23:41:55.989267446Z     await self._load_from_module_spec(spec, name)
-2025-10-13T23:41:55.989269166Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/discord/ext/commands/bot.py", line 968, in _load_from_module_spec
-2025-10-13T23:41:55.989270856Z     raise errors.ExtensionFailed(key, e) from e
-2025-10-13T23:41:55.989277586Z discord.ext.commands.errors.ExtensionFailed: Extension 'app.alerts.cogs.utilities' raised an error: CommandAlreadyRegistered: Command 'check' already registered.
-2025-10-13T23:41:56.17396321Z 2025-10-13 23:41:56,173 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: b85e669f9f840c839d1446288e6ab314).
-2025-10-13T23:41:58.181452038Z 2025-10-13 23:41:58,179 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
-2025-10-13T23:41:58.181492299Z 2025-10-13 23:41:58 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T01:51:14.910827308Z 2025-10-14 01:51:14 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.market_data
+2025-10-14T01:51:14.910837118Z 2025-10-14 01:51:14,910 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.market_data
+2025-10-14T01:51:14.914550168Z 2025-10-14 01:51:14,914 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.calculators
+2025-10-14T01:51:14.914582288Z 2025-10-14 01:51:14 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.calculators
+2025-10-14T01:51:14.91841155Z 2025-10-14 01:51:14 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.utilities
+2025-10-14T01:51:14.9184118Z 2025-10-14 01:51:14,918 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.utilities
+2025-10-14T01:51:15.183477548Z 2025-10-14 01:51:15 - INFO - volaris.discord_bot - Synced commands globally
+2025-10-14T01:51:15.183510128Z 2025-10-14 01:51:15,183 - volaris.discord_bot - INFO - Synced commands globally
+2025-10-14T01:51:15.635221701Z 2025-10-14 01:51:15 - INFO - volaris.discord.autocomplete - Updated symbol cache with 1010 entries
+2025-10-14T01:51:15.635247971Z 2025-10-14 01:51:15,635 - volaris.discord.autocomplete - INFO - Updated symbol cache with 1010 entries
+2025-10-14T01:51:15.635249551Z 2025-10-14 01:51:15 - INFO - volaris.discord_bot - Loaded 1010 symbols from API
+2025-10-14T01:51:15.635258881Z 2025-10-14 01:51:15,635 - volaris.discord_bot - INFO - Loaded 1010 symbols from API
+2025-10-14T01:51:15.833305862Z 2025-10-14 01:51:15,833 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: eb205b9c2aab02e98c45bab454275c5c).
+2025-10-14T01:51:17.836074535Z 2025-10-14 01:51:17 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T01:51:17.836074615Z 2025-10-14 01:51:17,835 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T02:15:02.636907234Z ==> Deploying...
+2025-10-14T02:15:37.144189552Z ==> Your service is live 🎉
+2025-10-14T02:15:41.2219362Z 2025-10-14 02:15:41 - INFO - volaris.discord_bot - Starting Discord bot...
+2025-10-14T02:15:41.22196426Z 2025-10-14 02:15:41,221 - discord.client - INFO - logging in using static token
+2025-10-14T02:15:41.222043642Z 2025-10-14 02:15:41,221 - discord.ext.commands.bot - WARNING - Privileged message content intent is missing, commands may not work as expected.
+2025-10-14T02:15:41.545570337Z 2025-10-14 02:15:41 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.strategy
+2025-10-14T02:15:41.545580337Z 2025-10-14 02:15:41,545 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.strategy
+2025-10-14T02:15:41.552134094Z 2025-10-14 02:15:41 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.market_data
+2025-10-14T02:15:41.552135324Z 2025-10-14 02:15:41,551 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.market_data
+2025-10-14T02:15:41.55597899Z 2025-10-14 02:15:41 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.calculators
+2025-10-14T02:15:41.55598416Z 2025-10-14 02:15:41,555 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.calculators
+2025-10-14T02:15:41.559842456Z 2025-10-14 02:15:41 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.utilities
+2025-10-14T02:15:41.559864837Z 2025-10-14 02:15:41,559 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.utilities
+2025-10-14T02:15:41.883388141Z 2025-10-14 02:15:41 - INFO - volaris.discord_bot - Synced commands globally
+2025-10-14T02:15:41.883388401Z 2025-10-14 02:15:41,883 - volaris.discord_bot - INFO - Synced commands globally
+2025-10-14T02:15:41.961176581Z 2025-10-14 02:15:41 - WARNING - volaris.discord_bot - Failed to refresh symbols from API: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/market/sp500'
+2025-10-14T02:15:41.961177591Z 2025-10-14 02:15:41,960 - volaris.discord_bot - WARNING - Failed to refresh symbols from API: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/market/sp500'
+2025-10-14T02:15:42.139422107Z 2025-10-14 02:15:42,139 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: 0202c45fb41191d893452540225bc42e).
+2025-10-14T02:15:44.143370599Z 2025-10-14 02:15:44 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T02:15:44.14340333Z 2025-10-14 02:15:44,143 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T02:15:44.20735475Z 2025-10-14 02:15:44 - ERROR - volaris.discord_bot - Failed to evaluate price streams: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/streams/price/evaluate'
+2025-10-14T02:15:44.207388511Z 2025-10-14 02:15:44,207 - volaris.discord_bot - ERROR - Failed to evaluate price streams: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/streams/price/evaluate'
+2025-10-14T02:15:44.208024575Z 2025-10-14 02:15:44,207 - volaris.discord_bot - ERROR - Failed to evaluate price alerts: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/alerts/price/evaluate'
+2025-10-14T02:15:44.208032715Z 2025-10-14 02:15:44 - ERROR - volaris.discord_bot - Failed to evaluate price alerts: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/alerts/price/evaluate'
+2025-10-14T02:47:53.697000066Z 2025-10-14 02:47:53,696 - discord.gateway - INFO - Shard ID None has successfully RESUMED session 0202c45fb41191d893452540225bc42e.
+2025-10-14T03:09:38.36984763Z ==> Deploying...
+2025-10-14T03:10:03.929276268Z ==> Your service is live 🎉
+2025-10-14T03:10:03.97448251Z ==> Running 'cd /opt/render/project/src && python -m app.alerts.discord_bot'
+2025-10-14T03:10:05.277873719Z 2025-10-14 03:10:05 - INFO - volaris - Logging initialized - Level: INFO
+2025-10-14T03:10:05.277898249Z 2025-10-14 03:10:05 - INFO - volaris - Environment: production
+2025-10-14T03:10:05.281124425Z 2025-10-14 03:10:05,281 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2025-10-14T03:10:05.28177631Z 2025-10-14 03:10:05,281 - volaris.discord.autocomplete - WARNING - SP500.csv not found at /opt/render/project/src/app/SP500.csv; fetching from Wikipedia
+2025-10-14T03:10:05.28177651Z 2025-10-14 03:10:05 - WARNING - volaris.discord.autocomplete - SP500.csv not found at /opt/render/project/src/app/SP500.csv; fetching from Wikipedia
+2025-10-14T03:10:06.359014148Z 2025-10-14 03:10:06 - INFO - volaris - Fetched 503 S&P 500 symbols from Wikipedia (sync)
+2025-10-14T03:10:06.359044399Z 2025-10-14 03:10:06,358 - volaris - INFO - Fetched 503 S&P 500 symbols from Wikipedia (sync)
+2025-10-14T03:10:06.360212196Z 2025-10-14 03:10:06 - INFO - volaris.discord_bot - Starting Discord bot...
+2025-10-14T03:10:06.360220616Z 2025-10-14 03:10:06,360 - volaris.discord_bot - INFO - Starting Discord bot...
+2025-10-14T03:10:06.360277818Z 2025-10-14 03:10:06,360 - discord.client - INFO - logging in using static token
+2025-10-14T03:10:06.36036887Z 2025-10-14 03:10:06,360 - discord.ext.commands.bot - WARNING - Privileged message content intent is missing, commands may not work as expected.
+2025-10-14T03:10:06.81772697Z 2025-10-14 03:10:06 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.strategy
+2025-10-14T03:10:06.817754791Z 2025-10-14 03:10:06,817 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.strategy
+2025-10-14T03:10:06.823743211Z 2025-10-14 03:10:06,823 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.market_data
+2025-10-14T03:10:06.823755932Z 2025-10-14 03:10:06 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.market_data
+2025-10-14T03:10:06.827435088Z 2025-10-14 03:10:06,827 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.calculators
+2025-10-14T03:10:06.827435458Z 2025-10-14 03:10:06 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.calculators
+2025-10-14T03:10:06.831172796Z 2025-10-14 03:10:06,831 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.utilities
+2025-10-14T03:10:06.831173756Z 2025-10-14 03:10:06 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.utilities
+2025-10-14T03:10:07.392897157Z 2025-10-14 03:10:07 - INFO - volaris.discord_bot - Synced 22 commands globally
+2025-10-14T03:10:07.392938029Z 2025-10-14 03:10:07,392 - volaris.discord_bot - INFO - Synced 22 commands globally
+2025-10-14T03:10:07.762760793Z 2025-10-14 03:10:07 - INFO - volaris.discord.autocomplete - Updated symbol cache with 1010 entries
+2025-10-14T03:10:07.762782504Z 2025-10-14 03:10:07,762 - volaris.discord.autocomplete - INFO - Updated symbol cache with 1010 entries
+2025-10-14T03:10:07.762792924Z 2025-10-14 03:10:07 - INFO - volaris.discord_bot - Loaded 1010 symbols from API
+2025-10-14T03:10:07.762804804Z 2025-10-14 03:10:07,762 - volaris.discord_bot - INFO - Loaded 1010 symbols from API
+2025-10-14T03:10:07.98149336Z 2025-10-14 03:10:07,981 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: c271356f91d743e07849777f387ccab5).
+2025-10-14T03:10:10.00970461Z 2025-10-14 03:10:10 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T03:10:10.009729211Z 2025-10-14 03:10:10,009 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T03:16:41.703849301Z ==> Deploying...
+2025-10-14T03:17:05.681290996Z ==> Your service is live 🎉
+2025-10-14T03:17:08.021527835Z 2025-10-14 03:17:08,021 - volaris.discord.autocomplete - WARNING - SP500.csv not found at /opt/render/project/src/app/SP500.csv; fetching from Wikipedia
+2025-10-14T03:17:08.021536555Z 2025-10-14 03:17:08 - WARNING - volaris.discord.autocomplete - SP500.csv not found at /opt/render/project/src/app/SP500.csv; fetching from Wikipedia
+2025-10-14T03:17:09.042178576Z 2025-10-14 03:17:09,041 - volaris - INFO - Fetched 503 S&P 500 symbols from Wikipedia (sync)
+2025-10-14T03:17:09.042178576Z 2025-10-14 03:17:09 - INFO - volaris - Fetched 503 S&P 500 symbols from Wikipedia (sync)
+2025-10-14T03:17:09.04277994Z 2025-10-14 03:17:09,042 - volaris.discord_bot - INFO - Starting Discord bot...
+2025-10-14T03:17:09.04279187Z 2025-10-14 03:17:09 - INFO - volaris.discord_bot - Starting Discord bot...
+2025-10-14T03:17:09.04280868Z 2025-10-14 03:17:09,042 - discord.client - INFO - logging in using static token
+2025-10-14T03:17:09.042931333Z 2025-10-14 03:17:09,042 - discord.ext.commands.bot - WARNING - Privileged message content intent is missing, commands may not work as expected.
+2025-10-14T03:17:09.488096318Z 2025-10-14 03:17:09 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.strategy
+2025-10-14T03:17:09.488127289Z 2025-10-14 03:17:09,487 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.strategy
+2025-10-14T03:17:09.494086132Z 2025-10-14 03:17:09,493 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.market_data
+2025-10-14T03:17:09.494099222Z 2025-10-14 03:17:09 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.market_data
+2025-10-14T03:17:09.497943588Z 2025-10-14 03:17:09,497 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.calculators
+2025-10-14T03:17:09.497945168Z 2025-10-14 03:17:09 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.calculators
+2025-10-14T03:17:09.501680712Z 2025-10-14 03:17:09 - INFO - volaris.discord_bot - Loaded extension app.alerts.cogs.utilities
+2025-10-14T03:17:09.501713202Z 2025-10-14 03:17:09,501 - volaris.discord_bot - INFO - Loaded extension app.alerts.cogs.utilities
+2025-10-14T03:17:09.683409451Z 2025-10-14 03:17:09 - INFO - volaris.discord_bot - Synced 22 commands globally
+2025-10-14T03:17:09.683434192Z 2025-10-14 03:17:09,683 - volaris.discord_bot - INFO - Synced 22 commands globally
+2025-10-14T03:17:09.75541732Z 2025-10-14 03:17:09 - WARNING - volaris.discord_bot - Failed to refresh symbols from API: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/market/sp500'
+2025-10-14T03:17:09.755446721Z 2025-10-14 03:17:09,755 - volaris.discord_bot - WARNING - Failed to refresh symbols from API: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/market/sp500'
+2025-10-14T03:17:09.96134887Z 2025-10-14 03:17:09,961 - discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: e509e9de36bbaffd84dc47bd75c36e72).
+2025-10-14T03:17:10.087241674Z 2025-10-14 03:17:10 - ERROR - volaris.discord_bot - Failed to evaluate price streams: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/streams/price/evaluate'
+2025-10-14T03:17:10.087275075Z 2025-10-14 03:17:10,086 - volaris.discord_bot - ERROR - Failed to evaluate price streams: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/streams/price/evaluate'
+2025-10-14T03:17:11.964190454Z 2025-10-14 03:17:11 - INFO - volaris.discord_bot - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T03:17:11.964215465Z 2025-10-14 03:17:11,964 - volaris.discord_bot - INFO - Bot ready as Volaris (ID: 1415004898293973135)
+2025-10-14T03:17:12.042023083Z 2025-10-14 03:17:12 - ERROR - volaris.discord_bot - Failed to evaluate price alerts: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/alerts/price/evaluate'
+2025-10-14T03:17:12.042058794Z 2025-10-14 03:17:12,041 - volaris.discord_bot - ERROR - Failed to evaluate price alerts: 502, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='https://volaris-yz19.onrender.com/api/v1/alerts/price/evaluate'
