@@ -57,13 +57,13 @@ class MarketDataCog(commands.Cog):
     @app_commands.command(
         name="sentiment", description="Show sentiment metrics for an S&P 500 stock"
     )
-    @app_commands.describe(symbol="Ticker symbol (S&P 500 only)")
-    async def sentiment(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (S&P 500 only)")
+    async def sentiment(self, interaction: discord.Interaction, ticker: str) -> None:
         """Return aggregated sentiment metrics."""
         await interaction.response.defer()
 
         try:
-            data = await self.bot.market_api.fetch_sentiment(symbol)
+            data = await self.bot.market_api.fetch_sentiment(ticker)
         except aiohttp.ClientError as exc:
             await interaction.followup.send(f"❌ Unable to fetch sentiment: {exc}")
             return
@@ -73,7 +73,7 @@ class MarketDataCog(commands.Cog):
         color = discord.Color.green() if bullish >= bearish else discord.Color.red()
 
         embed = discord.Embed(
-            title=f"🧠 {symbol.upper()} Sentiment",
+            title=f"🧠 {ticker.upper()} Sentiment",
             color=color,
             timestamp=discord.utils.utcnow(),
         )
@@ -106,13 +106,13 @@ class MarketDataCog(commands.Cog):
 
         await interaction.followup.send(embed=embed)
 
-    @sentiment.autocomplete("symbol")
+    @sentiment.autocomplete("ticker")
     async def sentiment_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for sentiment symbol selection."""
+        """Autocomplete for sentiment ticker selection."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
         return [
@@ -154,13 +154,13 @@ class MarketDataCog(commands.Cog):
     # Price command
     # -------------------------------------------------------------------------
     @app_commands.command(name="price", description="Get current stock price and % change")
-    @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
-    async def price(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY, AAPL)")
+    async def price(self, interaction: discord.Interaction, ticker: str) -> None:
         """Fetch the latest price snapshot."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/price/{symbol_clean}"
 
@@ -206,7 +206,7 @@ class MarketDataCog(commands.Cog):
             self.bot.logger.error("Error in /price", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @price.autocomplete("symbol")
+    @price.autocomplete("ticker")
     async def price_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -224,13 +224,13 @@ class MarketDataCog(commands.Cog):
     # Implied volatility
     # -------------------------------------------------------------------------
     @app_commands.command(name="iv", description="Get IV, IV rank, and IV percentile for a stock")
-    @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
-    async def iv(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY, AAPL)")
+    async def iv(self, interaction: discord.Interaction, ticker: str) -> None:
         """Return IV statistics and regime classification."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             await self._maybe_refresh_option_context(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/iv/{symbol_clean}"
 
@@ -279,7 +279,7 @@ class MarketDataCog(commands.Cog):
             self.bot.logger.error("Error in /iv", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @iv.autocomplete("symbol")
+    @iv.autocomplete("ticker")
     async def iv_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -299,13 +299,13 @@ class MarketDataCog(commands.Cog):
     @app_commands.command(
         name="quote", description="Get full quote with price, volume, and bid/ask"
     )
-    @app_commands.describe(symbol="Ticker symbol (e.g., SPY, AAPL)")
-    async def quote(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY, AAPL)")
+    async def quote(self, interaction: discord.Interaction, ticker: str) -> None:
         """Return a richer quote with bid/ask context."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/quote/{symbol_clean}"
 
@@ -365,7 +365,7 @@ class MarketDataCog(commands.Cog):
             self.bot.logger.error("Error in /quote", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @quote.autocomplete("symbol")
+    @quote.autocomplete("ticker")
     async def quote_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -383,13 +383,13 @@ class MarketDataCog(commands.Cog):
     # Earnings
     # -------------------------------------------------------------------------
     @app_commands.command(name="earnings", description="Get next earnings date for a stock")
-    @app_commands.describe(symbol="Ticker symbol (e.g., AAPL)")
-    async def earnings(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (e.g., AAPL)")
+    async def earnings(self, interaction: discord.Interaction, ticker: str) -> None:
         """Return next earnings date and how far out it is."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             url = f"{self.bot.api_client.base_url}/api/v1/market/earnings/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -449,7 +449,7 @@ class MarketDataCog(commands.Cog):
             self.bot.logger.error("Error in /earnings", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @earnings.autocomplete("symbol")
+    @earnings.autocomplete("ticker")
     async def earnings_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -467,13 +467,13 @@ class MarketDataCog(commands.Cog):
     # 52-week range
     # -------------------------------------------------------------------------
     @app_commands.command(name="range", description="Get 52-week high/low and current position")
-    @app_commands.describe(symbol="Ticker symbol (e.g., SPY)")
-    async def range(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY)")
+    async def range(self, interaction: discord.Interaction, ticker: str) -> None:
         """Show where the stock trades within its 52-week range."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/range/{symbol_clean}"
 
@@ -536,7 +536,7 @@ class MarketDataCog(commands.Cog):
             self.bot.logger.error("Error in /range", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @range.autocomplete("symbol")
+    @range.autocomplete("ticker")
     async def range_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -554,13 +554,13 @@ class MarketDataCog(commands.Cog):
     # Volume analysis
     # -------------------------------------------------------------------------
     @app_commands.command(name="volume", description="Compare today's volume to 30-day average")
-    @app_commands.describe(symbol="Ticker symbol (e.g., SPY)")
-    async def volume(self, interaction: discord.Interaction, symbol: str) -> None:
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY)")
+    async def volume(self, interaction: discord.Interaction, ticker: str) -> None:
         """Compare intraday volume to 30-day average."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             await self._maybe_refresh_price(symbol_clean)
             url = f"{self.bot.api_client.base_url}/api/v1/market/volume/{symbol_clean}"
 
@@ -617,7 +617,7 @@ class MarketDataCog(commands.Cog):
             self.bot.logger.error("Error in /volume", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @volume.autocomplete("symbol")
+    @volume.autocomplete("ticker")
     async def volume_symbol_autocomplete(
         self,
         interaction: discord.Interaction,

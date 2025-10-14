@@ -25,7 +25,7 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
 
     @app_commands.command(name="add", description="Create a server-wide price alert")
     @app_commands.describe(
-        symbol="Ticker symbol (e.g., SPY)",
+        ticker="Ticker symbol (e.g., SPY)",
         direction="Trigger condition",
         target_price="Target price that fires the alert",
     )
@@ -38,7 +38,7 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
     async def add(
         self,
         interaction: discord.Interaction,
-        symbol: str,
+        ticker: str,
         direction: str,
         target_price: float,
     ) -> None:
@@ -53,7 +53,7 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
 
         try:
             alert = await self.bot.alerts_api.create_alert(
-                symbol=symbol,
+                symbol=ticker,
                 target_price=target_price,
                 direction=direction,
                 channel_id=interaction.channel_id,
@@ -72,13 +72,13 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @add.autocomplete("symbol")
+    @add.autocomplete("ticker")
     async def alerts_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for /alerts add symbol parameter."""
+        """Autocomplete for /alerts add ticker parameter."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
         return [
@@ -154,7 +154,7 @@ class StreamsCog(
         super().__init__()
 
     @app_commands.command(name="add", description="Start a recurring price update")
-    @app_commands.describe(symbol="Ticker symbol (e.g., SPY)", interval="Update cadence in minutes")
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY)", interval="Update cadence in minutes")
     @app_commands.choices(
         interval=[
             app_commands.Choice(name="5 minutes", value=5),
@@ -163,13 +163,13 @@ class StreamsCog(
             app_commands.Choice(name="60 minutes", value=60),
         ]
     )
-    async def add(self, interaction: discord.Interaction, symbol: str, interval: int) -> None:
+    async def add(self, interaction: discord.Interaction, ticker: str, interval: int) -> None:
         """Create a recurring price stream for the current channel."""
         await interaction.response.defer(ephemeral=True)
 
         try:
             stream = await self.bot.streams_api.create_stream(
-                symbol=symbol,
+                symbol=ticker,
                 channel_id=interaction.channel_id,
                 interval_seconds=interval * 60,
                 created_by=interaction.user.id,
@@ -191,13 +191,13 @@ class StreamsCog(
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @add.autocomplete("symbol")
+    @add.autocomplete("ticker")
     async def streams_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for /streams add symbol parameter."""
+        """Autocomplete for /streams add ticker parameter."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
         return [
@@ -319,14 +319,14 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="📈 Market Data",
             value=(
-                "**`/price <symbol>`** - Current price + % change\n"
-                "**`/quote <symbol>`** - Full quote (bid/ask, volume, spread)\n"
-                "**`/iv <symbol>`** - IV, IV rank, IV percentile + regime\n"
-                "**`/range <symbol>`** - 52-week high/low + current position\n"
-                "**`/volume <symbol>`** - Volume vs 30-day average\n"
-                "**`/sentiment <symbol>`** - Analyst ratings + news (S&P 500 only)\n"
+                "**`/price <ticker>`** - Current price + % change\n"
+                "**`/quote <ticker>`** - Full quote (bid/ask, volume, spread)\n"
+                "**`/iv <ticker>`** - IV, IV rank, IV percentile + regime\n"
+                "**`/range <ticker>`** - 52-week high/low + current position\n"
+                "**`/volume <ticker>`** - Volume vs 30-day average\n"
+                "**`/sentiment <ticker>`** - Analyst ratings + news (S&P 500 only)\n"
                 "**`/top [limit]`** - Top S&P 500 gainers/losers\n"
-                "**`/earnings <symbol>`** - Next earnings date + days until"
+                "**`/earnings <ticker>`** - Next earnings date + days until"
             ),
             inline=False,
         )
@@ -335,7 +335,7 @@ class UtilitiesCog(commands.Cog):
             name="🧮 Quick Calculators",
             value=(
                 "**`/pop <delta>`** - Probability of profit from delta\n"
-                "**`/delta <symbol> <strike> <type> <dte>`** - Get delta for strike\n"
+                "**`/delta <ticker> <strike> <type> <dte>`** - Get delta for strike\n"
                 "**`/contracts <risk> <premium>`** - Contracts for target risk\n"
                 "**`/risk <contracts> <premium>`** - Total risk calculation\n"
                 "**`/dte <date>`** - Days to expiration (YYYY-MM-DD)\n"
@@ -348,7 +348,7 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="✅ Validators & Tools",
             value=(
-                "**`/spread <symbol> <width>`** - Validate spread width\n"
+                "**`/spread <ticker> <width>`** - Validate spread width\n"
                 "**`/check`** - System health check\n"
                 "**`/help`** - Show this help message"
             ),
@@ -358,10 +358,10 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="🔔 Alerts & Streams",
             value=(
-                "**`/alerts add <symbol> <price>`** - Add price alert\n"
+                "**`/alerts add <ticker> <price>`** - Add price alert\n"
                 "**`/alerts list`** - View active alerts\n"
                 "**`/alerts remove <id>`** - Remove alert\n"
-                "**`/streams add <symbol>`** - Subscribe to price stream\n"
+                "**`/streams add <ticker>`** - Subscribe to price stream\n"
                 "**`/streams list`** - View active streams\n"
                 "**`/streams remove <id>`** - Unsubscribe from stream"
             ),

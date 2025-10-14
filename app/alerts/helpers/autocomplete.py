@@ -149,7 +149,7 @@ class SymbolService:
             List of symbol strings.
         """
         if not query:
-            return self._symbols[:limit]
+            return []
 
         prefix = query.upper()
         return [symbol for symbol in self._symbols if symbol.startswith(prefix)][:limit]

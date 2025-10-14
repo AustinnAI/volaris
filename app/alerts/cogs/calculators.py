@@ -217,7 +217,7 @@ class CalculatorsCog(commands.Cog):
     # -----------------------------------------------------------------------------
     @app_commands.command(name="delta", description="Get delta for a specific option strike")
     @app_commands.describe(
-        symbol="Ticker symbol (e.g., SPY)",
+        ticker="Ticker symbol (e.g., SPY)",
         strike="Strike price",
         option_type="Call or Put",
         dte="Days to expiration (approximate)",
@@ -231,7 +231,7 @@ class CalculatorsCog(commands.Cog):
     async def delta(
         self,
         interaction: discord.Interaction,
-        symbol: str,
+        ticker: str,
         strike: float,
         option_type: str,
         dte: int,
@@ -240,7 +240,7 @@ class CalculatorsCog(commands.Cog):
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             url = f"{self.bot.api_client.base_url}/api/v1/market/delta/{symbol_clean}/{strike}/{option_type}/{dte}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -282,7 +282,7 @@ class CalculatorsCog(commands.Cog):
             self.bot.logger.error("Error in /delta", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @delta.autocomplete("symbol")
+    @delta.autocomplete("ticker")
     async def delta_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
@@ -303,15 +303,15 @@ class CalculatorsCog(commands.Cog):
         name="spread", description="Validate if spread width is appropriate for a stock"
     )
     @app_commands.describe(
-        symbol="Ticker symbol (e.g., SPY)",
+        ticker="Ticker symbol (e.g., SPY)",
         width="Spread width in points (e.g., 5 for a 5-point spread)",
     )
-    async def spread(self, interaction: discord.Interaction, symbol: str, width: int) -> None:
+    async def spread(self, interaction: discord.Interaction, ticker: str, width: int) -> None:
         """Validate spread width based on the underlying price tier."""
         await interaction.response.defer()
 
         try:
-            symbol_clean = symbol.upper().strip()
+            symbol_clean = ticker.upper().strip()
             url = f"{self.bot.api_client.base_url}/api/v1/market/price/{symbol_clean}"
 
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
@@ -380,7 +380,7 @@ class CalculatorsCog(commands.Cog):
             self.bot.logger.error("Error in /spread", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @spread.autocomplete("symbol")
+    @spread.autocomplete("ticker")
     async def spread_symbol_autocomplete(
         self,
         interaction: discord.Interaction,

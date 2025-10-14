@@ -57,7 +57,7 @@ class StrategyCog(commands.Cog):
     # =============================================================================
     @app_commands.command(name="plan", description="Get options strategy recommendations")
     @app_commands.describe(
-        symbol="Ticker symbol (e.g., SPY, AAPL)",
+        ticker="Ticker symbol (e.g., SPY, AAPL)",
         bias="Market bias",
         dte="Days to expiration",
         mode="Strategy preference (auto selects based on IV)",
@@ -87,7 +87,7 @@ class StrategyCog(commands.Cog):
     async def plan(
         self,
         interaction: discord.Interaction,
-        symbol: str,
+        ticker: str,
         bias: str,
         dte: int,
         mode: str = "auto",
@@ -112,10 +112,10 @@ class StrategyCog(commands.Cog):
 
         await interaction.response.defer()
 
-        symbol_clean = symbol.upper().strip()
+        symbol_clean = ticker.upper().strip()
         await self._refresh_price_only(symbol_clean)
 
-        symbol_clean = symbol.upper().strip()
+        symbol_clean = ticker.upper().strip()
         await self._refresh_trade_context(symbol_clean)
 
         try:
@@ -172,13 +172,13 @@ class StrategyCog(commands.Cog):
 
         await interaction.followup.send(embed=embed, view=view)
 
-    @plan.autocomplete("symbol")
+    @plan.autocomplete("ticker")
     async def plan_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for the /plan symbol argument."""
+        """Autocomplete for the /plan ticker argument."""
         _ = interaction  # Unused, but keeps signature consistent.
         matches = self.bot.symbol_service.matches(current)
         return [
@@ -192,7 +192,7 @@ class StrategyCog(commands.Cog):
     @app_commands.command(name="calc", description="Calculate P/L for a specific strategy")
     @app_commands.describe(
         strategy="Strategy type",
-        symbol="Ticker symbol",
+        ticker="Ticker symbol",
         strikes=(
             "Strike prices: '540' for single, or 'first/second' for spreads:\n"
             "• Debit spreads: long/short (buy first, e.g., '445/450')\n"
@@ -216,7 +216,7 @@ class StrategyCog(commands.Cog):
         self,
         interaction: discord.Interaction,
         strategy: str,
-        symbol: str,
+        ticker: str,
         strikes: str,
         dte: int,
         premium: float | None = None,
@@ -231,7 +231,7 @@ class StrategyCog(commands.Cog):
 
         await interaction.response.defer()
 
-        symbol_clean = symbol.upper().strip()
+        symbol_clean = ticker.upper().strip()
 
         try:
             is_spread = strategy in {
@@ -461,13 +461,13 @@ class StrategyCog(commands.Cog):
             self.bot.logger.error("Error in /calc", exc_info=True)
             await interaction.followup.send(f"❌ Error: {exc}")
 
-    @calc.autocomplete("symbol")
+    @calc.autocomplete("ticker")
     async def calc_symbol_autocomplete(
         self,
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for the /calc symbol argument."""
+        """Autocomplete for the /calc ticker argument."""
         _ = interaction
         matches = self.bot.symbol_service.matches(current)
         return [
