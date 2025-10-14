@@ -145,19 +145,32 @@
 
 > **Claude must never execute Git commands; only provide the commit message in the chat for me to copy/paste.**
 
-**Format**: Provide a concise commit message following Conventional Commits. Keep to one line when possible, expand to 2-4 lines for large commits:
+**Format**: Provide a concise commit message following Conventional Commits. **Default to 1-3 lines maximum**. Only expand to 4+ lines when there are significant file additions or substantial code changes (e.g., 10+ files, 500+ lines):
 
-**Small commit (one line)**:
+**Small commit (1 line - preferred)**:
 ```
 feat(alerts): add Discord webhook integration with rate limiting
 ```
 
-**Large commit (2-4 lines)**:
+**Medium commit (2-3 lines - use when multiple related changes)**:
 ```
 feat(api): implement Phase 1.2 API integrations
 
-Add 5 provider clients (Schwab OAuth, Tiingo, Alpaca, Databento, Finnhub) with retry logic, error handling, and health checks. Include provider manager with fallback hierarchy and 15+ unit tests.
+Add 5 provider clients (Schwab OAuth, Tiingo, Alpaca, Databento, Finnhub) with retry logic, error handling, and health checks.
 ```
+
+**Large commit (4+ lines - only for substantial additions)**:
+```
+feat(api): implement Phase 1.2 API integrations
+
+Add 5 provider clients (Schwab OAuth, Tiingo, Alpaca, Databento, Finnhub) with retry logic, error handling, and health checks. Include provider manager with fallback hierarchy and 15+ unit tests. Added 12 new files, 1500+ lines of code.
+```
+
+**Guidelines**:
+- 1-3 files changed → 1 line
+- 4-8 files changed → 2-3 lines
+- 9+ files or major feature → 3-4 lines
+- Keep it concise, avoid unnecessary details
 
 **I will then run**:
 ```bash
