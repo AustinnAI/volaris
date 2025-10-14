@@ -69,6 +69,67 @@ When your Render deployment is live:
 
 ---
 
+## Command Scheduler Dependencies
+
+### Commands that work WITHOUT the scheduler
+
+These commands work with `SCHEDULER_ENABLED=false` and perform on-demand data fetching:
+
+#### Pure Calculators (no external data)
+- `/pop` - Probability of profit from delta
+- `/contracts` - Calculate contracts from risk/premium
+- `/risk` - Calculate total risk from contracts/premium
+- `/dte` - Calculate days to expiration
+- `/size` - Position sizing calculator
+- `/breakeven` - Calculate breakeven price
+
+#### Market Data (on-demand refresh)
+- `/price` - Current stock price
+- `/quote` - Full quote with bid/ask
+- `/range` - 52-week high/low
+- `/volume` - Volume analysis
+- `/sentiment` - Sentiment metrics (Finnhub)
+- `/top` - Top movers (Tiingo/Finnhub)
+- `/earnings` - Next earnings date
+- `/spread` - Spread width validator
+
+#### Utilities
+- `/check` - Health check
+- `/help` - Command reference
+- `/alerts add/remove/list` - Price alert management
+- `/streams add/remove/list` - Price stream management
+
+### Commands that REQUIRE the scheduler (or historical data)
+
+These commands depend on historical IV data for accurate IV rank/percentile calculations:
+
+- **`/plan`** - Strategy recommendations
+  - **Can work with on-demand refresh** (calls `/refresh/price`, `/refresh/options`, `/refresh/iv`)
+  - **Limitation:** IV rank/percentile requires historical IV data (ideally 252 days)
+  - Without historical data: IV regime defaults to "neutral", may provide suboptimal strategy recommendations
+  - Error when no data: `"No IV data available for {symbol}. Enable scheduler to populate data."`
+
+- **`/iv`** - IV rank and IV percentile
+  - **Can fetch current IV on-demand**, but IV rank/percentile requires historical comparison
+  - Computes IV rank as: `(current_iv - min_iv) / (max_iv - min_iv) * 100`
+  - Needs multiple historical snapshots to calculate rank accurately
+  - Returns 404 error if no IV metrics exist in database
+
+- **`/calc`** - Strategy calculator (with auto-pricing)
+  - ✅ Works without scheduler if premium/price provided manually
+  - Can auto-fetch option chain pricing on-demand if omitted
+
+- **`/delta`** - Get delta for specific strike
+  - Can fetch option chain data on-demand
+  - Requires option chain snapshot for the requested DTE (±3 days tolerance)
+
+**Bottom line:** `/plan` and `/iv` will technically work with on-demand refresh, but **IV regime detection** (high/low/neutral) will be inaccurate without historical data. For best results, either:
+1. Enable the scheduler to build historical IV data over time
+2. Run a one-time backfill of historical option chains and IV metrics
+3. Accept "neutral" IV regime for all recommendations (less optimal strategy selection)
+
+---
+
 ## Using /plan Command
 
 ### Command Structure

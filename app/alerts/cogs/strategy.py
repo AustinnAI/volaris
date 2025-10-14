@@ -218,6 +218,8 @@ class StrategyCog(commands.Cog):
 
         await interaction.response.defer()
 
+        symbol_clean = symbol.upper().strip()
+
         try:
             is_spread = strategy in {
                 "bull_call_spread",
