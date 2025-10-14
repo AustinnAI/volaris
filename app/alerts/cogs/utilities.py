@@ -318,6 +318,8 @@ class UtilitiesCog(commands.Cog):
                 "**`/iv <symbol>`** - IV, IV rank, IV percentile + regime\n"
                 "**`/range <symbol>`** - 52-week high/low + current position\n"
                 "**`/volume <symbol>`** - Volume vs 30-day average\n"
+                "**`/sentiment <symbol>`** - Analyst ratings + news (S&P 500 only)\n"
+                "**`/top [limit]`** - Top S&P 500 gainers/losers\n"
                 "**`/earnings <symbol>`** - Next earnings date + days until"
             ),
             inline=False,
@@ -348,6 +350,19 @@ class UtilitiesCog(commands.Cog):
         )
 
         embed.add_field(
+            name="🔔 Alerts & Streams",
+            value=(
+                "**`/alerts add <symbol> <price>`** - Add price alert\n"
+                "**`/alerts list`** - View active alerts\n"
+                "**`/alerts remove <id>`** - Remove alert\n"
+                "**`/streams add <symbol>`** - Subscribe to price stream\n"
+                "**`/streams list`** - View active streams\n"
+                "**`/streams remove <id>`** - Unsubscribe from stream"
+            ),
+            inline=False,
+        )
+
+        embed.add_field(
             name="💡 Quick Examples",
             value=(
                 "• `/price SPY` - Get SPY current price\n"
@@ -367,7 +382,7 @@ class UtilitiesCog(commands.Cog):
             inline=False,
         )
 
-        embed.set_footer(text="Volaris Trading Intelligence • 18 Commands Available")
+        embed.set_footer(text="Volaris Trading Intelligence • 26 Commands Available")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 

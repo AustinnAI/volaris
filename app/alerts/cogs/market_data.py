@@ -130,7 +130,17 @@ class MarketDataCog(commands.Cog):
         try:
             data = await self.bot.market_api.fetch_top_movers(movers_limit)
         except aiohttp.ClientError as exc:
-            await interaction.followup.send(f"❌ Unable to fetch top movers: {exc}")
+            error_msg = str(exc)
+            if "403" in error_msg or "forbidden" in error_msg.lower():
+                await interaction.followup.send(
+                    "❌ Polygon API access denied. The `/top` command requires a Polygon.io "
+                    "subscription with access to the Stocks Snapshot API.\n"
+                    "• Check that `POLYGON_API_KEY` is set in environment variables\n"
+                    "• Verify your Polygon subscription includes snapshot data\n"
+                    "• Free tier may not have access to this endpoint"
+                )
+            else:
+                await interaction.followup.send(f"❌ Unable to fetch top movers: {exc}")
             return
 
         data["limit"] = movers_limit

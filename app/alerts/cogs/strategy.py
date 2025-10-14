@@ -321,7 +321,7 @@ class StrategyCog(commands.Cog):
                 "strike": single_strike,
             }
 
-            url = f"{self.bot.api_client.base_url}/api/v1/strategy/calc"
+            url = f"{self.bot.api_client.base_url}/api/v1/trade-planner/calculate"
             async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
                 async with session.post(url, json=payload) as response:
                     if response.status != 200:
