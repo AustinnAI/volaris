@@ -275,8 +275,18 @@ async def get_quote(symbol: str):
         if not quote:
             raise HTTPException(status_code=502, detail="Malformed Schwab quote payload")
 
-        current_price = quote.get("lastPrice") or quote.get("mark") or quote.get("closePrice") or 0
-        previous_close = quote.get("previousClose") or quote.get("closePrice") or current_price
+        # Prefer closePrice for accuracy after market close, fallback to lastPrice during market hours
+        close_price = quote.get("closePrice") or 0
+        last_price = quote.get("lastPrice") or 0
+        mark_price = quote.get("mark") or 0
+
+        # Use closePrice if available and lastPrice differs significantly (after-hours scenario)
+        if close_price and last_price and abs(last_price - close_price) < (close_price * 0.01):
+            current_price = close_price  # Within 1%, use official close
+        else:
+            current_price = last_price or mark_price or close_price or 0
+
+        previous_close = quote.get("previousClose") or quote.get("previousClosePrice") or current_price
         change_pct = ((current_price - previous_close) / previous_close * 100) if previous_close else 0
 
         return {
