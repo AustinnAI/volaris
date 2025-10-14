@@ -431,9 +431,10 @@ class StrategyCog(commands.Cog):
                 value=f"{float(result.get('risk_reward_ratio', 0)):.2f}:1",
                 inline=True,
             )
-            embed.add_field(
-                name="🎯 Breakeven", value=f"${float(result['breakeven']):.2f}", inline=True
-            )
+            # API returns breakeven_prices as a list
+            breakeven_prices = result.get("breakeven_prices", [])
+            breakeven_display = f"${float(breakeven_prices[0]):.2f}" if breakeven_prices else "N/A"
+            embed.add_field(name="🎯 Breakeven", value=breakeven_display, inline=True)
 
             if result.get("pop_proxy"):
                 embed.add_field(
