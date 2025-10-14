@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage server price alerts"):
     """Slash command group for managing shared price alerts."""
 
-    def __init__(self, bot: "VolarisBot") -> None:
+    def __init__(self, bot: VolarisBot) -> None:
         self.bot = bot
         super().__init__()
 
@@ -146,7 +146,7 @@ class StreamsCog(
 ):
     """Slash command group for scheduled price stream management."""
 
-    def __init__(self, bot: "VolarisBot") -> None:
+    def __init__(self, bot: VolarisBot) -> None:
         self.bot = bot
         super().__init__()
 
@@ -243,7 +243,7 @@ class StreamsCog(
 class UtilitiesCog(commands.Cog):
     """Single commands for health checks and help messaging."""
 
-    def __init__(self, bot: "VolarisBot") -> None:
+    def __init__(self, bot: VolarisBot) -> None:
         self.bot = bot
 
     @app_commands.command(name="check", description="Check bot and API health")
@@ -372,7 +372,7 @@ class UtilitiesCog(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-async def setup(bot: "VolarisBot") -> None:
+async def setup(bot: VolarisBot) -> None:
     """Register utility cogs."""
     await bot.add_cog(AlertsCog(bot))
     await bot.add_cog(StreamsCog(bot))

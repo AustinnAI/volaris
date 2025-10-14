@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class CalculatorsCog(commands.Cog):
     """Pure calculation helpers surfaced as slash commands."""
 
-    def __init__(self, bot: "VolarisBot") -> None:
+    def __init__(self, bot: VolarisBot) -> None:
         self.bot = bot
 
     # -----------------------------------------------------------------------------
@@ -389,6 +389,6 @@ class CalculatorsCog(commands.Cog):
         return [app_commands.Choice(name=symbol, value=symbol) for symbol in matches]
 
 
-async def setup(bot: "VolarisBot") -> None:
+async def setup(bot: VolarisBot) -> None:
     """Register the calculators cog."""
     await bot.add_cog(CalculatorsCog(bot))

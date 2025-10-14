@@ -3,13 +3,14 @@ Database Connection & Session Management
 Handles PostgreSQL connection using SQLAlchemy async engine.
 """
 
-from typing import AsyncGenerator, Dict, Tuple
-from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+from collections.abc import AsyncGenerator
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    AsyncSession,
     AsyncEngine,
+    AsyncSession,
     async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
@@ -19,7 +20,7 @@ from app.config import settings
 
 # Convert psycopg2 URL to async driver (asyncpg)
 # Neon uses standard PostgreSQL, so we use asyncpg driver
-def _parse_ssl_from_url(url: str) -> Tuple[str, Dict]:
+def _parse_ssl_from_url(url: str) -> tuple[str, dict]:
     """Translate libpq-style sslmode to asyncpg-friendly settings.
 
     - Rewrites scheme to postgresql+asyncpg
@@ -35,7 +36,7 @@ def _parse_ssl_from_url(url: str) -> Tuple[str, Dict]:
 
     # Parse and adjust query params
     query_params = dict(parse_qsl(parsed.query))
-    connect_args: Dict = {}
+    connect_args: dict = {}
 
     # Remove parameters unsupported by asyncpg
     query_params.pop("channel_binding", None)
@@ -72,7 +73,6 @@ def get_async_database_url(url: str) -> str:
 
 
 DATABASE_URL, CONNECT_ARGS = _parse_ssl_from_url(settings.DATABASE_URL)
-CONNECT_ARGS = CONNECT_ARGS or None
 
 
 def _build_engine() -> AsyncEngine:

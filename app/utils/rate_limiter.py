@@ -5,7 +5,7 @@ Token bucket implementation for API rate limiting.
 
 import time
 from collections import defaultdict
-from typing import Dict, Tuple
+
 from app.config import settings
 
 
@@ -16,7 +16,7 @@ class RateLimiter:
     """
 
     def __init__(self):
-        self.buckets: Dict[str, Tuple[int, float]] = defaultdict(
+        self.buckets: dict[str, tuple[int, float]] = defaultdict(
             lambda: (settings.RATE_LIMIT_REQUESTS, time.time())
         )
         self.max_requests = settings.RATE_LIMIT_REQUESTS

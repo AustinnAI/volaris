@@ -3,10 +3,10 @@ Comprehensive tests for Discord bot commands.
 Tests all 18 commands with mocked Discord interactions.
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import datetime, timedelta
-import discord
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from app.alerts.helpers import SymbolService, create_recommendation_embed
 
@@ -37,11 +37,7 @@ class TestStrategyCommands:
     async def test_calc_command_bull_put_spread(self, mock_interaction):
         """Test /calc command with bull put credit spread."""
         # Test parameters
-        strategy = "bull_put_spread"
-        symbol = "SPY"
         strikes = "540/535"
-        dte = 7
-        premium = 1.25
 
         # Verify strike parsing logic
         first, second = strikes.split("/")
@@ -72,7 +68,6 @@ class TestStrategyCommands:
         """Test /breakeven command for bull call spread."""
         # Bull call: long 445, short 450, debit $2.50
         long_strike = 445.0
-        short_strike = 450.0
         cost = 2.50
 
         # Breakeven = long_strike + cost

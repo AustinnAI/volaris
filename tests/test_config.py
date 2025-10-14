@@ -3,6 +3,7 @@ Test Configuration Module
 """
 
 import pytest
+
 from app.config import Settings
 
 

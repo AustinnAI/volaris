@@ -2,7 +2,6 @@
 Tests for Phase 3.4 DTE-based strategy preferences.
 """
 
-import pytest
 from decimal import Decimal
 
 from app.core.strategy_recommender import (

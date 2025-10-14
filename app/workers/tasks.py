@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from collections.abc import Iterable, Sequence
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from typing import Iterable, List, Optional, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,6 +43,8 @@ from app.db.models import (
     Ticker,
     Timeframe,
 )
+from app.services.exceptions import DataNotFoundError
+from app.services.index_service import SP500_SYMBOL, refresh_index_constituents
 from app.services.provider_manager import DataType, provider_manager
 from app.utils.logger import app_logger
 from app.workers.utils import (
@@ -51,9 +53,6 @@ from app.workers.utils import (
     parse_date,
     to_decimal,
 )
-from app.services.index_service import refresh_index_constituents, SP500_SYMBOL
-from app.services.exceptions import DataNotFoundError
-
 
 TIMEFRAME_TO_PROVIDER_ARGS = {
     Timeframe.ONE_MINUTE: {"frequency": 1, "timeframe": "1Min"},
@@ -80,7 +79,7 @@ def _provider_enum_from_object(provider: object) -> DataProvider:
         return DataProvider.SCHWAB
 
 
-async def get_active_tickers(session: AsyncSession) -> List[Ticker]:
+async def get_active_tickers(session: AsyncSession) -> list[Ticker]:
     """Fetch active tickers to drive periodic jobs."""
 
     result = await session.execute(select(Ticker).where(Ticker.is_active.is_(True)))
@@ -89,9 +88,9 @@ async def get_active_tickers(session: AsyncSession) -> List[Ticker]:
 
 async def fetch_realtime_prices(
     session: AsyncSession,
-    symbols: Optional[Sequence[str]] = None,
+    symbols: Sequence[str] | None = None,
     timeframe: Timeframe = Timeframe.ONE_MINUTE,
-    provider: Optional[object] = None,
+    provider: object | None = None,
     lookback_minutes: int = 5,
 ) -> int:
     """Ingest recent intraday bars from the configured provider."""
@@ -152,11 +151,11 @@ async def refresh_sp500_constituents_task(session: AsyncSession) -> int:
 
 async def backfill_historical_prices(
     session: AsyncSession,
-    symbols: Optional[Sequence[str]] = None,
+    symbols: Sequence[str] | None = None,
     timeframe: Timeframe = Timeframe.DAILY,
-    start: Optional[date] = None,
-    end: Optional[date] = None,
-    provider: Optional[object] = None,
+    start: date | None = None,
+    end: date | None = None,
+    provider: object | None = None,
 ) -> int:
     """Backfill historical prices using Databento/Alpaca providers."""
 
@@ -199,8 +198,8 @@ async def backfill_historical_prices(
 
 async def sync_eod_prices(
     session: AsyncSession,
-    symbols: Optional[Sequence[str]] = None,
-    provider: Optional[object] = None,
+    symbols: Sequence[str] | None = None,
+    provider: object | None = None,
 ) -> int:
     """Sync end-of-day prices using Tiingo."""
 
@@ -241,8 +240,8 @@ async def sync_eod_prices(
 
 async def fetch_option_chains(
     session: AsyncSession,
-    symbols: Optional[Sequence[str]] = None,
-    provider: Optional[object] = None,
+    symbols: Sequence[str] | None = None,
+    provider: object | None = None,
     strike_count: int = 10,
 ) -> int:
     """Pull option-chain snapshots and persist contracts."""
@@ -259,7 +258,7 @@ async def fetch_option_chains(
     provider_enum = _provider_enum_from_object(provider)
     snapshots_created = 0
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for ticker in tickers:
         try:
@@ -300,7 +299,7 @@ async def fetch_option_chains(
 
         for contract in contracts:
             option_type = OptionType.CALL if "call" in contract["option_type"] else OptionType.PUT
-            expiration_date = parse_date(contract.get("expiration")) or expiration
+            parse_date(contract.get("expiration")) or expiration
             session.add(
                 OptionContract(
                     snapshot_id=snapshot.id,
@@ -330,7 +329,7 @@ async def fetch_option_chains(
 
 async def compute_iv_metrics(
     session: AsyncSession,
-    symbols: Optional[Sequence[str]] = None,
+    symbols: Sequence[str] | None = None,
 ) -> int:
     """Derive IV/IVR metrics from the latest option-chain snapshots."""
 
@@ -372,7 +371,7 @@ async def compute_iv_metrics(
     return metrics_created
 
 
-async def _resolve_tickers(session: AsyncSession, symbols: Optional[Sequence[str]]) -> List[Ticker]:
+async def _resolve_tickers(session: AsyncSession, symbols: Sequence[str] | None) -> list[Ticker]:
     if symbols:
         result = await session.execute(select(Ticker).where(Ticker.symbol.in_(symbols)))
         return list(result.scalars().all())
@@ -412,8 +411,8 @@ async def _fetch_historical_payload(
     if hasattr(provider, "get_bars"):
         timeframe_label = TIMEFRAME_TO_PROVIDER_ARGS.get(timeframe, {}).get("timeframe", "1Day")
         # Alpaca expects ISO8601 datetimes
-        start_dt = datetime.combine(start, datetime.min.time()).replace(tzinfo=timezone.utc)
-        end_dt = datetime.combine(end, datetime.min.time()).replace(tzinfo=timezone.utc)
+        start_dt = datetime.combine(start, datetime.min.time()).replace(tzinfo=UTC)
+        end_dt = datetime.combine(end, datetime.min.time()).replace(tzinfo=UTC)
         return await provider.get_bars(
             symbol,
             timeframe=timeframe_label,
@@ -470,7 +469,7 @@ def _compute_dte(today: date, expiration: date) -> int:
     return max((expiration - today).days, 0)
 
 
-def _first_contract_expiration(contracts: Iterable[dict]) -> Optional[date]:
+def _first_contract_expiration(contracts: Iterable[dict]) -> date | None:
     for contract in contracts:
         parsed = parse_date(contract.get("expiration"))
         if parsed:
@@ -478,8 +477,8 @@ def _first_contract_expiration(contracts: Iterable[dict]) -> Optional[date]:
     return None
 
 
-def _group_contracts_by_term(snapshot: OptionChainSnapshot) -> dict[IVTerm, List[Decimal]]:
-    grouped: dict[IVTerm, List[Decimal]] = defaultdict(list)
+def _group_contracts_by_term(snapshot: OptionChainSnapshot) -> dict[IVTerm, list[Decimal]]:
+    grouped: dict[IVTerm, list[Decimal]] = defaultdict(list)
 
     for contract in snapshot.contracts:
         if contract.implied_vol is None:
@@ -498,7 +497,7 @@ async def _calculate_iv_rank(
     ticker_id: int,
     term: IVTerm,
     current_iv: Decimal,
-) -> tuple[Optional[Decimal], Optional[Decimal]]:
+) -> tuple[Decimal | None, Decimal | None]:
     """Compute IV rank and percentile based on historical metrics."""
 
     # Fetch historical metrics excluding the current observation so far.

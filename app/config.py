@@ -3,7 +3,6 @@ Configuration Management
 Centralized configuration using Pydantic settings with environment variable support.
 """
 
-from typing import List, Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -30,7 +29,7 @@ class Settings(BaseSettings):
 
     # API Configuration
     API_V1_PREFIX: str = Field(default="/api/v1", description="API version 1 prefix")
-    CORS_ORIGINS: List[str] = Field(
+    CORS_ORIGINS: list[str] = Field(
         default=["http://localhost:3000", "http://localhost:8000"],
         description="Allowed CORS origins",
     )
@@ -49,58 +48,54 @@ class Settings(BaseSettings):
     REDIS_TTL_DEFAULT: int = Field(default=300, description="Default Redis TTL in seconds")
 
     # Sentry Monitoring
-    SENTRY_DSN: Optional[str] = Field(default=None, description="Sentry DSN for error tracking")
+    SENTRY_DSN: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
     # API Keys - Market Data Providers (Phase 1.2)
     # Schwab API (Primary real-time 1m/5m)
-    SCHWAB_APP_KEY: Optional[str] = Field(default=None, description="Schwab API app key")
-    SCHWAB_SECRET_KEY: Optional[str] = Field(default=None, description="Schwab API secret key")
-    SCHWAB_REDIRECT_URI: Optional[str] = Field(
+    SCHWAB_APP_KEY: str | None = Field(default=None, description="Schwab API app key")
+    SCHWAB_SECRET_KEY: str | None = Field(default=None, description="Schwab API secret key")
+    SCHWAB_REDIRECT_URI: str | None = Field(
         default="https://volaris.onrender.com/auth/schwab/callback",  # Placeholder - update when deployed
         description="Schwab OAuth redirect URI",
     )
     SCHWAB_API_BASE: str = Field(
         default="https://api.schwabapi.com", description="Schwab API base URL"
     )
-    SCHWAB_REFRESH_TOKEN: Optional[str] = Field(
-        default=None, description="Schwab OAuth refresh token"
-    )
+    SCHWAB_REFRESH_TOKEN: str | None = Field(default=None, description="Schwab OAuth refresh token")
 
     # Tiingo (EOD data)
-    TIINGO_API_KEY: Optional[str] = Field(default=None, description="Tiingo API key")
+    TIINGO_API_KEY: str | None = Field(default=None, description="Tiingo API key")
     TIINGO_API_BASE: str = Field(
         default="https://api.tiingo.com", description="Tiingo API base URL"
     )
 
     # Alpaca (Minute delayed historical)
-    ALPACA_API_KEY: Optional[str] = Field(default=None, description="Alpaca API key ID")
-    ALPACA_API_SECRET: Optional[str] = Field(default=None, description="Alpaca API secret key")
+    ALPACA_API_KEY: str | None = Field(default=None, description="Alpaca API key ID")
+    ALPACA_API_SECRET: str | None = Field(default=None, description="Alpaca API secret key")
     ALPACA_API_BASE: str = Field(
         default="https://paper-api.alpaca.markets", description="Alpaca API base URL"
     )
 
     # Databento (Historical backfills)
-    DATABENTO_API_KEY: Optional[str] = Field(default=None, description="Databento API key")
+    DATABENTO_API_KEY: str | None = Field(default=None, description="Databento API key")
     DATABENTO_API_BASE: str = Field(
         default="https://hist.databento.com", description="Databento API base URL"
     )
 
     # Finnhub (Fundamentals & news)
-    FINNHUB_API_KEY: Optional[str] = Field(default=None, description="Finnhub API key")
-    FINNHUB_WEBHOOK_SECRET: Optional[str] = Field(
-        default=None, description="Finnhub webhook secret"
-    )
+    FINNHUB_API_KEY: str | None = Field(default=None, description="Finnhub API key")
+    FINNHUB_WEBHOOK_SECRET: str | None = Field(default=None, description="Finnhub webhook secret")
     FINNHUB_API_BASE: str = Field(
         default="https://finnhub.io/api/v1", description="Finnhub API base URL"
     )
 
     # Discord Integration (Phase 8)
-    DISCORD_BOT_TOKEN: Optional[str] = Field(default=None, description="Discord bot token")
-    DISCORD_WEBHOOK_URL: Optional[str] = Field(
+    DISCORD_BOT_TOKEN: str | None = Field(default=None, description="Discord bot token")
+    DISCORD_WEBHOOK_URL: str | None = Field(
         default=None, description="Discord webhook URL for alerts"
     )
-    DISCORD_SERVER_ID: Optional[str] = Field(default=None, description="Discord server/guild ID")
-    DISCORD_GUILD_ID: Optional[str] = Field(
+    DISCORD_SERVER_ID: str | None = Field(default=None, description="Discord server/guild ID")
+    DISCORD_GUILD_ID: str | None = Field(
         default=None,
         description="Discord guild ID for command registration (fallback to SERVER_ID)",
     )
@@ -132,16 +127,16 @@ class Settings(BaseSettings):
     TOP_MOVERS_LIMIT: int = Field(
         default=5, description="Number of gainers/losers to display in top command"
     )
-    DISCORD_DEFAULT_CHANNEL_ID: Optional[str] = Field(
+    DISCORD_DEFAULT_CHANNEL_ID: str | None = Field(
         default=None, description="Default Discord channel for scheduled digests"
     )
-    POLYGON_API_KEY: Optional[str] = Field(
+    POLYGON_API_KEY: str | None = Field(
         default=None, description="Polygon.io API key for market data"
     )
     POLYGON_API_BASE: str = Field(
         default="https://api.polygon.io", description="Polygon API base URL"
     )
-    MARKETSTACK_API_KEY: Optional[str] = Field(
+    MARKETSTACK_API_KEY: str | None = Field(
         default=None, description="Marketstack API key for EOD fallback"
     )
     MARKETSTACK_API_BASE: str = Field(
@@ -149,7 +144,7 @@ class Settings(BaseSettings):
     )
 
     @property
-    def discord_guild_id_resolved(self) -> Optional[str]:
+    def discord_guild_id_resolved(self) -> str | None:
         """Get Discord guild ID, preferring DISCORD_GUILD_ID, falling back to DISCORD_SERVER_ID."""
         return self.DISCORD_GUILD_ID or self.DISCORD_SERVER_ID
 

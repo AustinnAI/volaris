@@ -5,7 +5,6 @@ Handles OAuth callbacks for providers requiring authorization.
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from typing import Optional
 
 from app.services.schwab import schwab_client
 from app.utils.logger import app_logger
@@ -16,8 +15,8 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 @router.get("/schwab/callback")
 async def schwab_oauth_callback(
     code: str = Query(..., description="Authorization code from Schwab"),
-    code_verifier: Optional[str] = Query(None, description="PKCE code verifier"),
-    state: Optional[str] = Query(None, description="OAuth state (carries PKCE verifier)"),
+    code_verifier: str | None = Query(None, description="PKCE code verifier"),
+    state: str | None = Query(None, description="OAuth state (carries PKCE verifier)"),
 ):
     """
     Schwab OAuth callback endpoint.

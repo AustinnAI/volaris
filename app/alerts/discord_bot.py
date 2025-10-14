@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -18,10 +17,10 @@ import discord
 from discord.ext import commands, tasks
 
 from app.alerts.helpers import (
-    StrategyRecommendationAPI,
+    MarketInsightsAPI,
     PriceAlertAPI,
     PriceStreamAPI,
-    MarketInsightsAPI,
+    StrategyRecommendationAPI,
     SymbolService,
     build_top_movers_embed,
 )
@@ -33,7 +32,7 @@ logger = logging.getLogger("volaris.discord_bot")
 class VolarisBot(commands.Bot):
     """Discord bot that exposes Volaris strategy tooling."""
 
-    def __init__(self, api_base_url: str, guild_id: Optional[int] = None) -> None:
+    def __init__(self, api_base_url: str, guild_id: int | None = None) -> None:
         intents = discord.Intents.default()
         intents.message_content = False
 
@@ -47,7 +46,7 @@ class VolarisBot(commands.Bot):
         self.symbol_service = SymbolService()
         self.guild_id = guild_id
         self.user_command_count: dict[int, list[float]] = {}
-        self.last_digest_date: Optional[str] = None
+        self.last_digest_date: str | None = None
         self.est_tz = ZoneInfo("America/New_York")
 
     async def setup_hook(self) -> None:
@@ -95,7 +94,7 @@ class VolarisBot(commands.Bot):
                 # Now sync to guild
                 synced = await asyncio.wait_for(self.tree.sync(guild=guild), timeout=30.0)
                 self.logger.info("✅ Synced %d commands to guild %s", len(synced), self.guild_id)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.logger.error("❌ Command sync timed out after 30s")
             except Exception as e:
                 self.logger.error("❌ Command sync failed: %s", e, exc_info=True)
@@ -328,7 +327,7 @@ class VolarisBot(commands.Bot):
         await self.wait_until_ready()
 
 
-bot: Optional[VolarisBot] = None
+bot: VolarisBot | None = None
 
 
 def create_bot() -> VolarisBot:
@@ -353,8 +352,8 @@ async def run_bot() -> None:
     scheduler = None
     if settings.SCHEDULER_ENABLED:
         try:
-            from app.workers import create_scheduler
             from app.db.database import init_db
+            from app.workers import create_scheduler
 
             logger.info("Initializing database for scheduler...")
             await init_db()

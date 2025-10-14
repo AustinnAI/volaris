@@ -4,7 +4,6 @@ Pydantic schemas for price alert management.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,7 +19,7 @@ class PriceAlertCreateRequest(BaseModel):
         ..., description="Trigger direction: above (price ≥ target) or below (price ≤ target)"
     )
     channel_id: str = Field(..., description="Discord channel ID to notify when the alert fires")
-    created_by: Optional[str] = Field(
+    created_by: str | None = Field(
         default=None,
         description="Discord user ID that created the alert (optional metadata)",
     )
@@ -34,14 +33,14 @@ class PriceAlertResponse(BaseModel):
     target_price: Decimal
     direction: PriceAlertDirection
     channel_id: str
-    created_by: Optional[str]
+    created_by: str | None
     created_at: datetime
 
 
 class PriceAlertListResponse(BaseModel):
     """Response containing all active alerts."""
 
-    alerts: List[PriceAlertResponse]
+    alerts: list[PriceAlertResponse]
 
 
 class PriceAlertTriggered(BaseModel):
@@ -53,10 +52,10 @@ class PriceAlertTriggered(BaseModel):
     direction: PriceAlertDirection
     current_price: Decimal
     channel_id: str
-    created_by: Optional[str]
+    created_by: str | None
 
 
 class PriceAlertEvaluateResponse(BaseModel):
     """Result of evaluating alerts for trigger conditions."""
 
-    triggered: List[PriceAlertTriggered]
+    triggered: list[PriceAlertTriggered]

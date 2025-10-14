@@ -2,39 +2,40 @@
 Pydantic schemas for strategy recommendation API.
 """
 
-from decimal import Decimal
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from decimal import Decimal
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
 
 class StrategyObjectivesRequest(BaseModel):
     """Trading objectives."""
 
-    max_risk_per_trade: Optional[Decimal] = Field(
+    max_risk_per_trade: Decimal | None = Field(
         default=None, description="Maximum risk per trade in dollars", ge=0
     )
-    min_pop_pct: Optional[Decimal] = Field(
+    min_pop_pct: Decimal | None = Field(
         default=None, description="Minimum probability of profit %", ge=0, le=100
     )
-    min_risk_reward: Optional[Decimal] = Field(
+    min_risk_reward: Decimal | None = Field(
         default=None, description="Minimum risk/reward ratio", ge=0
     )
-    prefer_credit: Optional[bool] = Field(
+    prefer_credit: bool | None = Field(
         default=None, description="Prefer credit spreads if True, debit if False, auto if None"
     )
     avoid_earnings: bool = Field(default=False, description="Avoid trades during earnings window")
-    account_size: Optional[Decimal] = Field(
+    account_size: Decimal | None = Field(
         default=None, description="Account size for position sizing", ge=0
     )
-    bias_reason: Optional[str] = Field(
+    bias_reason: str | None = Field(
         default="user_manual",
         description="Reason for bias: 'ssl_sweep', 'bsl_sweep', 'fvg_retest', 'structure_shift', 'user_manual'",
     )
 
     @field_validator("bias_reason")
     @classmethod
-    def validate_bias_reason(cls, v: Optional[str]) -> Optional[str]:
+    def validate_bias_reason(cls, v: str | None) -> str | None:
         """Validate bias_reason is one of the allowed values."""
         if v is None:
             return "user_manual"
@@ -47,24 +48,22 @@ class StrategyObjectivesRequest(BaseModel):
 class StrategyConstraintsRequest(BaseModel):
     """Strategy constraints."""
 
-    min_credit_pct: Optional[Decimal] = Field(
+    min_credit_pct: Decimal | None = Field(
         default=None, description="Minimum credit as % of spread width", ge=0, le=100
     )
-    max_spread_width: Optional[int] = Field(
+    max_spread_width: int | None = Field(
         default=None, description="Maximum spread width in points", ge=1, le=50
     )
-    iv_regime_override: Optional[str] = Field(
+    iv_regime_override: str | None = Field(
         default=None, description="Override IV regime: 'high', 'neutral', or 'low'"
     )
-    min_open_interest: Optional[int] = Field(
-        default=None, description="Minimum open interest", ge=0
-    )
-    min_volume: Optional[int] = Field(default=None, description="Minimum daily volume", ge=0)
-    min_mark_price: Optional[Decimal] = Field(default=None, description="Minimum mark price", ge=0)
+    min_open_interest: int | None = Field(default=None, description="Minimum open interest", ge=0)
+    min_volume: int | None = Field(default=None, description="Minimum daily volume", ge=0)
+    min_mark_price: Decimal | None = Field(default=None, description="Minimum mark price", ge=0)
 
     @field_validator("iv_regime_override")
     @classmethod
-    def validate_iv_regime(cls, v: Optional[str]) -> Optional[str]:
+    def validate_iv_regime(cls, v: str | None) -> str | None:
         """Validate IV regime override."""
         if v is None:
             return None
@@ -81,13 +80,13 @@ class StrategyRecommendationRequest(BaseModel):
     bias: str = Field(..., description="Directional bias: 'bullish', 'bearish', or 'neutral'")
     target_dte: int = Field(..., description="Target days to expiration", ge=1, le=365)
     dte_tolerance: int = Field(default=3, description="DTE tolerance window in days", ge=0, le=10)
-    target_move_pct: Optional[Decimal] = Field(
+    target_move_pct: Decimal | None = Field(
         default=None, description="Expected move as % of current price", ge=0, le=100
     )
-    objectives: Optional[StrategyObjectivesRequest] = Field(
+    objectives: StrategyObjectivesRequest | None = Field(
         default=None, description="Trading objectives and preferences"
     )
-    constraints: Optional[StrategyConstraintsRequest] = Field(
+    constraints: StrategyConstraintsRequest | None = Field(
         default=None, description="Strategy constraints and filters"
     )
 
@@ -110,42 +109,42 @@ class StrategyRecommendationResponse(BaseModel):
     position: str = Field(..., description="'itm', 'atm', or 'otm'")
 
     # Strike details
-    strike: Optional[Decimal] = Field(default=None, description="Strike for long options")
-    long_strike: Optional[Decimal] = Field(default=None, description="Long strike for spreads")
-    short_strike: Optional[Decimal] = Field(default=None, description="Short strike for spreads")
+    strike: Decimal | None = Field(default=None, description="Strike for long options")
+    long_strike: Decimal | None = Field(default=None, description="Long strike for spreads")
+    short_strike: Decimal | None = Field(default=None, description="Short strike for spreads")
 
     # Pricing
-    premium: Optional[Decimal] = Field(default=None, description="Premium for long options")
-    long_premium: Optional[Decimal] = Field(default=None, description="Long premium for spreads")
-    short_premium: Optional[Decimal] = Field(default=None, description="Short premium for spreads")
-    net_premium: Optional[Decimal] = Field(default=None, description="Net debit/credit")
-    is_credit: Optional[bool] = Field(default=None, description="True if credit spread")
-    net_credit: Optional[Decimal] = Field(default=None, description="Credit received")
-    net_debit: Optional[Decimal] = Field(default=None, description="Debit paid")
+    premium: Decimal | None = Field(default=None, description="Premium for long options")
+    long_premium: Decimal | None = Field(default=None, description="Long premium for spreads")
+    short_premium: Decimal | None = Field(default=None, description="Short premium for spreads")
+    net_premium: Decimal | None = Field(default=None, description="Net debit/credit")
+    is_credit: bool | None = Field(default=None, description="True if credit spread")
+    net_credit: Decimal | None = Field(default=None, description="Credit received")
+    net_debit: Decimal | None = Field(default=None, description="Debit paid")
 
     # Spread details
-    width_points: Optional[Decimal] = Field(default=None, description="Spread width in points")
-    width_dollars: Optional[Decimal] = Field(default=None, description="Spread width in dollars")
+    width_points: Decimal | None = Field(default=None, description="Spread width in points")
+    width_dollars: Decimal | None = Field(default=None, description="Spread width in dollars")
 
     # Risk metrics
     breakeven: Decimal = Field(..., description="Breakeven price")
-    max_profit: Optional[Decimal] = Field(..., description="Maximum profit (None=unlimited)")
+    max_profit: Decimal | None = Field(..., description="Maximum profit (None=unlimited)")
     max_loss: Decimal = Field(..., description="Maximum loss")
-    risk_reward_ratio: Optional[Decimal] = Field(default=None, description="Risk/reward ratio")
+    risk_reward_ratio: Decimal | None = Field(default=None, description="Risk/reward ratio")
 
     # Probabilities
-    pop_proxy: Optional[Decimal] = Field(default=None, description="Probability of profit proxy %")
+    pop_proxy: Decimal | None = Field(default=None, description="Probability of profit proxy %")
 
     # Greeks
-    delta: Optional[Decimal] = Field(default=None, description="Delta for long options")
-    long_delta: Optional[Decimal] = Field(default=None, description="Long delta for spreads")
-    short_delta: Optional[Decimal] = Field(default=None, description="Short delta for spreads")
+    delta: Decimal | None = Field(default=None, description="Delta for long options")
+    long_delta: Decimal | None = Field(default=None, description="Long delta for spreads")
+    short_delta: Decimal | None = Field(default=None, description="Short delta for spreads")
 
     # Position sizing
-    recommended_contracts: Optional[int] = Field(
+    recommended_contracts: int | None = Field(
         default=None, description="Recommended contract count"
     )
-    position_size_dollars: Optional[Decimal] = Field(
+    position_size_dollars: Decimal | None = Field(
         default=None, description="Position size in dollars"
     )
 
@@ -153,12 +152,12 @@ class StrategyRecommendationResponse(BaseModel):
     composite_score: Decimal = Field(..., description="Composite ranking score (0-100)")
 
     # Liquidity
-    avg_open_interest: Optional[int] = Field(default=None, description="Average open interest")
-    avg_volume: Optional[int] = Field(default=None, description="Average volume")
+    avg_open_interest: int | None = Field(default=None, description="Average open interest")
+    avg_volume: int | None = Field(default=None, description="Average volume")
 
     # Reasoning
-    reasons: List[str] = Field(default_factory=list, description="Reasoning bullets")
-    warnings: List[str] = Field(default_factory=list, description="Warning messages")
+    reasons: list[str] = Field(default_factory=list, description="Reasoning bullets")
+    warnings: list[str] = Field(default_factory=list, description="Warning messages")
 
 
 class StrategyRecommendationResultResponse(BaseModel):
@@ -167,22 +166,22 @@ class StrategyRecommendationResultResponse(BaseModel):
     underlying_symbol: str = Field(..., description="Ticker symbol")
     underlying_price: Decimal = Field(..., description="Current underlying price")
     chosen_strategy_family: str = Field(..., description="Selected strategy family")
-    iv_rank: Optional[Decimal] = Field(default=None, description="IV rank percentile")
-    iv_regime: Optional[str] = Field(default=None, description="IV regime classification")
+    iv_rank: Decimal | None = Field(default=None, description="IV rank percentile")
+    iv_regime: str | None = Field(default=None, description="IV regime classification")
     dte: int = Field(..., description="Days to expiration")
-    expected_move_pct: Optional[Decimal] = Field(default=None, description="Expected move %")
+    expected_move_pct: Decimal | None = Field(default=None, description="Expected move %")
     data_timestamp: datetime = Field(..., description="Data timestamp")
 
     # Recommendations
-    recommendations: List[StrategyRecommendationResponse] = Field(
+    recommendations: list[StrategyRecommendationResponse] = Field(
         ..., description="Ranked recommendations (top 2-3)"
     )
 
     # Configuration
-    config_used: Dict[str, Any] = Field(..., description="Configuration used")
+    config_used: dict[str, Any] = Field(..., description="Configuration used")
 
     # Warnings
-    warnings: List[str] = Field(default_factory=list, description="System warnings")
+    warnings: list[str] = Field(default_factory=list, description="System warnings")
 
     class Config:
         json_encoders = {

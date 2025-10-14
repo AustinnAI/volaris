@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import csv
 import logging
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
 from app.services.sp500_scraper import fetch_sp500_symbols_wikipedia_sync
 

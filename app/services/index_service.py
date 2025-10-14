@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List, Set
+import csv
+from pathlib import Path
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import IndexConstituent, Ticker
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
 from app.services.polygon import polygon_client
+from app.services.sp500_scraper import fetch_sp500_symbols_wikipedia
 from app.services.tickers import get_or_create_ticker
 from app.utils.logger import app_logger
-from pathlib import Path
-import csv
-from app.services.sp500_scraper import fetch_sp500_symbols_wikipedia
 
 SP500_SYMBOL = "^GSPC"
 
@@ -23,10 +22,10 @@ SP500_SYMBOL = "^GSPC"
 async def refresh_index_constituents(
     db: AsyncSession,
     index_symbol: str = SP500_SYMBOL,
-) -> List[str]:
+) -> list[str]:
     """Refresh constituents for the given index symbol using Finnhub."""
 
-    symbols: List[str] = []
+    symbols: list[str] = []
 
     if polygon_client:
         try:
@@ -58,7 +57,7 @@ async def refresh_index_constituents(
     existing: list[IndexConstituent] = list(result.scalars().all())
     existing_map = {cons.ticker.symbol: cons for cons in existing}
 
-    incoming: Set[str] = {symbol.upper() for symbol in symbols}
+    incoming: set[str] = {symbol.upper() for symbol in symbols}
 
     # Add or update memberships
     for symbol in incoming:
@@ -69,7 +68,7 @@ async def refresh_index_constituents(
         db.add(membership)
 
     # Remove stale memberships
-    stale_symbols: Set[str] = set(existing_map.keys()) - incoming
+    stale_symbols: set[str] = set(existing_map.keys()) - incoming
     if stale_symbols:
         await db.execute(
             delete(IndexConstituent)
@@ -91,7 +90,7 @@ async def refresh_index_constituents(
     return sorted(incoming)
 
 
-async def _load_local_constituents(db: AsyncSession, index_symbol: str) -> List[str]:
+async def _load_local_constituents(db: AsyncSession, index_symbol: str) -> list[str]:
     """Fallback: hydrate constituents from bundled CSV."""
     csv_path = Path(__file__).parent.parent / "SP500.csv"
     if not csv_path.exists():
@@ -130,7 +129,7 @@ async def _load_local_constituents(db: AsyncSession, index_symbol: str) -> List[
 async def get_index_constituents_symbols(
     db: AsyncSession,
     index_symbol: str = SP500_SYMBOL,
-) -> Set[str]:
+) -> set[str]:
     stmt = (
         select(Ticker.symbol)
         .join(IndexConstituent, IndexConstituent.ticker_id == Ticker.id)
@@ -147,7 +146,7 @@ async def is_sp500_member(db: AsyncSession, symbol: str) -> bool:
 
 async def ensure_sp500_constituents(
     db: AsyncSession, index_symbol: str = SP500_SYMBOL
-) -> List[str]:
+) -> list[str]:
     """Ensure the database has at least one batch of S&P 500 constituents."""
     existing = await get_index_constituents_symbols(db, index_symbol)
     if existing:

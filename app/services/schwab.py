@@ -8,13 +8,12 @@ Documentation: https://developer.schwab.com/products/trader-api--individual
 import base64
 import hashlib
 import secrets
-from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import UTC, date, datetime
 from urllib.parse import urlencode
 
 from app.config import settings
 from app.services.base_client import BaseAPIClient
-from app.services.exceptions import AuthenticationError, DataNotFoundError
+from app.services.exceptions import AuthenticationError
 from app.utils.cache import cache
 
 
@@ -113,7 +112,7 @@ class SchwabClient(BaseAPIClient):
         self,
         authorization_code: str,
         code_verifier: str,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Exchange authorization code for access and refresh tokens.
 
@@ -162,8 +161,8 @@ class SchwabClient(BaseAPIClient):
 
     async def refresh_access_token(
         self,
-        refresh_token: Optional[str] = None,
-    ) -> Dict[str, str]:
+        refresh_token: str | None = None,
+    ) -> dict[str, str]:
         """
         Refresh the access token using refresh token.
 
@@ -220,9 +219,10 @@ class SchwabClient(BaseAPIClient):
                 provider="Schwab",
             ) from e
 
-    async def _cache_tokens(self, tokens: Dict) -> None:
+    async def _cache_tokens(self, tokens: dict) -> None:
         """Cache access and refresh tokens with expiry tracking"""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from app.utils.logger import app_logger
 
         if "access_token" in tokens:
@@ -243,7 +243,7 @@ class SchwabClient(BaseAPIClient):
             token_issued_key = f"{self.refresh_token_key}:issued_at"
             await cache.set(
                 token_issued_key,
-                datetime.now(timezone.utc).isoformat(),
+                datetime.now(UTC).isoformat(),
                 ttl=refresh_ttl,
             )
 
@@ -254,8 +254,6 @@ class SchwabClient(BaseAPIClient):
 
     async def _get_access_token(self) -> str:
         """Get valid access token, refreshing if necessary"""
-        from datetime import datetime, timedelta, timezone
-        from app.utils.logger import app_logger
 
         # Try cached token first
         access_token = await cache.get(self.access_token_key)
@@ -271,7 +269,8 @@ class SchwabClient(BaseAPIClient):
 
     async def _check_refresh_token_expiry(self) -> None:
         """Log warning if refresh token is nearing expiry"""
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime
+
         from app.utils.logger import app_logger
 
         token_issued_key = f"{self.refresh_token_key}:issued_at"
@@ -283,7 +282,7 @@ class SchwabClient(BaseAPIClient):
 
         try:
             issued_at = datetime.fromisoformat(issued_at_str)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             age_days = (now - issued_at).days
 
             # Warn if token is 6+ days old (expires in 7 days)
@@ -299,7 +298,7 @@ class SchwabClient(BaseAPIClient):
         except (ValueError, TypeError) as e:
             app_logger.debug(f"Could not parse refresh token timestamp: {e}")
 
-    async def _get_headers(self) -> Dict[str, str]:
+    async def _get_headers(self) -> dict[str, str]:
         """Get headers with access token"""
         access_token = await self._get_access_token()
         return {
@@ -309,7 +308,7 @@ class SchwabClient(BaseAPIClient):
 
     # ==================== Market Data API ====================
 
-    async def get_quote(self, symbol: str) -> Dict:
+    async def get_quote(self, symbol: str) -> dict:
         """
         Get real-time quote for a symbol.
 
@@ -352,9 +351,9 @@ class SchwabClient(BaseAPIClient):
         period: int = 1,
         frequency_type: str = "minute",
         frequency: int = 1,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> Dict:
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> dict:
         """
         Get price history (candles).
 
@@ -376,7 +375,7 @@ class SchwabClient(BaseAPIClient):
         Example for 5-minute bars:
             period_type="day", period=5, frequency_type="minute", frequency=5
         """
-        endpoint = f"/marketdata/v1/pricehistory"
+        endpoint = "/marketdata/v1/pricehistory"
 
         params = {
             "symbol": symbol.upper(),
@@ -407,9 +406,9 @@ class SchwabClient(BaseAPIClient):
         contract_type: str = "ALL",
         strike_count: int = 10,
         include_quotes: bool = True,
-        from_date: Optional[date] = None,
-        to_date: Optional[date] = None,
-    ) -> Dict:
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> dict:
         """
         Get options chain for a symbol.
 
@@ -424,7 +423,7 @@ class SchwabClient(BaseAPIClient):
         Returns:
             Options chain data
         """
-        endpoint = f"/marketdata/v1/chains"
+        endpoint = "/marketdata/v1/chains"
 
         params = {
             "symbol": symbol.upper(),
@@ -443,9 +442,9 @@ class SchwabClient(BaseAPIClient):
 
     async def get_market_hours(
         self,
-        markets: List[str],
-        date: Optional[date] = None,
-    ) -> Dict:
+        markets: list[str],
+        date: date | None = None,
+    ) -> dict:
         """
         Get market hours for specified markets.
 

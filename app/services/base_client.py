@@ -4,14 +4,14 @@ Shared functionality for all market data provider clients.
 Includes retry logic with exponential backoff and error handling.
 """
 
-import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
+
 import httpx
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from app.services.exceptions import (
@@ -62,11 +62,11 @@ class BaseAPIClient:
         self,
         method: str,
         endpoint: str,
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Make HTTP request with retry logic.
 
@@ -105,7 +105,7 @@ class BaseAPIClient:
             if response.status_code == 429:
                 retry_after = int(response.headers.get("Retry-After", 60))
                 raise RateLimitError(
-                    f"Rate limit exceeded",
+                    "Rate limit exceeded",
                     provider=self.provider_name,
                     retry_after=retry_after,
                     status_code=429,
@@ -166,20 +166,20 @@ class BaseAPIClient:
     async def get(
         self,
         endpoint: str,
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """GET request"""
         return await self._request("GET", endpoint, headers=headers, params=params)
 
     async def post(
         self,
         endpoint: str,
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """POST request"""
         return await self._request(
             "POST", endpoint, headers=headers, params=params, json=json, data=data

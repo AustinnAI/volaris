@@ -4,7 +4,7 @@ Tests for price stream evaluation endpoint.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -16,7 +16,7 @@ from app.api.v1 import streams
 @pytest.mark.asyncio
 async def test_evaluate_price_streams_dispatch(monkeypatch):
     """Streams due for dispatch should emit payloads and update scheduling."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stream_obj = SimpleNamespace(
         id=7,
         ticker=SimpleNamespace(symbol="QQQ"),

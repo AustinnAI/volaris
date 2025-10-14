@@ -6,8 +6,9 @@ Usage: python -m app.workers
 import asyncio
 import signal
 import sys
+
 from app.config import settings
-from app.db.database import init_db, close_db
+from app.db.database import close_db, init_db
 from app.utils.logger import app_logger
 from app.workers import create_scheduler
 

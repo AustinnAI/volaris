@@ -3,13 +3,11 @@ API Client Exceptions
 Clear error taxonomy for all market data provider interactions.
 """
 
-from typing import Optional
-
 
 class APIClientError(Exception):
     """Base exception for all API client errors"""
 
-    def __init__(self, message: str, provider: str, status_code: Optional[int] = None):
+    def __init__(self, message: str, provider: str, status_code: int | None = None):
         self.message = message
         self.provider = provider
         self.status_code = status_code
@@ -25,7 +23,7 @@ class AuthenticationError(APIClientError):
 class RateLimitError(APIClientError):
     """Rate limit exceeded"""
 
-    def __init__(self, message: str, provider: str, retry_after: Optional[int] = None, **kwargs):
+    def __init__(self, message: str, provider: str, retry_after: int | None = None, **kwargs):
         self.retry_after = retry_after
         super().__init__(message, provider, **kwargs)
 

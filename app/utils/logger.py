@@ -5,7 +5,7 @@ Structured logging with Sentry integration for error tracking.
 
 import logging
 import sys
-from typing import Any, Dict
+
 from app.config import settings
 
 

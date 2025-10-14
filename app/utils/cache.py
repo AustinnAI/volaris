@@ -4,8 +4,10 @@ Wrapper for Upstash Redis REST API with async support.
 """
 
 import json
-from typing import Any, Optional
+from typing import Any
+
 import httpx
+
 from app.config import settings
 
 
@@ -24,7 +26,7 @@ class RedisCache:
         }
         self.client = httpx.AsyncClient(headers=self.headers, timeout=10.0)
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """
         Get value from cache.
 
@@ -59,7 +61,7 @@ class RedisCache:
         self,
         key: str,
         value: Any,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> bool:
         """
         Set value in cache with optional TTL.

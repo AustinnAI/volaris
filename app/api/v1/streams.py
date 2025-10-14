@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -10,19 +10,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.v1.market_data import _extract_schwab_quote
 from app.api.v1.schemas.streams import (
     PriceStreamCreateRequest,
+    PriceStreamDispatch,
+    PriceStreamEvaluateResponse,
     PriceStreamListResponse,
     PriceStreamResponse,
-    PriceStreamEvaluateResponse,
-    PriceStreamDispatch,
 )
 from app.config import settings
 from app.db.database import get_db
 from app.db.models import PriceStream
-from app.services.tickers import get_or_create_ticker
 from app.services.schwab import SchwabClient
-from app.api.v1.market_data import _extract_schwab_quote
+from app.services.tickers import get_or_create_ticker
 from app.utils.logger import app_logger
 
 router = APIRouter(prefix="/streams", tags=["streams"])
@@ -80,7 +80,7 @@ async def create_or_update_price_stream(
     result = await db.execute(stmt)
     stream = result.scalar_one_or_none()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     if stream:
         stream.interval_seconds = interval
@@ -115,7 +115,7 @@ async def delete_price_stream(stream_id: int, db: AsyncSession = Depends(get_db)
 
 @router.post("/price/evaluate", response_model=PriceStreamEvaluateResponse)
 async def evaluate_price_streams(db: AsyncSession = Depends(get_db)) -> PriceStreamEvaluateResponse:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stmt = (
         select(PriceStream)
         .options(selectinload(PriceStream.ticker))

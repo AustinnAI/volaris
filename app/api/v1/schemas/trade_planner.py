@@ -3,7 +3,7 @@ Pydantic schemas for trade planner API.
 """
 
 from decimal import Decimal
-from typing import List, Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -19,10 +19,10 @@ class VerticalSpreadRequest(BaseModel):
     option_type: str = Field(..., description="Option type: 'call' or 'put'")
     bias: str = Field(..., description="Directional bias: 'bullish', 'bearish', or 'neutral'")
     contracts: int = Field(default=1, description="Number of contracts", ge=1)
-    dte: Optional[int] = Field(default=None, description="Days to expiration", ge=0)
-    long_delta: Optional[Decimal] = Field(default=None, description="Delta of the long option")
-    short_delta: Optional[Decimal] = Field(default=None, description="Delta of the short option")
-    account_size: Optional[Decimal] = Field(
+    dte: int | None = Field(default=None, description="Days to expiration", ge=0)
+    long_delta: Decimal | None = Field(default=None, description="Delta of the long option")
+    short_delta: Decimal | None = Field(default=None, description="Delta of the short option")
+    account_size: Decimal | None = Field(
         default=None, description="Account size for position sizing", gt=0
     )
     risk_percentage: Decimal = Field(
@@ -58,9 +58,9 @@ class LongOptionRequest(BaseModel):
     option_type: str = Field(..., description="Option type: 'call' or 'put'")
     bias: str = Field(..., description="Directional bias: 'bullish' or 'bearish'")
     contracts: int = Field(default=1, description="Number of contracts", ge=1)
-    dte: Optional[int] = Field(default=None, description="Days to expiration", ge=0)
-    delta: Optional[Decimal] = Field(default=None, description="Delta of the option")
-    account_size: Optional[Decimal] = Field(
+    dte: int | None = Field(default=None, description="Days to expiration", ge=0)
+    delta: Decimal | None = Field(default=None, description="Delta of the option")
+    account_size: Decimal | None = Field(
         default=None, description="Account size for position sizing", gt=0
     )
     risk_percentage: Decimal = Field(
@@ -117,16 +117,16 @@ class CalculationResponse(BaseModel):
     underlying_price: Decimal
 
     # Position structure
-    legs: List[LegResponse]
+    legs: list[LegResponse]
 
     # Risk metrics
-    max_profit: Optional[Decimal]  # None for unlimited (long calls)
+    max_profit: Decimal | None  # None for unlimited (long calls)
     max_loss: Decimal
-    breakeven_prices: List[Decimal]
-    risk_reward_ratio: Optional[Decimal]  # None if max_profit is unlimited
+    breakeven_prices: list[Decimal]
+    risk_reward_ratio: Decimal | None  # None if max_profit is unlimited
 
     # Probability proxy
-    win_probability: Optional[Decimal]
+    win_probability: Decimal | None
 
     # Position sizing (risk-based recommendations)
     recommended_contracts: int  # Based on account size & risk %
@@ -134,9 +134,9 @@ class CalculationResponse(BaseModel):
 
     # Metadata
     net_premium: Decimal
-    net_credit: Optional[Decimal]  # For credit spreads
-    dte: Optional[int]
-    total_delta: Optional[Decimal]
+    net_credit: Decimal | None  # For credit spreads
+    dte: int | None
+    total_delta: Decimal | None
 
     assumptions: dict
 
@@ -167,23 +167,23 @@ class StrategyCalculateRequest(BaseModel):
     underlying_price: Decimal
 
     # Vertical spread fields
-    long_strike: Optional[Decimal] = None
-    short_strike: Optional[Decimal] = None
-    long_premium: Optional[Decimal] = None
-    short_premium: Optional[Decimal] = None
-    long_delta: Optional[Decimal] = None
-    short_delta: Optional[Decimal] = None
+    long_strike: Decimal | None = None
+    short_strike: Decimal | None = None
+    long_premium: Decimal | None = None
+    short_premium: Decimal | None = None
+    long_delta: Decimal | None = None
+    short_delta: Decimal | None = None
 
     # Long option fields
-    strike: Optional[Decimal] = None
-    premium: Optional[Decimal] = None
-    delta: Optional[Decimal] = None
+    strike: Decimal | None = None
+    premium: Decimal | None = None
+    delta: Decimal | None = None
 
     # Common
     option_type: str
     bias: str
     contracts: int = 1
-    dte: Optional[int] = None
+    dte: int | None = None
 
     @field_validator("strategy_type")
     @classmethod

@@ -4,23 +4,23 @@ Provides strategy calculation and position sizing endpoints.
 """
 
 from decimal import Decimal
-from fastapi import APIRouter, HTTPException
-from typing import Dict
 
-from app.core.trade_planner import (
-    calculate_vertical_spread,
-    calculate_long_option,
-    calculate_position_size,
-    TradeBias,
-)
+from fastapi import APIRouter, HTTPException
+
 from app.api.v1.schemas.trade_planner import (
-    VerticalSpreadRequest,
+    CalculationResponse,
+    LegResponse,
     LongOptionRequest,
     PositionSizeRequest,
-    CalculationResponse,
     PositionSizeResponse,
     StrategyCalculateRequest,
-    LegResponse,
+    VerticalSpreadRequest,
+)
+from app.core.trade_planner import (
+    TradeBias,
+    calculate_long_option,
+    calculate_position_size,
+    calculate_vertical_spread,
 )
 
 router = APIRouter(prefix="/trade-planner", tags=["trade-planner"])
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/trade-planner", tags=["trade-planner"])
 @router.post("/calculate/vertical-spread", response_model=CalculationResponse)
 async def calculate_vertical_spread_endpoint(
     request: VerticalSpreadRequest,
-) -> Dict:
+) -> dict:
     """
     Calculate risk/reward metrics for a vertical spread.
 
@@ -101,7 +101,7 @@ async def calculate_vertical_spread_endpoint(
 @router.post("/calculate/long-option", response_model=CalculationResponse)
 async def calculate_long_option_endpoint(
     request: LongOptionRequest,
-) -> Dict:
+) -> dict:
     """
     Calculate risk/reward metrics for a long call or long put.
 
@@ -165,7 +165,7 @@ async def calculate_long_option_endpoint(
 @router.post("/calculate", response_model=CalculationResponse)
 async def calculate_strategy_unified(
     request: StrategyCalculateRequest,
-) -> Dict:
+) -> dict:
     """
     Unified endpoint for calculating any supported strategy.
 
@@ -278,7 +278,7 @@ async def calculate_strategy_unified(
 @router.post("/position-size", response_model=PositionSizeResponse)
 async def calculate_position_size_endpoint(
     request: PositionSizeRequest,
-) -> Dict:
+) -> dict:
     """
     Calculate position size based on risk management rules.
 

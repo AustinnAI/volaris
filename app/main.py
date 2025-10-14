@@ -4,18 +4,18 @@ Main entry point for the Volaris trading intelligence platform.
 """
 
 from contextlib import asynccontextmanager
+
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.config import settings
-from app.db.database import init_db, close_db, async_session_maker
-from app.workers import create_scheduler
+from app.db.database import async_session_maker, close_db, init_db
 from app.services.index_service import ensure_sp500_constituents
 from app.utils.logger import app_logger
-
+from app.workers import create_scheduler
 
 # Initialize Sentry for error tracking
 SENTRY_DSN = (settings.SENTRY_DSN or "").strip()
@@ -101,8 +101,9 @@ async def health_check():
     Health check endpoint for monitoring.
     Returns system status and component health.
     """
-    from app.db.database import engine
     from sqlalchemy import text
+
+    from app.db.database import engine
 
     health_status = {"status": "healthy", "database": "disconnected", "cache": "unknown"}
 
@@ -136,14 +137,14 @@ async def health_check():
 
 
 # Register API routers
-from app.api.v1.providers import router as providers_router
-from app.api.v1.auth import router as auth_router
-from app.api.v1.trade_planner import router as trade_planner_router
-from app.api.v1.strike_selection import router as strike_selection_router
-from app.api.v1.strategy_recommendation import router as strategy_router
-from app.api.v1.market_data import router as market_data_router
 from app.api.v1.alerts import router as alerts_router
+from app.api.v1.auth import router as auth_router
+from app.api.v1.market_data import router as market_data_router
+from app.api.v1.providers import router as providers_router
+from app.api.v1.strategy_recommendation import router as strategy_router
 from app.api.v1.streams import router as streams_router
+from app.api.v1.strike_selection import router as strike_selection_router
+from app.api.v1.trade_planner import router as trade_planner_router
 
 app.include_router(providers_router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)

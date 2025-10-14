@@ -1,6 +1,6 @@
 """Tests for helper functions powering market data endpoints."""
 
-from typing import Any, Dict
+from typing import Any
 
 from app.api.v1.market_data import (
     _extract_finnhub_earnings,
@@ -10,7 +10,7 @@ from app.api.v1.market_data import (
 
 def test_extract_schwab_quote_handles_nested_structure() -> None:
     """Schwab quote helper should unwrap nested payloads keyed by symbol."""
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "quotes": {
             "AAPL": {
                 "quote": {

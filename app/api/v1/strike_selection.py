@@ -3,24 +3,23 @@ Strike Selection API Endpoints
 Provides intelligent strike and spread recommendations.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.database import get_db
-from app.services.strike_data_service import StrikeDataService
-from app.core.strike_selection import (
-    recommend_vertical_spreads,
-    recommend_long_options,
-    determine_iv_regime,
-    get_spread_width_for_price,
-    IVRegime,
-)
 from app.api.v1.schemas.strike_selection import (
+    LongOptionCandidateResponse,
+    SpreadCandidateResponse,
     StrikeRecommendationRequest,
     StrikeRecommendationResponse,
-    SpreadCandidateResponse,
-    LongOptionCandidateResponse,
 )
+from app.core.strike_selection import (
+    determine_iv_regime,
+    get_spread_width_for_price,
+    recommend_long_options,
+    recommend_vertical_spreads,
+)
+from app.db.database import get_db
+from app.services.strike_data_service import StrikeDataService
 
 router = APIRouter(prefix="/strike-selection", tags=["strike-selection"])
 
@@ -100,7 +99,6 @@ async def recommend_strikes(
         # Auto-select strategy based on IV regime with explicit debit/credit determination
         strategy_type = request.strategy_type
         force_credit = False  # Explicit credit/debit flag
-        force_debit = False
 
         if strategy_type == "auto":
             if iv_regime_str == "high":
@@ -118,12 +116,10 @@ async def recommend_strikes(
                     warnings.append("Auto-selected long put strategy (low IV regime)")
                 else:
                     strategy_type = "vertical_spread"
-                    force_debit = True
                     warnings.append("Auto-selected debit spread strategy (low IV regime)")
             else:
                 # Neutral IV → use debit spreads for defined risk
                 strategy_type = "vertical_spread"
-                force_debit = True
                 warnings.append("Auto-selected debit spread strategy (neutral IV regime)")
 
         # Convert contracts to data objects

@@ -4,14 +4,12 @@ Provides bridge functions to integrate trade planner with Discord commands.
 """
 
 from decimal import Decimal
-from typing import Optional
 
 from app.core.trade_planner import (
-    calculate_vertical_spread,
-    calculate_long_option,
-    calculate_position_size,
-    TradeBias,
     StrategyCalculationResult,
+    TradeBias,
+    calculate_long_option,
+    calculate_vertical_spread,
 )
 
 
@@ -25,7 +23,7 @@ async def handle_plan_vertical_spread(
     option_type: str,
     bias: str,
     contracts: int = 1,
-    dte: Optional[int] = None,
+    dte: int | None = None,
 ) -> StrategyCalculationResult:
     """
     Handle /plan command for vertical spreads from Discord.
@@ -76,7 +74,7 @@ async def handle_plan_long_option(
     option_type: str,
     bias: str,
     contracts: int = 1,
-    dte: Optional[int] = None,
+    dte: int | None = None,
 ) -> StrategyCalculationResult:
     """
     Handle /plan command for long options (calls/puts) from Discord.

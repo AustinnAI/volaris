@@ -4,10 +4,9 @@ Recommends optimal strikes and widths for vertical spreads and long options.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, List
-from datetime import datetime
 
 from app.config import settings
 
@@ -34,13 +33,13 @@ class OptionContractData:
 
     strike: Decimal
     option_type: str  # "call" or "put"
-    bid: Optional[Decimal]
-    ask: Optional[Decimal]
-    mark: Optional[Decimal]
-    delta: Optional[Decimal]
-    implied_vol: Optional[Decimal]
-    volume: Optional[int]
-    open_interest: Optional[int]
+    bid: Decimal | None
+    ask: Decimal | None
+    mark: Decimal | None
+    delta: Decimal | None
+    implied_vol: Decimal | None
+    volume: int | None
+    open_interest: int | None
 
 
 @dataclass
@@ -54,8 +53,8 @@ class SpreadCandidate:
     short_premium: Decimal
     net_premium: Decimal  # Negative for credits, positive for debits
     is_credit: bool  # True if credit spread
-    net_credit: Optional[Decimal]  # Positive credit received (credit spreads only)
-    net_debit: Optional[Decimal]  # Positive debit paid (debit spreads only)
+    net_credit: Decimal | None  # Positive credit received (credit spreads only)
+    net_debit: Decimal | None  # Positive debit paid (debit spreads only)
     width_points: Decimal  # Spread width in strike points
     width_dollars: Decimal  # Spread width in dollars (width_points × 100)
     spread_width: Decimal  # DEPRECATED: Use width_dollars
@@ -63,11 +62,11 @@ class SpreadCandidate:
     max_profit: Decimal
     max_loss: Decimal
     risk_reward_ratio: Decimal
-    pop_proxy: Optional[Decimal]  # Delta-based probability
-    long_delta: Optional[Decimal]
-    short_delta: Optional[Decimal]
-    quality_score: Optional[Decimal] = None  # Composite ranking score
-    notes: List[str] = field(default_factory=list)
+    pop_proxy: Decimal | None  # Delta-based probability
+    long_delta: Decimal | None
+    short_delta: Decimal | None
+    quality_score: Decimal | None = None  # Composite ranking score
+    notes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -79,10 +78,10 @@ class LongOptionCandidate:
     premium: Decimal
     breakeven: Decimal
     max_loss: Decimal
-    max_profit: Optional[Decimal]  # None for calls
-    delta: Optional[Decimal]
-    pop_proxy: Optional[Decimal]
-    notes: List[str]
+    max_profit: Decimal | None  # None for calls
+    delta: Decimal | None
+    pop_proxy: Decimal | None
+    notes: list[str]
 
 
 @dataclass
@@ -94,14 +93,14 @@ class StrikeRecommendation:
     strategy_type: str
     bias: str
     dte: int
-    iv_rank: Optional[Decimal]
-    iv_regime: Optional[str]
-    candidates: List[SpreadCandidate | LongOptionCandidate]
+    iv_rank: Decimal | None
+    iv_regime: str | None
+    candidates: list[SpreadCandidate | LongOptionCandidate]
     data_timestamp: datetime
-    warnings: List[str]
+    warnings: list[str]
 
 
-def determine_iv_regime(iv_rank: Optional[Decimal]) -> Optional[IVRegime]:
+def determine_iv_regime(iv_rank: Decimal | None) -> IVRegime | None:
     """
     Classify IV regime based on IV Rank using configurable thresholds.
 
@@ -124,8 +123,8 @@ def determine_iv_regime(iv_rank: Optional[Decimal]) -> Optional[IVRegime]:
 
 def get_spread_width_for_price(
     underlying_price: Decimal,
-    min_width: Optional[int] = None,
-    max_width: Optional[int] = None,
+    min_width: int | None = None,
+    max_width: int | None = None,
 ) -> int:
     """
     Determine appropriate spread width based on underlying price using config settings.
@@ -163,9 +162,9 @@ def calculate_spread_metrics(
     long_premium: Decimal,
     short_premium: Decimal,
     option_type: str,
-    long_delta: Optional[Decimal] = None,
-    short_delta: Optional[Decimal] = None,
-) -> tuple[Decimal, Decimal, Decimal, Decimal, Decimal, Optional[Decimal]]:
+    long_delta: Decimal | None = None,
+    short_delta: Decimal | None = None,
+) -> tuple[Decimal, Decimal, Decimal, Decimal, Decimal, Decimal | None]:
     """
     Calculate key metrics for a vertical spread.
 
@@ -212,10 +211,10 @@ def calculate_spread_metrics(
 
 def passes_liquidity_filter(
     contract: OptionContractData,
-    min_open_interest: Optional[int] = None,
-    min_volume: Optional[int] = None,
-    min_mark: Optional[Decimal] = None,
-) -> tuple[bool, List[str]]:
+    min_open_interest: int | None = None,
+    min_volume: int | None = None,
+    min_mark: Decimal | None = None,
+) -> tuple[bool, list[str]]:
     """
     Check if a contract passes liquidity filters.
 
@@ -258,7 +257,7 @@ def passes_liquidity_filter(
 
 def calculate_quality_score(
     candidate: SpreadCandidate,
-    iv_regime: Optional[IVRegime] = None,
+    iv_regime: IVRegime | None = None,
 ) -> Decimal:
     """
     Calculate composite quality score for ranking spread candidates.
@@ -311,7 +310,7 @@ def classify_strike_position(
     strike: Decimal,
     underlying_price: Decimal,
     option_type: str,
-    atm_threshold: Optional[Decimal] = None,
+    atm_threshold: Decimal | None = None,
 ) -> StrikePosition:
     """
     Classify a strike as ITM, ATM, or OTM.
@@ -340,11 +339,11 @@ def classify_strike_position(
 
 
 def find_nearest_strikes(
-    contracts: List[OptionContractData],
+    contracts: list[OptionContractData],
     underlying_price: Decimal,
     option_type: str,
-    positions: List[StrikePosition] = [StrikePosition.ITM, StrikePosition.ATM, StrikePosition.OTM],
-) -> dict[StrikePosition, Optional[OptionContractData]]:
+    positions: list[StrikePosition] = None,
+) -> dict[StrikePosition, OptionContractData | None]:
     """
     Find the nearest strikes for each requested position.
 
@@ -357,6 +356,8 @@ def find_nearest_strikes(
     Returns:
         Dict mapping position to nearest contract
     """
+    if positions is None:
+        positions = [StrikePosition.ITM, StrikePosition.ATM, StrikePosition.OTM]
     result = {pos: None for pos in positions}
 
     # Filter by option type
@@ -399,15 +400,15 @@ def find_nearest_strikes(
 
 
 def recommend_vertical_spreads(
-    contracts: List[OptionContractData],
+    contracts: list[OptionContractData],
     underlying_price: Decimal,
     option_type: str,
     bias: str,
     target_width: int,
-    min_credit_pct: Optional[Decimal] = None,
-    iv_regime: Optional[IVRegime] = None,
+    min_credit_pct: Decimal | None = None,
+    iv_regime: IVRegime | None = None,
     apply_liquidity_filter: bool = True,
-) -> List[SpreadCandidate]:
+) -> list[SpreadCandidate]:
     """
     Recommend vertical spread candidates (ITM, ATM, OTM) with liquidity filtering and ranking.
 
@@ -462,9 +463,6 @@ def recommend_vertical_spreads(
                 target_other_strike = anchor_contract.strike - Decimal(target_width)
 
             # For debit spreads: anchor is long, other is short
-            long_strike_to_use = anchor_contract.strike
-            long_premium_to_use = anchor_contract.mark
-            long_delta_to_use = anchor_contract.delta
 
         else:
             # CREDIT: Sell nearer strike, buy farther strike
@@ -578,10 +576,10 @@ def recommend_vertical_spreads(
 
 
 def recommend_long_options(
-    contracts: List[OptionContractData],
+    contracts: list[OptionContractData],
     underlying_price: Decimal,
     option_type: str,
-) -> List[LongOptionCandidate]:
+) -> list[LongOptionCandidate]:
     """
     Recommend long option candidates (ITM, ATM, OTM).
 

@@ -3,23 +3,23 @@ Strike Data Service
 Retrieves option chain and IV data from database for strike selection.
 """
 
-from decimal import Decimal
-from typing import Optional, List
 from datetime import datetime, timedelta
-from sqlalchemy import select, and_, desc
+from decimal import Decimal
+
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.strike_selection import OptionContractData
 from app.db.models import (
-    Ticker,
-    OptionChainSnapshot,
-    OptionContract,
     IVMetric,
     IVTerm,
+    OptionChainSnapshot,
+    OptionContract,
     PriceBar,
+    Ticker,
     Timeframe,
 )
-from app.core.strike_selection import OptionContractData
 
 
 class StrikeDataService:
@@ -29,7 +29,7 @@ class StrikeDataService:
     async def get_ticker_by_symbol(
         db: AsyncSession,
         symbol: str,
-    ) -> Optional[Ticker]:
+    ) -> Ticker | None:
         """
         Get ticker by symbol.
 
@@ -49,7 +49,7 @@ class StrikeDataService:
         db: AsyncSession,
         ticker_id: int,
         timeframe: Timeframe = Timeframe.ONE_MINUTE,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Get the latest price for a ticker.
 
@@ -82,7 +82,7 @@ class StrikeDataService:
         ticker_id: int,
         target_dte: int,
         dte_tolerance: int = 3,
-    ) -> Optional[OptionChainSnapshot]:
+    ) -> OptionChainSnapshot | None:
         """
         Get option chain snapshot closest to target DTE.
 
@@ -120,7 +120,7 @@ class StrikeDataService:
         ticker_id: int,
         term: IVTerm = IVTerm.D30,
         max_age_hours: int = 24,
-    ) -> Optional[IVMetric]:
+    ) -> IVMetric | None:
         """
         Get latest IV metrics for a ticker.
 
@@ -152,8 +152,8 @@ class StrikeDataService:
 
     @staticmethod
     def contracts_to_data(
-        contracts: List[OptionContract],
-    ) -> List[OptionContractData]:
+        contracts: list[OptionContract],
+    ) -> list[OptionContractData]:
         """
         Convert SQLAlchemy OptionContract objects to OptionContractData.
 
@@ -185,11 +185,11 @@ class StrikeDataService:
         target_dte: int,
         dte_tolerance: int = 3,
     ) -> tuple[
-        Optional[Ticker],
-        Optional[Decimal],
-        Optional[OptionChainSnapshot],
-        Optional[IVMetric],
-        List[str],
+        Ticker | None,
+        Decimal | None,
+        OptionChainSnapshot | None,
+        IVMetric | None,
+        list[str],
     ]:
         """
         Validate symbol and fetch all required data for strike selection.

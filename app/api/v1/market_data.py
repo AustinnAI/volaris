@@ -3,35 +3,35 @@ Market Data API Endpoints
 Provides quick market data access for Discord commands.
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional, Set
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy import select, func, desc
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.db.database import get_db
-from app.db.models import Ticker, PriceBar, Timeframe, OptionContract, IVMetric, OptionChainSnapshot
-from app.services.schwab import SchwabClient
+from app.db.models import IVMetric, OptionChainSnapshot, OptionContract, PriceBar, Ticker, Timeframe
+from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import FinnhubClient
-from app.services.market_insights import fetch_sentiment, get_top_movers
 from app.services.index_service import (
+    SP500_SYMBOL,
     get_index_constituents_symbols,
     refresh_index_constituents,
-    SP500_SYMBOL,
 )
-from app.services.exceptions import DataNotFoundError
-from app.config import settings
+from app.services.market_insights import fetch_sentiment, get_top_movers
+from app.services.schwab import SchwabClient
 from app.workers.tasks import (
-    fetch_realtime_prices,
-    fetch_option_chains,
     compute_iv_metrics,
+    fetch_option_chains,
+    fetch_realtime_prices,
 )
 
 router = APIRouter(prefix="/market", tags=["market-data"])
 
 
-def _extract_schwab_quote(payload: Dict[str, Any], symbol: str) -> Dict[str, Any]:
+def _extract_schwab_quote(payload: dict[str, Any], symbol: str) -> dict[str, Any]:
     """
     Normalize Schwab quote payloads into a flat quote dict.
 
@@ -75,7 +75,7 @@ def _extract_schwab_quote(payload: Dict[str, Any], symbol: str) -> Dict[str, Any
     return {}
 
 
-def _extract_finnhub_earnings(payload: Any, symbol: str) -> Optional[Dict[str, Any]]:
+def _extract_finnhub_earnings(payload: Any, symbol: str) -> dict[str, Any] | None:
     """
     Extract the next earnings record for a symbol from a Finnhub payload.
 
@@ -87,7 +87,7 @@ def _extract_finnhub_earnings(payload: Any, symbol: str) -> Optional[Dict[str, A
         Matching earnings record or None.
     """
     symbol_upper = symbol.upper()
-    records: list[Dict[str, Any]] = []
+    records: list[dict[str, Any]] = []
 
     if isinstance(payload, dict):
         candidates = payload.get("earningsCalendar") or payload.get("earnings")
@@ -155,10 +155,10 @@ async def get_price(symbol: str, db: AsyncSession = Depends(get_db)):
     def _is_stale(bar_timestamp: datetime, grace_minutes: int = 15) -> bool:
         """Return True when cached bar data is older than the allowed freshness window."""
         if bar_timestamp.tzinfo is None:
-            ts = bar_timestamp.replace(tzinfo=timezone.utc)
+            ts = bar_timestamp.replace(tzinfo=UTC)
         else:
             ts = bar_timestamp
-        return datetime.now(ts.tzinfo or timezone.utc) - ts > timedelta(minutes=grace_minutes)
+        return datetime.now(ts.tzinfo or UTC) - ts > timedelta(minutes=grace_minutes)
 
     if latest_bar and daily_bar and not _is_stale(latest_bar.timestamp):
         # Use most recent bar for current price, daily bar for previous close
@@ -408,21 +408,21 @@ async def get_sp500_constituents(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh/price/{symbol}", status_code=202)
-async def refresh_price(symbol: str, db: AsyncSession = Depends(get_db)) -> Dict[str, int]:
+async def refresh_price(symbol: str, db: AsyncSession = Depends(get_db)) -> dict[str, int]:
     symbol_upper = symbol.upper()
     inserted = await fetch_realtime_prices(db, symbols=[symbol_upper])
     return {"inserted": inserted}
 
 
 @router.post("/refresh/options/{symbol}", status_code=202)
-async def refresh_option_chain(symbol: str, db: AsyncSession = Depends(get_db)) -> Dict[str, int]:
+async def refresh_option_chain(symbol: str, db: AsyncSession = Depends(get_db)) -> dict[str, int]:
     symbol_upper = symbol.upper()
     snapshots = await fetch_option_chains(db, symbols=[symbol_upper])
     return {"snapshots": snapshots}
 
 
 @router.post("/refresh/iv/{symbol}", status_code=202)
-async def refresh_iv_metrics(symbol: str, db: AsyncSession = Depends(get_db)) -> Dict[str, int]:
+async def refresh_iv_metrics(symbol: str, db: AsyncSession = Depends(get_db)) -> dict[str, int]:
     symbol_upper = symbol.upper()
     metrics = await compute_iv_metrics(db, symbols=[symbol_upper])
     return {"metrics": metrics}
@@ -513,7 +513,7 @@ async def get_earnings(symbol: str):
         today = date.today()
         days_until = (earnings_date - today).days
 
-        response: Dict[str, Any] = {
+        response: dict[str, Any] = {
             "symbol": symbol,
             "earnings_date": earnings_date.isoformat(),
             "days_until": days_until,

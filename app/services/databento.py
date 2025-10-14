@@ -5,11 +5,11 @@ Provides high-quality historical market data backfills.
 Documentation: https://databento.com/docs/api-reference-historical
 """
 
-from datetime import date, datetime
-from typing import Dict, List, Optional
+from datetime import date
+
 from app.config import settings
 from app.services.base_client import BaseAPIClient
-from app.services.exceptions import AuthenticationError, DataNotFoundError
+from app.services.exceptions import AuthenticationError
 
 
 class DatabentoClient(BaseAPIClient):
@@ -37,7 +37,7 @@ class DatabentoClient(BaseAPIClient):
         )
         self.api_key = settings.DATABENTO_API_KEY
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers with API key"""
         return {
             "Authorization": f"Bearer {self.api_key}",
@@ -47,12 +47,12 @@ class DatabentoClient(BaseAPIClient):
     async def get_timeseries(
         self,
         dataset: str,
-        symbols: List[str],
+        symbols: list[str],
         schema: str,
         start: date,
-        end: Optional[date] = None,
+        end: date | None = None,
         stype_in: str = "raw_symbol",
-    ) -> Dict:
+    ) -> dict:
         """
         Get historical time-series data.
 
@@ -92,10 +92,10 @@ class DatabentoClient(BaseAPIClient):
         self,
         symbol: str,
         start: date,
-        end: Optional[date] = None,
+        end: date | None = None,
         timeframe: str = "1m",
         dataset: str = "XNAS.ITCH",
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get OHLCV bars for a symbol.
 
@@ -130,7 +130,7 @@ class DatabentoClient(BaseAPIClient):
         # This is a simplified version
         return result.get("data", [])
 
-    async def list_datasets(self) -> List[Dict]:
+    async def list_datasets(self) -> list[dict]:
         """
         List available datasets.
 
@@ -141,7 +141,7 @@ class DatabentoClient(BaseAPIClient):
         result = await self.get(endpoint, headers=self._get_headers())
         return result.get("datasets", [])
 
-    async def get_dataset_range(self, dataset: str) -> Dict:
+    async def get_dataset_range(self, dataset: str) -> dict:
         """
         Get date range for a dataset.
 
@@ -158,11 +158,11 @@ class DatabentoClient(BaseAPIClient):
     async def get_cost_estimate(
         self,
         dataset: str,
-        symbols: List[str],
+        symbols: list[str],
         schema: str,
         start: date,
-        end: Optional[date] = None,
-    ) -> Dict:
+        end: date | None = None,
+    ) -> dict:
         """
         Estimate the cost of a data request.
 

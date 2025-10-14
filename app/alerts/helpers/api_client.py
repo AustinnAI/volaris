@@ -7,7 +7,7 @@ provide consistent error handling for the Volaris REST API.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 
@@ -32,9 +32,9 @@ class StrategyRecommendationAPI:
         bias: str,
         dte: int,
         mode: str = "auto",
-        max_risk: Optional[float] = None,
-        account_size: Optional[float] = None,
-        bias_reason: Optional[str] = None,
+        max_risk: float | None = None,
+        account_size: float | None = None,
+        bias_reason: str | None = None,
     ) -> dict[str, Any]:
         """Call the strategy recommendation endpoint and return the JSON payload."""
         url = f"{self.base_url}/api/v1/strategy/recommend"
@@ -98,7 +98,7 @@ class PriceAlertAPI:
         target_price: float,
         direction: str,
         channel_id: int,
-        created_by: Optional[int] = None,
+        created_by: int | None = None,
     ) -> dict[str, Any]:
         """Create a price alert."""
         url = f"{self.base_url}/api/v1/alerts/price"
@@ -167,7 +167,7 @@ class PriceStreamAPI:
         symbol: str,
         channel_id: int,
         interval_seconds: int,
-        created_by: Optional[int] = None,
+        created_by: int | None = None,
     ) -> dict[str, Any]:
         """Create a price stream."""
         url = f"{self.base_url}/api/v1/streams/price"

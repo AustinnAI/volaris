@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-from typing import Dict, List, Optional
-
 from app.config import settings
 from app.services.base_client import BaseAPIClient
 from app.services.exceptions import AuthenticationError, DataNotFoundError
@@ -22,7 +19,7 @@ class MarketstackClient(BaseAPIClient):
         )
         self.api_key = settings.MARKETSTACK_API_KEY
 
-    async def get_eod(self, symbol: str, limit: int = 1) -> List[Dict]:
+    async def get_eod(self, symbol: str, limit: int = 1) -> list[dict]:
         params = {
             "access_key": self.api_key,
             "symbols": symbol.upper(),
@@ -35,7 +32,7 @@ class MarketstackClient(BaseAPIClient):
             raise DataNotFoundError(f"No EOD data for {symbol}", provider="Marketstack")
         return data
 
-    async def get_latest(self, symbol: str) -> Dict:
+    async def get_latest(self, symbol: str) -> dict:
         data = await self.get_eod(symbol, limit=1)
         return data[0]
 
@@ -47,7 +44,7 @@ class MarketstackClient(BaseAPIClient):
             return False
 
 
-marketstack_client: Optional[MarketstackClient]
+marketstack_client: MarketstackClient | None
 
 try:
     marketstack_client = MarketstackClient() if settings.MARKETSTACK_API_KEY else None

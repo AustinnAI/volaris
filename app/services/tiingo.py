@@ -6,10 +6,10 @@ Documentation: https://api.tiingo.com/documentation/general/overview
 """
 
 from datetime import date, datetime
-from typing import Dict, List, Optional
+
 from app.config import settings
 from app.services.base_client import BaseAPIClient
-from app.services.exceptions import DataNotFoundError, AuthenticationError
+from app.services.exceptions import AuthenticationError, DataNotFoundError
 
 
 class TiingoClient(BaseAPIClient):
@@ -37,14 +37,14 @@ class TiingoClient(BaseAPIClient):
         )
         self.api_key = settings.TIINGO_API_KEY
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers with API key"""
         return {
             "Content-Type": "application/json",
             "Authorization": f"Token {self.api_key}",
         }
 
-    async def get_ticker_metadata(self, ticker: str) -> Dict:
+    async def get_ticker_metadata(self, ticker: str) -> dict:
         """
         Get metadata for a ticker.
 
@@ -70,9 +70,9 @@ class TiingoClient(BaseAPIClient):
     async def get_eod_prices(
         self,
         ticker: str,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
-    ) -> List[Dict]:
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[dict]:
         """
         Get end-of-day historical prices.
 
@@ -119,7 +119,7 @@ class TiingoClient(BaseAPIClient):
                     item.setdefault("symbol", symbol)
         return prices
 
-    async def get_latest_price(self, ticker: str) -> Dict:
+    async def get_latest_price(self, ticker: str) -> dict:
         """
         Get the most recent EOD price.
 
@@ -140,7 +140,7 @@ class TiingoClient(BaseAPIClient):
     async def get_iex_realtime_price(
         self,
         ticker: str,
-    ) -> Dict:
+    ) -> dict:
         """
         Get real-time IEX price data (intraday).
 
@@ -180,10 +180,10 @@ class TiingoClient(BaseAPIClient):
     async def get_iex_intraday_prices(
         self,
         ticker: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         resample_freq: str = "1min",
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get intraday price data from IEX.
 
@@ -218,7 +218,7 @@ class TiingoClient(BaseAPIClient):
 
         return await self.get(endpoint, headers=self._get_headers(), params=params)
 
-    async def get_top_movers(self, list_type: str, limit: int = 10) -> List[Dict]:
+    async def get_top_movers(self, list_type: str, limit: int = 10) -> list[dict]:
         """Return Tiingo top movers list (e.g., topgainers, toplosers)."""
 
         endpoint = "/tiingo/utilities/top"

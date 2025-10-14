@@ -2,21 +2,21 @@
 Unit tests for strike selection engine.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
 
 from app.core.strike_selection import (
+    IVRegime,
     OptionContractData,
     StrikePosition,
-    IVRegime,
-    determine_iv_regime,
-    get_spread_width_for_price,
     calculate_spread_metrics,
     classify_strike_position,
+    determine_iv_regime,
     find_nearest_strikes,
-    recommend_vertical_spreads,
+    get_spread_width_for_price,
     recommend_long_options,
+    recommend_vertical_spreads,
 )
 
 

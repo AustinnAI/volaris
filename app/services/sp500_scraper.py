@@ -5,7 +5,7 @@ Utilities for fetching the S&P 500 constituent list from Wikipedia.
 from __future__ import annotations
 
 import asyncio
-from typing import Iterable, List
+from collections.abc import Iterable
 from urllib.request import Request, urlopen
 
 import aiohttp
@@ -17,7 +17,7 @@ WIKIPEDIA_SP500_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies
 USER_AGENT = "VolarisBot/1.0 (+https://github.com/volaris-trading)"
 
 
-def parse_sp500_table(html: str) -> List[str]:
+def parse_sp500_table(html: str) -> list[str]:
     """Parse the S&P 500 HTML table and return the constituent symbols."""
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", {"id": "constituents"})
@@ -39,7 +39,7 @@ def parse_sp500_table(html: str) -> List[str]:
     return symbols
 
 
-async def fetch_sp500_symbols_wikipedia() -> List[str]:
+async def fetch_sp500_symbols_wikipedia() -> list[str]:
     """Fetch the S&P 500 constituent list from Wikipedia asynchronously."""
     timeout = aiohttp.ClientTimeout(total=30)
     headers = {"User-Agent": USER_AGENT}
@@ -69,7 +69,7 @@ async def fetch_sp500_symbols_wikipedia() -> List[str]:
     return symbols
 
 
-def fetch_sp500_symbols_wikipedia_sync() -> List[str]:
+def fetch_sp500_symbols_wikipedia_sync() -> list[str]:
     """Fetch the S&P 500 list synchronously (used for startup fallbacks)."""
     request = Request(WIKIPEDIA_SP500_URL, headers={"User-Agent": USER_AGENT})
     try:
@@ -90,7 +90,7 @@ def fetch_sp500_symbols_wikipedia_sync() -> List[str]:
     return symbols
 
 
-async def ensure_sp500_symbols(fetchers: Iterable[callable]) -> List[str]:
+async def ensure_sp500_symbols(fetchers: Iterable[callable]) -> list[str]:
     """Try multiple fetchers until one returns symbols."""
     for fetcher in fetchers:
         try:

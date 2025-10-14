@@ -5,11 +5,11 @@ Provides company fundamentals, news, and market sentiment.
 Documentation: https://finnhub.io/docs/api
 """
 
-from datetime import datetime, date
-from typing import Dict, List, Optional
+from datetime import date
+
 from app.config import settings
 from app.services.base_client import BaseAPIClient
-from app.services.exceptions import AuthenticationError, DataNotFoundError
+from app.services.exceptions import AuthenticationError
 
 
 class FinnhubClient(BaseAPIClient):
@@ -39,14 +39,14 @@ class FinnhubClient(BaseAPIClient):
         )
         self.api_key = settings.FINNHUB_API_KEY
 
-    def _get_params(self, extra_params: Optional[Dict] = None) -> Dict:
+    def _get_params(self, extra_params: dict | None = None) -> dict:
         """Get query params with API key"""
         params = {"token": self.api_key}
         if extra_params:
             params.update(extra_params)
         return params
 
-    async def get_company_profile(self, symbol: str) -> Dict:
+    async def get_company_profile(self, symbol: str) -> dict:
         """
         Get company profile.
 
@@ -79,9 +79,9 @@ class FinnhubClient(BaseAPIClient):
     async def get_company_news(
         self,
         symbol: str,
-        from_date: Optional[date] = None,
-        to_date: Optional[date] = None,
-    ) -> List[Dict]:
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> list[dict]:
         """
         Get company news.
 
@@ -131,8 +131,8 @@ class FinnhubClient(BaseAPIClient):
     async def get_market_news(
         self,
         category: str = "general",
-        min_id: Optional[int] = None,
-    ) -> List[Dict]:
+        min_id: int | None = None,
+    ) -> list[dict]:
         """
         Get general market news.
 
@@ -155,7 +155,7 @@ class FinnhubClient(BaseAPIClient):
         self,
         symbol: str,
         metric: str = "all",
-    ) -> Dict:
+    ) -> dict:
         """
         Get company basic financials and metrics.
 
@@ -195,10 +195,10 @@ class FinnhubClient(BaseAPIClient):
 
     async def get_earnings_calendar(
         self,
-        from_date: Optional[date] = None,
-        to_date: Optional[date] = None,
-        symbol: Optional[str] = None,
-    ) -> Dict:
+        from_date: date | None = None,
+        to_date: date | None = None,
+        symbol: str | None = None,
+    ) -> dict:
         """
         Get earnings calendar.
 
@@ -240,7 +240,7 @@ class FinnhubClient(BaseAPIClient):
         params = self._get_params(params)
         return await self.get(endpoint, params=params)
 
-    async def get_quote(self, symbol: str) -> Dict:
+    async def get_quote(self, symbol: str) -> dict:
         """
         Get real-time quote.
 
@@ -266,7 +266,7 @@ class FinnhubClient(BaseAPIClient):
         params = self._get_params({"symbol": symbol.upper()})
         return await self.get(endpoint, params=params)
 
-    async def get_recommendation_trends(self, symbol: str) -> List[Dict]:
+    async def get_recommendation_trends(self, symbol: str) -> list[dict]:
         """
         Get analyst recommendation trends.
 
@@ -296,9 +296,9 @@ class FinnhubClient(BaseAPIClient):
     async def get_insider_transactions(
         self,
         symbol: str,
-        from_date: Optional[date] = None,
-        to_date: Optional[date] = None,
-    ) -> Dict:
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> dict:
         """
         Get insider transactions.
 
@@ -321,13 +321,13 @@ class FinnhubClient(BaseAPIClient):
         params = self._get_params(params)
         return await self.get(endpoint, params=params)
 
-    async def get_index_constituents(self, index_symbol: str) -> Dict:
+    async def get_index_constituents(self, index_symbol: str) -> dict:
         """Return constituents for a specific index (e.g., ^GSPC)."""
         endpoint = "/index/constituents"
         params = self._get_params({"symbol": index_symbol})
         return await self.get(endpoint, params=params)
 
-    async def get_news_sentiment(self, symbol: str) -> Dict:
+    async def get_news_sentiment(self, symbol: str) -> dict:
         """Return news sentiment statistics for a symbol."""
         endpoint = "/news-sentiment"
         params = self._get_params({"symbol": symbol.upper()})

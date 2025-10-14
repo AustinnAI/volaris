@@ -12,7 +12,16 @@
       "Bash(test:*)",
       "Bash(python3:*)",
       "Bash(kill:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(ruff check:*)",
+      "Bash(ENVIRONMENT=testing DATABASE_URL=postgresql://test:test@localhost:5432/test UPSTASH_REDIS_REST_URL=http://localhost UPSTASH_REDIS_REST_TOKEN=test python -m pytest tests/test_alerts_api.py --collect-only)",
+      "Bash(black:*)",
+      "Bash(ENVIRONMENT=testing DATABASE_URL=postgresql://test:test@localhost:5432/test UPSTASH_REDIS_REST_URL=http://localhost UPSTASH_REDIS_REST_TOKEN=test pytest tests/ -v --tb=short)",
+      "Bash(export ENVIRONMENT=testing)",
+      "Bash(export DATABASE_URL=\"postgresql://test:test@localhost:5432/test\")",
+      "Bash(export UPSTASH_REDIS_REST_URL=\"http://localhost\")",
+      "Bash(export UPSTASH_REDIS_REST_TOKEN=\"test\")",
+      "Bash(pytest:*)"
     ],
     "deny": [],
     "ask": []

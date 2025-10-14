@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 from app.db.database import async_session_maker
 from app.db.models import Timeframe
 from app.services.exceptions import AuthenticationError

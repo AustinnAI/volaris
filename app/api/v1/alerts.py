@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Dict, Iterable
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
@@ -21,11 +21,11 @@ from app.api.v1.schemas.alerts import (
     PriceAlertTriggered,
 )
 from app.db.database import get_db
-from app.db.models import PriceAlert, PriceAlertDirection, Ticker
+from app.db.models import PriceAlert, PriceAlertDirection
 from app.services.exceptions import AuthenticationError
 from app.services.schwab import SchwabClient
-from app.utils.logger import app_logger
 from app.services.tickers import get_or_create_ticker
+from app.utils.logger import app_logger
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -110,8 +110,8 @@ async def delete_price_alert(alert_id: int, db: AsyncSession = Depends(get_db)) 
     return Response(status_code=204)
 
 
-async def _fetch_prices(symbols: Iterable[str]) -> Dict[str, Decimal]:
-    prices: Dict[str, Decimal] = {}
+async def _fetch_prices(symbols: Iterable[str]) -> dict[str, Decimal]:
+    prices: dict[str, Decimal] = {}
     if not symbols:
         return prices
 
@@ -156,7 +156,7 @@ async def evaluate_price_alerts(db: AsyncSession = Depends(get_db)) -> PriceAler
     prices = await _fetch_prices(symbol_map.keys())
 
     triggered: list[PriceAlertTriggered] = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for symbol, symbol_alerts in symbol_map.items():
         current_price = prices.get(symbol)

@@ -5,11 +5,11 @@ Provides minute-delayed historical market data.
 Documentation: https://alpaca.markets/docs/market-data/
 """
 
-from datetime import datetime, date
-from typing import Dict, List, Optional
+from datetime import datetime
+
 from app.config import settings
 from app.services.base_client import BaseAPIClient
-from app.services.exceptions import AuthenticationError, DataNotFoundError
+from app.services.exceptions import AuthenticationError
 
 
 class AlpacaClient(BaseAPIClient):
@@ -38,7 +38,7 @@ class AlpacaClient(BaseAPIClient):
         self.api_key = settings.ALPACA_API_KEY
         self.api_secret = settings.ALPACA_API_SECRET
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers with API credentials"""
         return {
             "APCA-API-KEY-ID": self.api_key,
@@ -49,10 +49,10 @@ class AlpacaClient(BaseAPIClient):
         self,
         symbol: str,
         timeframe: str = "1Min",
-        start: Optional[datetime] = None,
-        end: Optional[datetime] = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
         limit: int = 1000,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get historical price bars.
 
@@ -97,7 +97,7 @@ class AlpacaClient(BaseAPIClient):
         result = await self.get(endpoint, headers=self._get_headers(), params=params)
         return result.get("bars", [])
 
-    async def get_latest_bar(self, symbol: str) -> Dict:
+    async def get_latest_bar(self, symbol: str) -> dict:
         """
         Get the most recent bar for a symbol.
 
@@ -111,7 +111,7 @@ class AlpacaClient(BaseAPIClient):
         result = await self.get(endpoint, headers=self._get_headers())
         return result.get("bar", {})
 
-    async def get_latest_quote(self, symbol: str) -> Dict:
+    async def get_latest_quote(self, symbol: str) -> dict:
         """
         Get the latest quote (bid/ask).
 
@@ -139,7 +139,7 @@ class AlpacaClient(BaseAPIClient):
         result = await self.get(endpoint, headers=self._get_headers())
         return result.get("quote", {})
 
-    async def get_latest_trade(self, symbol: str) -> Dict:
+    async def get_latest_trade(self, symbol: str) -> dict:
         """
         Get the latest trade.
 
@@ -153,7 +153,7 @@ class AlpacaClient(BaseAPIClient):
         result = await self.get(endpoint, headers=self._get_headers())
         return result.get("trade", {})
 
-    async def get_snapshot(self, symbol: str) -> Dict:
+    async def get_snapshot(self, symbol: str) -> dict:
         """
         Get market snapshot (latest quote, trade, minute bar, daily bar).
 
@@ -179,12 +179,12 @@ class AlpacaClient(BaseAPIClient):
 
     async def get_multi_bars(
         self,
-        symbols: List[str],
+        symbols: list[str],
         timeframe: str = "1Min",
-        start: Optional[datetime] = None,
-        end: Optional[datetime] = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
         limit: int = 1000,
-    ) -> Dict[str, List[Dict]]:
+    ) -> dict[str, list[dict]]:
         """
         Get bars for multiple symbols in a single request.
 

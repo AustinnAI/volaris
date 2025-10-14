@@ -3,18 +3,15 @@ Tests for API Provider Clients
 Mock-based tests for all provider integrations.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import date, datetime
-import httpx
+
+import pytest
 
 from app.services.exceptions import (
     AuthenticationError,
-    RateLimitError,
     ProviderError,
-    DataNotFoundError,
+    RateLimitError,
 )
-
 
 # ==================== Tiingo Tests ====================
 
@@ -58,7 +55,7 @@ async def test_tiingo_authentication_error():
         mock_settings.TIINGO_API_KEY = None
 
         with pytest.raises(AuthenticationError):
-            client = TiingoClient()
+            TiingoClient()
 
 
 # ==================== Alpaca Tests ====================
@@ -266,7 +263,7 @@ async def test_base_client_server_error_retry():
 @pytest.mark.asyncio
 async def test_provider_manager_get_provider():
     """Test provider manager provider selection"""
-    from app.services.provider_manager import provider_manager, DataType
+    from app.services.provider_manager import DataType, provider_manager
 
     # Test getting EOD provider (should be Tiingo)
     provider = provider_manager.get_provider(DataType.EOD)

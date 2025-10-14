@@ -4,7 +4,7 @@ Strategy planning and sizing slash commands.
 
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import aiohttp
 import discord
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class StrategyCog(commands.Cog):
     """Commands that power the trade planner experience."""
 
-    def __init__(self, bot: "VolarisBot") -> None:
+    def __init__(self, bot: VolarisBot) -> None:
         self.bot = bot
 
     async def _refresh_trade_context(self, symbol: str) -> None:
@@ -91,9 +91,9 @@ class StrategyCog(commands.Cog):
         bias: str,
         dte: int,
         mode: str = "auto",
-        max_risk: Optional[float] = None,
-        account_size: Optional[float] = None,
-        bias_reason: Optional[str] = None,
+        max_risk: float | None = None,
+        account_size: float | None = None,
+        bias_reason: str | None = None,
     ) -> None:
         """Call the Volaris strategy engine and render the top candidates."""
         if dte < 1 or dte > 365:
@@ -212,8 +212,8 @@ class StrategyCog(commands.Cog):
         symbol: str,
         strikes: str,
         dte: int,
-        premium: Optional[float] = None,
-        underlying_price: Optional[float] = None,
+        premium: float | None = None,
+        underlying_price: float | None = None,
     ) -> None:
         """Call the calculator endpoint and render payoff metrics."""
         if dte < 1 or dte > 365:
@@ -305,7 +305,7 @@ class StrategyCog(commands.Cog):
                 single_strike = float(strikes)
                 option_type = "call" if strategy == "long_call" else "put"
 
-            payload: dict[str, Optional[float | str | int]] = {
+            payload: dict[str, float | str | int | None] = {
                 "strategy_type": strategy,
                 "symbol": symbol_clean,
                 "dte": dte,
@@ -564,6 +564,6 @@ class StrategyCog(commands.Cog):
             await interaction.followup.send(f"❌ Error: {exc}")
 
 
-async def setup(bot: "VolarisBot") -> None:
+async def setup(bot: VolarisBot) -> None:
     """Add the strategy cog to the bot."""
     await bot.add_cog(StrategyCog(bot))

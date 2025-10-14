@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any
 
 from app.utils.logger import app_logger
 
 
-def to_decimal(value: Any) -> Optional[Decimal]:
+def to_decimal(value: Any) -> Decimal | None:
     """Convert generic numeric values to Decimal, tolerating None."""
 
     if value is None:
@@ -18,7 +19,7 @@ def to_decimal(value: Any) -> Optional[Decimal]:
     try:
         if isinstance(value, Decimal):
             return value
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return Decimal(str(value))
         if isinstance(value, str) and value.strip():
 
@@ -28,21 +29,21 @@ def to_decimal(value: Any) -> Optional[Decimal]:
     return None
 
 
-def parse_timestamp(raw: Any) -> Optional[datetime]:
+def parse_timestamp(raw: Any) -> datetime | None:
     """Normalise provider timestamps (epoch milliseconds, seconds, ISO strings)."""
 
     if raw is None:
         return None
 
     if isinstance(raw, datetime):
-        return raw if raw.tzinfo else raw.replace(tzinfo=timezone.utc)
+        return raw if raw.tzinfo else raw.replace(tzinfo=UTC)
 
     try:
-        if isinstance(raw, (int, float)):
+        if isinstance(raw, int | float):
             # Heuristic: assume milliseconds when value is large.
             if raw > 10_000_000_000:
                 raw /= 1000
-            return datetime.fromtimestamp(raw, tz=timezone.utc)
+            return datetime.fromtimestamp(raw, tz=UTC)
 
         if isinstance(raw, str):
             raw = raw.strip()
@@ -56,13 +57,13 @@ def parse_timestamp(raw: Any) -> Optional[datetime]:
                 numeric = float(raw)
                 if numeric > 10_000_000_000:
                     numeric /= 1000
-                return datetime.fromtimestamp(numeric, tz=timezone.utc)
+                return datetime.fromtimestamp(numeric, tz=UTC)
     except Exception as exc:  # pylint: disable=broad-except
         app_logger.debug("Failed to parse timestamp", extra={"value": raw, "error": str(exc)})
     return None
 
 
-def normalize_price_points(raw: Any) -> List[Dict[str, Any]]:
+def normalize_price_points(raw: Any) -> list[dict[str, Any]]:
     """Extract a list of OHLCV dictionaries from provider responses."""
 
     if raw is None:
@@ -77,7 +78,7 @@ def normalize_price_points(raw: Any) -> List[Dict[str, Any]]:
     if not isinstance(raw, Iterable):
         return []
 
-    normalized: List[Dict[str, Any]] = []
+    normalized: list[dict[str, Any]] = []
 
     for item in raw:
         if not isinstance(item, dict):
@@ -119,10 +120,10 @@ def normalize_price_points(raw: Any) -> List[Dict[str, Any]]:
     return normalized
 
 
-def normalize_option_contracts(raw: Any) -> List[Dict[str, Any]]:
+def normalize_option_contracts(raw: Any) -> list[dict[str, Any]]:
     """Flatten provider option-chain payloads into a list of contracts."""
 
-    contracts: List[Dict[str, Any]] = []
+    contracts: list[dict[str, Any]] = []
 
     if raw is None:
         return contracts
@@ -132,7 +133,7 @@ def normalize_option_contracts(raw: Any) -> List[Dict[str, Any]]:
             raw_list = raw["contracts"]
         else:
             # Schwab/TD style callExpDateMap / putExpDateMap
-            combined: List[Dict[str, Any]] = []
+            combined: list[dict[str, Any]] = []
             for key in ("callExpDateMap", "putExpDateMap"):
                 exp_map = raw.get(key, {})
                 if isinstance(exp_map, dict):
@@ -193,7 +194,7 @@ def normalize_option_contracts(raw: Any) -> List[Dict[str, Any]]:
     return contracts
 
 
-def parse_date(raw: Any) -> Optional[date]:
+def parse_date(raw: Any) -> date | None:
     """Parse date-like payloads returned by providers."""
 
     if raw is None:

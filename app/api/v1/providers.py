@@ -3,17 +3,17 @@ Provider Health & Status Endpoints
 Check provider availability and health status.
 """
 
-from fastapi import APIRouter, HTTPException
-from typing import Dict, List
 from datetime import datetime
 
-from app.services.provider_manager import provider_manager, DataType
+from fastapi import APIRouter, HTTPException
+
+from app.services.provider_manager import provider_manager
 
 router = APIRouter(prefix="/providers", tags=["providers"])
 
 
 @router.get("/health")
-async def get_providers_health() -> Dict:
+async def get_providers_health() -> dict:
     """
     Check health status of all configured providers.
 
@@ -81,7 +81,7 @@ async def get_providers_health() -> Dict:
 
 
 @router.get("/configured")
-async def get_configured_providers() -> Dict:
+async def get_configured_providers() -> dict:
     """
     Get list of configured providers.
 
@@ -103,7 +103,7 @@ async def get_configured_providers() -> Dict:
 
 
 @router.get("/capabilities")
-async def get_provider_capabilities() -> Dict:
+async def get_provider_capabilities() -> dict:
     """
     Get available data types and their providers.
 
@@ -132,7 +132,7 @@ async def get_provider_capabilities() -> Dict:
 
 
 @router.get("/hierarchy")
-async def get_provider_hierarchy() -> Dict:
+async def get_provider_hierarchy() -> dict:
     """
     Get the complete provider hierarchy by data type.
 
@@ -166,7 +166,7 @@ async def get_provider_hierarchy() -> Dict:
 
 
 @router.get("/{provider_name}/health")
-async def check_provider_health(provider_name: str) -> Dict:
+async def check_provider_health(provider_name: str) -> dict:
     """
     Check health of a specific provider.
 

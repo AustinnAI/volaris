@@ -5,7 +5,7 @@ Market data and analytics slash commands.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import aiohttp
 import discord
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class MarketDataCog(commands.Cog):
     """Surface sentiment, prices, and fundamental context via slash commands."""
 
-    def __init__(self, bot: "VolarisBot") -> None:
+    def __init__(self, bot: VolarisBot) -> None:
         self.bot = bot
 
     async def _maybe_refresh_price(self, symbol: str) -> None:
@@ -122,7 +122,7 @@ class MarketDataCog(commands.Cog):
     # -------------------------------------------------------------------------
     @app_commands.command(name="top", description="Show top S&P 500 gainers and losers")
     @app_commands.describe(limit="Number of gainers/losers to show (default from config)")
-    async def top(self, interaction: discord.Interaction, limit: Optional[int] = None) -> None:
+    async def top(self, interaction: discord.Interaction, limit: int | None = None) -> None:
         """Display top movers using cached Tiingo/Finnhub data."""
         await interaction.response.defer()
 
@@ -601,6 +601,6 @@ class MarketDataCog(commands.Cog):
         return [app_commands.Choice(name=sym, value=sym) for sym in matches]
 
 
-async def setup(bot: "VolarisBot") -> None:
+async def setup(bot: VolarisBot) -> None:
     """Register the market data cog."""
     await bot.add_cog(MarketDataCog(bot))

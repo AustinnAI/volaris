@@ -6,7 +6,6 @@ Provides core calculations for vertical spreads and long options.
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 
 class StrategyType(str, Enum):
@@ -50,13 +49,13 @@ class StrategyCalculationResult:
     legs: list[dict]
 
     # Risk metrics
-    max_profit: Optional[Decimal]  # None for unlimited (long calls)
+    max_profit: Decimal | None  # None for unlimited (long calls)
     max_loss: Decimal
     breakeven_prices: list[Decimal]
-    risk_reward_ratio: Optional[Decimal]  # None if max_profit is unlimited
+    risk_reward_ratio: Decimal | None  # None if max_profit is unlimited
 
     # Probability proxy (delta-based)
-    win_probability: Optional[Decimal]
+    win_probability: Decimal | None
 
     # Position sizing (risk-based recommendations)
     recommended_contracts: int  # Based on account size & risk %
@@ -64,9 +63,9 @@ class StrategyCalculationResult:
 
     # Metadata
     net_premium: Decimal  # debit (positive) or credit (negative)
-    net_credit: Optional[Decimal]  # For credit spreads, the credit received
-    dte: Optional[int]
-    total_delta: Optional[Decimal]
+    net_credit: Decimal | None  # For credit spreads, the credit received
+    dte: int | None
+    total_delta: Decimal | None
 
     assumptions: dict
 
@@ -81,10 +80,10 @@ def calculate_vertical_spread(
     option_type: str,  # "call" or "put"
     bias: TradeBias,
     contracts: int = 1,
-    dte: Optional[int] = None,
-    long_delta: Optional[Decimal] = None,
-    short_delta: Optional[Decimal] = None,
-    account_size: Optional[Decimal] = None,
+    dte: int | None = None,
+    long_delta: Decimal | None = None,
+    short_delta: Decimal | None = None,
+    account_size: Decimal | None = None,
     risk_percentage: Decimal = Decimal("2.0"),
 ) -> StrategyCalculationResult:
     """
@@ -225,9 +224,9 @@ def calculate_long_option(
     option_type: str,  # "call" or "put"
     bias: TradeBias,
     contracts: int = 1,
-    dte: Optional[int] = None,
-    delta: Optional[Decimal] = None,
-    account_size: Optional[Decimal] = None,
+    dte: int | None = None,
+    delta: Decimal | None = None,
+    account_size: Decimal | None = None,
     risk_percentage: Decimal = Decimal("2.0"),
 ) -> StrategyCalculationResult:
     """

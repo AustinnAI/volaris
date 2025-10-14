@@ -3,9 +3,9 @@ Integration tests for Discord bot commands.
 Tests end-to-end flow from Discord command → API → Core logic.
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from decimal import Decimal
 
 from app.alerts.discord_bot import StrategyRecommendationAPI
 

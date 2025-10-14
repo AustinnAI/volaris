@@ -11,15 +11,13 @@ Hierarchy (from spec):
 """
 
 from enum import Enum
-from typing import Optional, List, Dict
-from datetime import datetime
 
-from app.services.schwab import schwab_client
 from app.services.alpaca import alpaca_client
 from app.services.databento import databento_client
-from app.services.tiingo import tiingo_client
 from app.services.finnhub import finnhub_client
 from app.services.marketstack import marketstack_client
+from app.services.schwab import schwab_client
+from app.services.tiingo import tiingo_client
 from app.utils.logger import app_logger
 
 
@@ -72,8 +70,8 @@ class ProviderManager:
     def get_provider(
         self,
         data_type: DataType,
-        preferred: Optional[str] = None,
-    ) -> Optional[object]:
+        preferred: str | None = None,
+    ) -> object | None:
         """
         Get the best available provider for a data type.
 
@@ -108,7 +106,7 @@ class ProviderManager:
         app_logger.warning(f"No provider available for {data_type.value}")
         return None
 
-    async def get_provider_health(self) -> Dict[str, bool]:
+    async def get_provider_health(self) -> dict[str, bool]:
         """
         Check health of all configured providers.
 
@@ -139,7 +137,7 @@ class ProviderManager:
 
         return health_status
 
-    def get_configured_providers(self) -> List[str]:
+    def get_configured_providers(self) -> list[str]:
         """
         Get list of configured (non-None) providers.
 
@@ -148,7 +146,7 @@ class ProviderManager:
         """
         return [name for name, client in self.providers.items() if client is not None]
 
-    def get_available_data_types(self) -> Dict[DataType, List[str]]:
+    def get_available_data_types(self) -> dict[DataType, list[str]]:
         """
         Get available data types and their providers.
 

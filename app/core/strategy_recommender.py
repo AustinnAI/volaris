@@ -4,10 +4,10 @@ Intelligent strategy selection combining IV regime analysis, strike selection, a
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from typing import Any
 
 from app.config import settings
 from app.core.strike_selection import (
@@ -15,14 +15,8 @@ from app.core.strike_selection import (
     OptionContractData,
     determine_iv_regime,
     get_spread_width_for_price,
-    recommend_vertical_spreads,
     recommend_long_options,
-    SpreadCandidate,
-    LongOptionCandidate,
-)
-from app.core.trade_planner import (
-    calculate_vertical_spread,
-    calculate_long_option,
+    recommend_vertical_spreads,
 )
 
 
@@ -40,25 +34,25 @@ class StrategyFamily(str, Enum):
 class StrategyObjectives:
     """Trading objectives and preferences."""
 
-    max_risk_per_trade: Optional[Decimal] = None  # Max $ risk per trade
-    min_pop_pct: Optional[Decimal] = None  # Minimum probability of profit %
-    min_risk_reward: Optional[Decimal] = None  # Minimum R:R ratio
-    prefer_credit: Optional[bool] = None  # Prefer credit spreads if True
+    max_risk_per_trade: Decimal | None = None  # Max $ risk per trade
+    min_pop_pct: Decimal | None = None  # Minimum probability of profit %
+    min_risk_reward: Decimal | None = None  # Minimum R:R ratio
+    prefer_credit: bool | None = None  # Prefer credit spreads if True
     avoid_earnings: bool = False  # Avoid trades during earnings
-    account_size: Optional[Decimal] = None  # For position sizing
-    bias_reason: Optional[str] = "user_manual"  # Reason for bias (Phase 3.5)
+    account_size: Decimal | None = None  # For position sizing
+    bias_reason: str | None = "user_manual"  # Reason for bias (Phase 3.5)
 
 
 @dataclass
 class StrategyConstraints:
     """Strategy constraints and filters."""
 
-    min_credit_pct: Optional[Decimal] = None  # Min credit as % of spread width
-    max_spread_width: Optional[int] = None  # Max spread width in points
-    iv_regime_override: Optional[str] = None  # Force specific IV regime
-    min_open_interest: Optional[int] = None  # Min OI for liquidity
-    min_volume: Optional[int] = None  # Min daily volume
-    min_mark_price: Optional[Decimal] = None  # Min mark price
+    min_credit_pct: Decimal | None = None  # Min credit as % of spread width
+    max_spread_width: int | None = None  # Max spread width in points
+    iv_regime_override: str | None = None  # Force specific IV regime
+    min_open_interest: int | None = None  # Min OI for liquidity
+    min_volume: int | None = None  # Min daily volume
+    min_mark_price: Decimal | None = None  # Min mark price
 
 
 @dataclass
@@ -82,51 +76,51 @@ class StrategyRecommendation:
     position: str  # "itm", "atm", "otm"
 
     # Strike details
-    strike: Optional[Decimal] = None  # For long options
-    long_strike: Optional[Decimal] = None  # For spreads
-    short_strike: Optional[Decimal] = None  # For spreads
+    strike: Decimal | None = None  # For long options
+    long_strike: Decimal | None = None  # For spreads
+    short_strike: Decimal | None = None  # For spreads
 
     # Pricing
-    premium: Optional[Decimal] = None  # For long options
-    long_premium: Optional[Decimal] = None  # For spreads
-    short_premium: Optional[Decimal] = None  # For spreads
-    net_premium: Optional[Decimal] = None  # Net debit/credit
-    is_credit: Optional[bool] = None
-    net_credit: Optional[Decimal] = None
-    net_debit: Optional[Decimal] = None
+    premium: Decimal | None = None  # For long options
+    long_premium: Decimal | None = None  # For spreads
+    short_premium: Decimal | None = None  # For spreads
+    net_premium: Decimal | None = None  # Net debit/credit
+    is_credit: bool | None = None
+    net_credit: Decimal | None = None
+    net_debit: Decimal | None = None
 
     # Spread details
-    width_points: Optional[Decimal] = None
-    width_dollars: Optional[Decimal] = None
+    width_points: Decimal | None = None
+    width_dollars: Decimal | None = None
 
     # Risk metrics
     breakeven: Decimal = Decimal(0)
-    max_profit: Optional[Decimal] = None
+    max_profit: Decimal | None = None
     max_loss: Decimal = Decimal(0)
-    risk_reward_ratio: Optional[Decimal] = None
+    risk_reward_ratio: Decimal | None = None
 
     # Probabilities
-    pop_proxy: Optional[Decimal] = None  # Delta-based POP
+    pop_proxy: Decimal | None = None  # Delta-based POP
 
     # Greeks
-    delta: Optional[Decimal] = None
-    long_delta: Optional[Decimal] = None
-    short_delta: Optional[Decimal] = None
+    delta: Decimal | None = None
+    long_delta: Decimal | None = None
+    short_delta: Decimal | None = None
 
     # Position sizing
-    recommended_contracts: Optional[int] = None
-    position_size_dollars: Optional[Decimal] = None
+    recommended_contracts: int | None = None
+    position_size_dollars: Decimal | None = None
 
     # Scoring
     composite_score: Decimal = Decimal(0)
 
     # Liquidity
-    avg_open_interest: Optional[int] = None
-    avg_volume: Optional[int] = None
+    avg_open_interest: int | None = None
+    avg_volume: int | None = None
 
     # Reasoning
-    reasons: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -136,26 +130,26 @@ class StrategyRecommendationResult:
     underlying_symbol: str
     underlying_price: Decimal
     chosen_strategy_family: StrategyFamily
-    iv_rank: Optional[Decimal]
-    iv_regime: Optional[str]
+    iv_rank: Decimal | None
+    iv_regime: str | None
     dte: int
-    expected_move_pct: Optional[Decimal]
+    expected_move_pct: Decimal | None
     data_timestamp: datetime
 
     # Recommendations
-    recommendations: List[StrategyRecommendation]
+    recommendations: list[StrategyRecommendation]
 
     # Configuration used
-    config_used: Dict[str, Any]
+    config_used: dict[str, Any]
 
     # Warnings
-    warnings: List[str]
+    warnings: list[str]
 
 
 def select_strategy_family(
-    iv_regime: Optional[IVRegime],
+    iv_regime: IVRegime | None,
     bias: str,
-    objectives: Optional[StrategyObjectives] = None,
+    objectives: StrategyObjectives | None = None,
 ) -> tuple[StrategyFamily, str, str]:
     """
     Select optimal strategy family based on IV regime and bias.
@@ -255,19 +249,19 @@ def select_strategy_family(
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "call",
-                f"Neutral IV regime - balanced bull call debit spread",
+                "Neutral IV regime - balanced bull call debit spread",
             )
         elif bias == "bearish":
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "put",
-                f"Neutral IV regime - balanced bear put debit spread",
+                "Neutral IV regime - balanced bear put debit spread",
             )
         else:  # neutral bias
             return (
                 StrategyFamily.VERTICAL_DEBIT,
                 "call",
-                f"Neutral IV and bias - balanced vertical debit spread",
+                "Neutral IV and bias - balanced vertical debit spread",
             )
 
 
@@ -275,7 +269,7 @@ def apply_dte_preferences(
     strategy_family: StrategyFamily,
     option_type: str,
     dte: int,
-    account_size: Optional[Decimal],
+    account_size: Decimal | None,
     bias: str,
     reasoning: str,
 ) -> tuple[StrategyFamily, str, str]:
@@ -407,7 +401,7 @@ def apply_dte_preferences(
 
 
 def get_bias_context_reasoning(
-    bias_reason: Optional[str], bias: str, strategy_family: StrategyFamily
+    bias_reason: str | None, bias: str, strategy_family: StrategyFamily
 ) -> str:
     """
     Generate reasoning context based on bias_reason (Phase 3.5).
@@ -530,9 +524,9 @@ def calculate_composite_score(
 
 def apply_constraints(
     candidate: StrategyRecommendation,
-    constraints: Optional[StrategyConstraints],
-    objectives: Optional[StrategyObjectives],
-) -> tuple[bool, List[str]]:
+    constraints: StrategyConstraints | None,
+    objectives: StrategyObjectives | None,
+) -> tuple[bool, list[str]]:
     """
     Check if recommendation meets all constraints.
 
@@ -613,10 +607,10 @@ def apply_constraints(
 def build_reasoning(
     recommendation: StrategyRecommendation,
     strategy_family: StrategyFamily,
-    iv_regime: Optional[IVRegime],
+    iv_regime: IVRegime | None,
     bias: str,
     strategy_selection_reason: str,
-) -> List[str]:
+) -> list[str]:
     """
     Build clear reasoning bullets for why this recommendation was selected.
 
@@ -684,17 +678,17 @@ def build_reasoning(
 
 
 def recommend_strategies(
-    contracts: List[OptionContractData],
+    contracts: list[OptionContractData],
     underlying_symbol: str,
     underlying_price: Decimal,
     bias: str,
     dte: int,
-    iv_rank: Optional[Decimal] = None,
-    target_move_pct: Optional[Decimal] = None,
-    objectives: Optional[StrategyObjectives] = None,
-    constraints: Optional[StrategyConstraints] = None,
-    scoring_weights: Optional[ScoringWeights] = None,
-    data_timestamp: Optional[datetime] = None,
+    iv_rank: Decimal | None = None,
+    target_move_pct: Decimal | None = None,
+    objectives: StrategyObjectives | None = None,
+    constraints: StrategyConstraints | None = None,
+    scoring_weights: ScoringWeights | None = None,
+    data_timestamp: datetime | None = None,
 ) -> StrategyRecommendationResult:
     """
     Generate ranked strategy recommendations.

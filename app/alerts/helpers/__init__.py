@@ -6,15 +6,15 @@ including API clients, embed builders, and autocomplete helpers.
 """
 
 from .api_client import (
-    StrategyRecommendationAPI,
+    MarketInsightsAPI,
     PriceAlertAPI,
     PriceStreamAPI,
-    MarketInsightsAPI,
+    StrategyRecommendationAPI,
 )
-from .autocomplete import SymbolService, PRIORITY_SYMBOLS
+from .autocomplete import PRIORITY_SYMBOLS, SymbolService
 from .embeds import (
-    create_recommendation_embed,
     build_top_movers_embed,
+    create_recommendation_embed,
 )
 from .views import MoreCandidatesView
 

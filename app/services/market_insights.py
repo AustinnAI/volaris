@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Set
-
 from app.config import settings
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
@@ -11,7 +9,7 @@ from app.services.polygon import polygon_client
 from app.utils.cache import cache
 
 
-async def fetch_sentiment(symbol: str) -> Dict:
+async def fetch_sentiment(symbol: str) -> dict:
     symbol_upper = symbol.upper()
     cache_key = f"sentiment:{symbol_upper}"
     cached = await cache.get(cache_key)
@@ -22,7 +20,7 @@ async def fetch_sentiment(symbol: str) -> Dict:
         raise DataNotFoundError("Finnhub client not configured", provider="Finnhub")
 
     recommendations_raw = await finnhub_client.get_recommendation_trends(symbol_upper)
-    news_raw: List[Dict] = []
+    news_raw: list[dict] = []
     try:
         news_raw = await finnhub_client.get_company_news(symbol_upper)
     except Exception:
@@ -51,7 +49,7 @@ async def fetch_sentiment(symbol: str) -> Dict:
     sell = latest_recommendation.get("sell", 0) if latest_recommendation else 0
     strong_sell = latest_recommendation.get("strongSell", 0) if latest_recommendation else 0
 
-    def _weighted_score(strong: int, regular: int) -> Optional[float]:
+    def _weighted_score(strong: int, regular: int) -> float | None:
         total = strong + regular
         if total == 0:
             return None
@@ -70,7 +68,7 @@ async def fetch_sentiment(symbol: str) -> Dict:
     return payload
 
 
-async def get_top_movers(limit: int, sp500_symbols: Set[str]) -> Dict[str, List[Dict]]:
+async def get_top_movers(limit: int, sp500_symbols: set[str]) -> dict[str, list[dict]]:
     if not polygon_client:
         raise DataNotFoundError(
             "Polygon client not configured for top movers",
@@ -80,7 +78,7 @@ async def get_top_movers(limit: int, sp500_symbols: Set[str]) -> Dict[str, List[
     raw_gainers = await polygon_client.get_top_movers("gainers")
     raw_losers = await polygon_client.get_top_movers("losers")
 
-    def _to_float(value: Optional[float]) -> Optional[float]:
+    def _to_float(value: float | None) -> float | None:
         if value is None:
             return None
         try:
@@ -88,7 +86,7 @@ async def get_top_movers(limit: int, sp500_symbols: Set[str]) -> Dict[str, List[
         except (TypeError, ValueError):
             return None
 
-    def _map(entry: Dict) -> Dict:
+    def _map(entry: dict) -> dict:
         return {
             "symbol": entry.get("ticker"),
             "price": _to_float(

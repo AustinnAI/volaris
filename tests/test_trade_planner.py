@@ -2,14 +2,13 @@
 Unit tests for trade planner calculation engine.
 """
 
-import pytest
 from decimal import Decimal
 
 from app.core.trade_planner import (
-    calculate_vertical_spread,
+    TradeBias,
     calculate_long_option,
     calculate_position_size,
-    TradeBias,
+    calculate_vertical_spread,
 )
 
 

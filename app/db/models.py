@@ -5,14 +5,12 @@ from __future__ import annotations
 import enum
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
     Date,
     DateTime,
-    Enum as SqlEnum,
     ForeignKey,
     Index,
     Integer,
@@ -21,6 +19,9 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+)
+from sqlalchemy import (
+    Enum as SqlEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -153,10 +154,10 @@ class Ticker(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     symbol: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, index=True)
-    name: Mapped[Optional[str]] = mapped_column(String(255))
-    exchange: Mapped[Optional[str]] = mapped_column(String(64))
-    sector: Mapped[Optional[str]] = mapped_column(String(128))
-    industry: Mapped[Optional[str]] = mapped_column(String(128))
+    name: Mapped[str | None] = mapped_column(String(255))
+    exchange: Mapped[str | None] = mapped_column(String(64))
+    sector: Mapped[str | None] = mapped_column(String(128))
+    industry: Mapped[str | None] = mapped_column(String(128))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
 
     price_bars: Mapped[list[PriceBar]] = relationship("PriceBar", back_populates="ticker")  # type: ignore[name-defined]
@@ -165,17 +166,17 @@ class Ticker(TimestampMixin, Base):
     iv_metrics: Mapped[list[IVMetric]] = relationship("IVMetric", back_populates="ticker")  # type: ignore[name-defined]
     market_levels: Mapped[list[MarketStructureLevel]] = relationship("MarketStructureLevel", back_populates="ticker")  # type: ignore[name-defined]
     trade_plans: Mapped[list[TradePlan]] = relationship("TradePlan", back_populates="ticker")  # type: ignore[name-defined]
-    price_alerts: Mapped[list["PriceAlert"]] = relationship(
+    price_alerts: Mapped[list[PriceAlert]] = relationship(
         "PriceAlert",
         back_populates="ticker",
         cascade="all, delete-orphan",
     )
-    price_streams: Mapped[list["PriceStream"]] = relationship(
+    price_streams: Mapped[list[PriceStream]] = relationship(
         "PriceStream",
         back_populates="ticker",
         cascade="all, delete-orphan",
     )
-    index_memberships: Mapped[list["IndexConstituent"]] = relationship(
+    index_memberships: Mapped[list[IndexConstituent]] = relationship(
         "IndexConstituent",
         back_populates="ticker",
         cascade="all, delete-orphan",
@@ -189,7 +190,7 @@ class Watchlist(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
     is_default: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
 
     items: Mapped[list[WatchlistItem]] = relationship("WatchlistItem", back_populates="watchlist", cascade="all, delete-orphan")  # type: ignore[name-defined]
@@ -207,8 +208,8 @@ class WatchlistItem(TimestampMixin, Base):
     ticker_id: Mapped[int] = mapped_column(
         ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    rank: Mapped[Optional[int]] = mapped_column(Integer)
-    notes: Mapped[Optional[str]] = mapped_column(Text)
+    rank: Mapped[int | None] = mapped_column(Integer)
+    notes: Mapped[str | None] = mapped_column(Text)
 
     watchlist: Mapped[Watchlist] = relationship("Watchlist", back_populates="items")
     ticker: Mapped[Ticker] = relationship("Ticker", back_populates="watchlist_items")
@@ -231,7 +232,7 @@ class PriceBar(TimestampMixin, Base):
     high: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     low: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     close: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
-    volume: Mapped[Optional[int]] = mapped_column(BigInteger)
+    volume: Mapped[int | None] = mapped_column(BigInteger)
     data_provider: Mapped[DataProvider] = mapped_column(
         enum_column(DataProvider, length=32), nullable=False
     )
@@ -258,7 +259,7 @@ class OptionChainSnapshot(TimestampMixin, Base):
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     expiration: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     dte: Mapped[int] = mapped_column(Integer, nullable=False)
-    underlying_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
+    underlying_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
     data_provider: Mapped[DataProvider] = mapped_column(
         enum_column(DataProvider, length=32), nullable=False
     )
@@ -284,18 +285,18 @@ class OptionContract(TimestampMixin, Base):
         enum_column(OptionType, length=16), nullable=False
     )
     strike: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
-    bid: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    ask: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    last: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    mark: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    volume: Mapped[Optional[int]] = mapped_column(BigInteger)
-    open_interest: Mapped[Optional[int]] = mapped_column(BigInteger)
-    implied_vol: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    delta: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    gamma: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    theta: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    vega: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    rho: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
+    bid: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    ask: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    last: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    mark: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    volume: Mapped[int | None] = mapped_column(BigInteger)
+    open_interest: Mapped[int | None] = mapped_column(BigInteger)
+    implied_vol: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    delta: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    gamma: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    theta: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    vega: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    rho: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
 
     snapshot: Mapped[OptionChainSnapshot] = relationship(
         "OptionChainSnapshot", back_populates="contracts"
@@ -320,9 +321,9 @@ class IVMetric(TimestampMixin, Base):
     )
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     term: Mapped[IVTerm] = mapped_column(enum_column(IVTerm, length=16), nullable=False)
-    implied_vol: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    iv_rank: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
-    iv_percentile: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
+    implied_vol: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    iv_rank: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
+    iv_percentile: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
     data_provider: Mapped[DataProvider] = mapped_column(
         SqlEnum(DataProvider, native_enum=False, length=16), nullable=False
     )
@@ -349,10 +350,10 @@ class MarketStructureLevel(TimestampMixin, Base):
     )
     price: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    valid_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    valid_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    confidence: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 2))
-    notes: Mapped[Optional[str]] = mapped_column(Text)
+    valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    notes: Mapped[str | None] = mapped_column(Text)
 
     ticker: Mapped[Ticker] = relationship("Ticker", back_populates="market_levels")
 
@@ -373,8 +374,8 @@ class PriceAlert(TimestampMixin, Base):
     )
     target_price: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     channel_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    created_by: Mapped[Optional[str]] = mapped_column(String(64))
-    triggered_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_by: Mapped[str | None] = mapped_column(String(64))
+    triggered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     ticker: Mapped[Ticker] = relationship("Ticker", back_populates="price_alerts")
 
@@ -393,8 +394,8 @@ class PriceStream(TimestampMixin, Base):
     channel_id: Mapped[str] = mapped_column(String(64), nullable=False)
     interval_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
     next_run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    created_by: Mapped[Optional[str]] = mapped_column(String(64))
-    last_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
+    created_by: Mapped[str | None] = mapped_column(String(64))
+    last_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
 
     ticker: Mapped[Ticker] = relationship("Ticker", back_populates="price_streams")
 
@@ -414,7 +415,7 @@ class IndexConstituent(TimestampMixin, Base):
     ticker_id: Mapped[int] = mapped_column(
         ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False
     )
-    weight: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 6))
+    weight: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
 
     ticker: Mapped[Ticker] = relationship("Ticker", back_populates="index_memberships")
 
@@ -442,17 +443,17 @@ class TradePlan(TimestampMixin, Base):
         enum_column(StrategyType, length=48), nullable=False
     )
     bias: Mapped[TradeBias] = mapped_column(enum_column(TradeBias, length=16), nullable=False)
-    thesis: Mapped[Optional[str]] = mapped_column(Text)
-    expiration: Mapped[Optional[date]] = mapped_column(Date)
-    dte: Mapped[Optional[int]] = mapped_column(Integer)
-    entry_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    stop_loss: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    target_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    max_loss: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    max_profit: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    risk_reward: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4))
-    position_size: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    tags: Mapped[Optional[str]] = mapped_column(String(255))
+    thesis: Mapped[str | None] = mapped_column(Text)
+    expiration: Mapped[date | None] = mapped_column(Date)
+    dte: Mapped[int | None] = mapped_column(Integer)
+    entry_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    stop_loss: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    target_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    max_loss: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    max_profit: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    risk_reward: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    position_size: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    tags: Mapped[str | None] = mapped_column(String(255))
 
     ticker: Mapped[Ticker] = relationship("Ticker", back_populates="trade_plans")
     executions: Mapped[list[TradeExecution]] = relationship("TradeExecution", back_populates="trade_plan", cascade="all, delete-orphan")  # type: ignore[name-defined]
@@ -474,12 +475,12 @@ class TradeExecution(TimestampMixin, Base):
         enum_column(TradeExecutionType, length=32), nullable=False
     )
     executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    fill_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    quantity: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6))
-    order_id: Mapped[Optional[str]] = mapped_column(String(64))
-    notes: Mapped[Optional[str]] = mapped_column(Text)
+    fill_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    quantity: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
+    order_id: Mapped[str | None] = mapped_column(String(64))
+    notes: Mapped[str | None] = mapped_column(Text)
 
-    trade_plan: Mapped[Optional[TradePlan]] = relationship("TradePlan", back_populates="executions")
+    trade_plan: Mapped[TradePlan | None] = relationship("TradePlan", back_populates="executions")
     journal_entries: Mapped[list[TradeJournalEntry]] = relationship("TradeJournalEntry", back_populates="execution")  # type: ignore[name-defined]
 
 
@@ -489,22 +490,22 @@ class TradeJournalEntry(TimestampMixin, Base):
     __tablename__ = "trade_journal_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    trade_plan_id: Mapped[Optional[int]] = mapped_column(
+    trade_plan_id: Mapped[int | None] = mapped_column(
         ForeignKey("trade_plans.id", ondelete="SET NULL")
     )
-    execution_id: Mapped[Optional[int]] = mapped_column(
+    execution_id: Mapped[int | None] = mapped_column(
         ForeignKey("trade_executions.id", ondelete="SET NULL")
     )
-    sentiment: Mapped[Optional[JournalSentiment]] = mapped_column(
+    sentiment: Mapped[JournalSentiment | None] = mapped_column(
         enum_column(JournalSentiment, length=16)
     )
-    rating: Mapped[Optional[int]] = mapped_column(Integer)
+    rating: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str] = mapped_column(Text, nullable=False)
-    attachments: Mapped[Optional[str]] = mapped_column(Text)
+    attachments: Mapped[str | None] = mapped_column(Text)
 
-    trade_plan: Mapped[Optional[TradePlan]] = relationship(
+    trade_plan: Mapped[TradePlan | None] = relationship(
         "TradePlan", back_populates="journal_entries"
     )
-    execution: Mapped[Optional[TradeExecution]] = relationship(
+    execution: Mapped[TradeExecution | None] = relationship(
         "TradeExecution", back_populates="journal_entries"
     )
