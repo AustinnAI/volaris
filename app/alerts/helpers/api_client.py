@@ -148,7 +148,14 @@ class PriceAlertAPI:
         url = f"{self.base_url}/api/v1/alerts/price/evaluate"
         async with aiohttp.ClientSession(timeout=self.timeout) as session:
             async with session.post(url) as response:
-                data = await response.json()
+                # Handle 502/503 (service not ready yet) gracefully
+                if response.status in (502, 503):
+                    return []
+                try:
+                    data = await response.json()
+                except Exception:  # pylint: disable=broad-except
+                    # If response is HTML (service error), return empty
+                    return []
                 if response.status == 404:
                     # No alerts configured - return empty list
                     return []
@@ -219,7 +226,14 @@ class PriceStreamAPI:
         url = f"{self.base_url}/api/v1/streams/price/evaluate"
         async with aiohttp.ClientSession(timeout=self.timeout) as session:
             async with session.post(url) as response:
-                data = await response.json()
+                # Handle 502/503 (service not ready yet) gracefully
+                if response.status in (502, 503):
+                    return []
+                try:
+                    data = await response.json()
+                except Exception:  # pylint: disable=broad-except
+                    # If response is HTML (service error), return empty
+                    return []
                 if response.status == 404:
                     # No streams configured - return empty list
                     return []

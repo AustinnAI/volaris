@@ -44,7 +44,8 @@ def load_sp500_symbols(csv_path: Path | None = None) -> tuple[list[str], dict[st
     """
     symbols: list[str] = []
     names: dict[str, str] = {}
-    path = csv_path or Path(__file__).resolve().parents[2] / "SP500.csv"
+    # SP500.csv is at project root, 3 levels up from this file (app/alerts/helpers/autocomplete.py)
+    path = csv_path or Path(__file__).resolve().parents[3] / "SP500.csv"
 
     try:
         if path.exists():

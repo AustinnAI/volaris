@@ -19,8 +19,9 @@ from app.workers.jobs import (
 
 def _log_job_memory(event):
     """Log memory usage after each job execution."""
-    if event.exception:
-        return  # Job failed, memory info not useful
+    # Only log for JOB_EXECUTED events (SchedulerEvent doesn't have exception attribute)
+    if not hasattr(event, 'job_id'):
+        return
 
     memory = get_memory_usage()
     app_logger.info(
@@ -35,11 +36,12 @@ def _log_job_memory(event):
 
 def create_scheduler() -> AsyncIOScheduler:
     """Configure the AsyncIO scheduler with recurring jobs."""
+    from apscheduler.events import EVENT_JOB_EXECUTED
 
     scheduler = AsyncIOScheduler(timezone=settings.SCHEDULER_TIMEZONE)
 
     # Add listener to log memory usage after each job
-    scheduler.add_listener(_log_job_memory, mask=1 | 2)  # JOB_EXECUTED | JOB_ERROR
+    scheduler.add_listener(_log_job_memory, EVENT_JOB_EXECUTED)
 
     scheduler.add_job(
         realtime_prices_job,
