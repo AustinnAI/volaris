@@ -139,6 +139,7 @@ async def health_check():
 # Register API routers
 from app.api.v1.alerts import router as alerts_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.debug import router as debug_router
 from app.api.v1.market_data import router as market_data_router
 from app.api.v1.providers import router as providers_router
 from app.api.v1.strategy_recommendation import router as strategy_router
@@ -154,6 +155,7 @@ app.include_router(strategy_router, prefix=settings.API_V1_PREFIX)
 app.include_router(market_data_router, prefix=settings.API_V1_PREFIX)
 app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
 app.include_router(streams_router, prefix=settings.API_V1_PREFIX)
+app.include_router(debug_router, prefix=settings.API_V1_PREFIX)
 
 
 def create_app() -> FastAPI:

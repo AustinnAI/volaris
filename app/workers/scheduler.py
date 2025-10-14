@@ -8,6 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 from app.config import settings
 from app.db.models import Timeframe
 from app.utils.logger import app_logger
+from app.utils.memory_profiler import get_memory_usage
 from app.workers.jobs import (
     iv_metric_job,
     option_chain_refresh_job,
@@ -16,10 +17,29 @@ from app.workers.jobs import (
 )
 
 
+def _log_job_memory(event):
+    """Log memory usage after each job execution."""
+    if event.exception:
+        return  # Job failed, memory info not useful
+
+    memory = get_memory_usage()
+    app_logger.info(
+        "job_completed",
+        extra={
+            "job_id": event.job_id,
+            "memory_mb": memory["rss_mb"],
+            "memory_percent": memory["percent"],
+        },
+    )
+
+
 def create_scheduler() -> AsyncIOScheduler:
     """Configure the AsyncIO scheduler with recurring jobs."""
 
     scheduler = AsyncIOScheduler(timezone=settings.SCHEDULER_TIMEZONE)
+
+    # Add listener to log memory usage after each job
+    scheduler.add_listener(_log_job_memory, mask=1 | 2)  # JOB_EXECUTED | JOB_ERROR
 
     scheduler.add_job(
         realtime_prices_job,
