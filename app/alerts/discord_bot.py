@@ -51,7 +51,24 @@ class VolarisBot(commands.Bot):
         self.est_tz = ZoneInfo("America/New_York")
 
     async def setup_hook(self) -> None:
-        """Sync slash commands and load cogs."""
+        """Load cogs first, then sync slash commands."""
+        # Load extensions BEFORE syncing to avoid CommandAlreadyRegistered errors
+        extensions = [
+            "app.alerts.cogs.strategy",
+            "app.alerts.cogs.market_data",
+            "app.alerts.cogs.calculators",
+            "app.alerts.cogs.utilities",
+        ]
+        for extension in extensions:
+            if extension in self.extensions:
+                continue
+            try:
+                await self.load_extension(extension)
+                self.logger.info("Loaded extension %s", extension)
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("Failed to load extension %s", extension)
+
+        # Now sync commands to Discord after all cogs are loaded
         if self.guild_id:
             guild = discord.Object(id=self.guild_id)
             self.tree.copy_global_to(guild=guild)
@@ -69,21 +86,6 @@ class VolarisBot(commands.Bot):
             self.poll_price_streams.start()
         if not self.daily_top_digest.is_running():
             self.daily_top_digest.start()
-
-        extensions = [
-            "app.alerts.cogs.strategy",
-            "app.alerts.cogs.market_data",
-            "app.alerts.cogs.calculators",
-            "app.alerts.cogs.utilities",
-        ]
-        for extension in extensions:
-            if extension in self.extensions:
-                continue
-            try:
-                await self.load_extension(extension)
-                self.logger.info("Loaded extension %s", extension)
-            except Exception:  # pylint: disable=broad-except
-                self.logger.exception("Failed to load extension %s", extension)
 
     async def on_ready(self) -> None:
         """Log bot identity when it becomes ready."""
