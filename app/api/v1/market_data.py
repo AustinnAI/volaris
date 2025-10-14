@@ -335,14 +335,22 @@ async def get_sentiment(symbol: str, db: AsyncSession = Depends(get_db)):
         try:
             sp500_symbols = set(await refresh_index_constituents(db))
         except DataNotFoundError as exc:
-            raise HTTPException(status_code=502, detail=str(exc)) from exc
+            raise HTTPException(
+                status_code=502,
+                detail=f"S&P 500 list not available: {str(exc)}. "
+                "Enable scheduler to populate constituents or wait for weekly refresh job.",
+            ) from exc
         except Exception as exc:  # pylint: disable=broad-except
             raise HTTPException(
                 status_code=500, detail=f"Failed to refresh S&P 500 list: {str(exc)}"
             ) from exc
 
     if symbol_upper not in sp500_symbols:
-        raise HTTPException(status_code=400, detail="Symbol must be part of the S&P 500 list")
+        raise HTTPException(
+            status_code=400,
+            detail=f"{symbol_upper} is not in the S&P 500 list. "
+            "Sentiment data is only available for S&P 500 stocks.",
+        )
 
     try:
         sentiment = await fetch_sentiment(symbol_upper)
@@ -373,7 +381,7 @@ async def get_top_movers_endpoint(
             ) from exc
 
     try:
-        movers = await get_top_movers(limit=limit, sp500_symbols=sp500_symbols)
+        movers = await get_top_movers(limit=limit, sp500_symbols=sp500_symbols, db=db)
     except DataNotFoundError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception as exc:  # pylint: disable=broad-except

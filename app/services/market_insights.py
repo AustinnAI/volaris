@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
+from sqlalchemy import desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import settings
+from app.db.models import PriceBar, Ticker, Timeframe
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
 from app.services.polygon import polygon_client
@@ -68,37 +74,116 @@ async def fetch_sentiment(symbol: str) -> dict:
     return payload
 
 
-async def get_top_movers(limit: int, sp500_symbols: set[str]) -> dict[str, list[dict]]:
-    if not polygon_client:
+async def get_top_movers(
+    limit: int, sp500_symbols: set[str], db: AsyncSession | None = None
+) -> dict[str, list[dict]]:
+    """
+    Get top gainers and losers from S&P 500.
+
+    Uses in-house calculation from price_bars data (free, no external API needed).
+    Calculates daily % change from today's OHLCV data.
+
+    Args:
+        limit: Number of gainers/losers to return
+        sp500_symbols: Set of S&P 500 ticker symbols
+        db: Database session (required for in-house calculation)
+
+    Returns:
+        {"gainers": [...], "losers": [...]}
+    """
+    # Use in-house calculation from price_bars (free, no API limits)
+    if db is None:
         raise DataNotFoundError(
-            "Polygon client not configured for top movers",
-            provider="Polygon",
+            "Database session required for top movers calculation",
+            provider="Internal",
         )
 
-    raw_gainers = await polygon_client.get_top_movers("gainers")
-    raw_losers = await polygon_client.get_top_movers("losers")
+    return await _calculate_top_movers_from_db(limit, sp500_symbols, db)
 
-    def _to_float(value: float | None) -> float | None:
-        if value is None:
-            return None
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return None
 
-    def _map(entry: dict) -> dict:
-        return {
-            "symbol": entry.get("ticker"),
-            "price": _to_float(
-                entry.get("lastTrade", {}).get("p") or entry.get("lastQuote", {}).get("p")
-            ),
-            "change": _to_float(entry.get("todaysChange")),
-            "percent": _to_float(entry.get("todaysChangePerc")),
-            "volume": entry.get("day", {}).get("v"),
+async def _calculate_top_movers_from_db(
+    limit: int, sp500_symbols: set[str], db: AsyncSession
+) -> dict[str, list[dict]]:
+    """Calculate top movers from price_bars data (no external API needed)."""
+
+    # Get today's date range (market open to now)
+    now = datetime.now(UTC)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Query: Get most recent price bar for each S&P 500 ticker today
+    # Calculate % change from (close - open) / open
+    stmt = (
+        select(
+            Ticker.symbol,
+            PriceBar.close,
+            PriceBar.open,
+            PriceBar.volume,
+            (
+                ((PriceBar.close - PriceBar.open) / PriceBar.open) * 100
+            ).label("percent_change"),
+            (PriceBar.close - PriceBar.open).label("price_change"),
+        )
+        .join(Ticker, PriceBar.ticker_id == Ticker.id)
+        .where(
+            Ticker.symbol.in_(sp500_symbols),
+            PriceBar.timestamp >= today_start,
+            PriceBar.timeframe == Timeframe.ONE_MINUTE,
+        )
+        .distinct(Ticker.symbol)
+        .order_by(Ticker.symbol, desc(PriceBar.timestamp))
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    if not rows:
+        # No price data for today - try yesterday's daily bars as fallback
+        yesterday = today_start - timedelta(days=1)
+        stmt_fallback = (
+            select(
+                Ticker.symbol,
+                PriceBar.close,
+                PriceBar.open,
+                PriceBar.volume,
+                (
+                    ((PriceBar.close - PriceBar.open) / PriceBar.open) * 100
+                ).label("percent_change"),
+                (PriceBar.close - PriceBar.open).label("price_change"),
+            )
+            .join(Ticker, PriceBar.ticker_id == Ticker.id)
+            .where(
+                Ticker.symbol.in_(sp500_symbols),
+                PriceBar.timestamp >= yesterday,
+                PriceBar.timeframe == Timeframe.DAILY,
+            )
+            .distinct(Ticker.symbol)
+            .order_by(Ticker.symbol, desc(PriceBar.timestamp))
+        )
+        result = await db.execute(stmt_fallback)
+        rows = result.all()
+
+    if not rows:
+        raise DataNotFoundError(
+            "No price data available for top movers calculation. "
+            "Enable scheduler or wait for price data to be populated.",
+            provider="Internal",
+        )
+
+    # Convert to list of dicts
+    movers = [
+        {
+            "symbol": row.symbol,
+            "price": float(row.close),
+            "change": float(row.price_change),
+            "percent": float(row.percent_change),
+            "volume": int(row.volume) if row.volume else None,
         }
+        for row in rows
+        if row.percent_change is not None
+    ]
 
-    gainers = [_map(item) for item in raw_gainers if item.get("ticker") in sp500_symbols][:limit]
-
-    losers = [_map(item) for item in raw_losers if item.get("ticker") in sp500_symbols][:limit]
+    # Sort by percent change
+    gainers = sorted(movers, key=lambda x: x["percent"], reverse=True)[:limit]
+    losers = sorted(movers, key=lambda x: x["percent"])[:limit]
 
     return {"gainers": gainers, "losers": losers}

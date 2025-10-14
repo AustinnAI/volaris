@@ -89,7 +89,7 @@ These commands work with `SCHEDULER_ENABLED=false` and perform on-demand data fe
 - `/range` - 52-week high/low
 - `/volume` - Volume analysis
 - `/sentiment` - Sentiment metrics (Finnhub)
-- `/top` - Top movers (Tiingo/Finnhub)
+- `/top` - Top movers (in-house calculation from price data)
 - `/earnings` - Next earnings date
 - `/spread` - Spread width validator
 
@@ -603,9 +603,11 @@ curl -X POST http://localhost:8000/api/v1/strategy/recommend \
 
 ### Top Movers & Daily Digest
 - `/top [limit]` — fetches top S&P 500 gainers/losers (default limit from `TOP_MOVERS_LIMIT`).
-  - **Free-tier note:** Tiingo's top-movers endpoint requires the paid IEX add-on. With a free key, the command will respond with guidance instead of data. Configure a paid key or alternative provider before relying on the digest.
-- Automated digest posts at **4:00 PM ET** each trading day when `DISCORD_DEFAULT_CHANNEL_ID` is set and premium data is available.
-- We're evaluating alternatives (Polygon.io, Alpha Vantage, or in-house computation) to remove the paid dependency in a future phase.
+  - **Implementation:** Uses in-house calculation from scheduled `price_bars` data (no external API needed).
+  - **How it works:** Calculates daily % change from today's OHLCV data, sorts by percent change.
+  - **Requirements:** Scheduler must be enabled to populate price data (or data will be empty).
+  - **Fallback:** If no data for today, uses yesterday's daily bars.
+- Automated digest posts at **4:00 PM ET** each trading day when `DISCORD_DEFAULT_CHANNEL_ID` is set and price data is available.
 
 ### Dynamic S&P 500 Membership
 - Weekly APScheduler job (`sp500_refresh`) updates constituents via Finnhub `/index/constituents`.
