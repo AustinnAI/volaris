@@ -17,7 +17,9 @@ if TYPE_CHECKING:
     from app.alerts.discord_bot import VolarisBot
 
 
-class WatchlistCog(commands.GroupCog, name="watchlist", group_description="Manage Volaris watchlist"):
+class WatchlistCog(
+    commands.GroupCog, name="watchlist", group_description="Manage Volaris watchlist"
+):
     """Admin-only commands to view and update the server-side watchlist."""
 
     def __init__(self, bot: VolarisBot) -> None:
@@ -82,7 +84,9 @@ class WatchlistCog(commands.GroupCog, name="watchlist", group_description="Manag
 
         await interaction.response.defer(ephemeral=True)
 
-        parts = [token.strip().upper() for token in symbols.replace(",", " ").split() if token.strip()]
+        parts = [
+            token.strip().upper() for token in symbols.replace(",", " ").split() if token.strip()
+        ]
         if not parts:
             await interaction.followup.send("❌ Provide at least one symbol.", ephemeral=True)
             return

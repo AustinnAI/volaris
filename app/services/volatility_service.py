@@ -225,7 +225,9 @@ class VolatilityService:
         candidates = [
             snapshot
             for snapshot in snapshots
-            if snapshot.dte is not None and min_dte <= snapshot.dte <= max_dte and snapshot.contracts
+            if snapshot.dte is not None
+            and min_dte <= snapshot.dte <= max_dte
+            and snapshot.contracts
         ]
         if not candidates:
             return None

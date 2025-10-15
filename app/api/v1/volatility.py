@@ -32,7 +32,9 @@ async def get_iv_summary(symbol: str, db: AsyncSession = Depends(get_db)) -> IVS
 
 
 @router.get("/term/{symbol}", response_model=TermStructureResponse)
-async def get_term_structure(symbol: str, db: AsyncSession = Depends(get_db)) -> TermStructureResponse:
+async def get_term_structure(
+    symbol: str, db: AsyncSession = Depends(get_db)
+) -> TermStructureResponse:
     """
     Return IV term structure across configured horizons (7-90d).
     """
@@ -44,7 +46,9 @@ async def get_term_structure(symbol: str, db: AsyncSession = Depends(get_db)) ->
 
 
 @router.get("/expected-move/{symbol}", response_model=ExpectedMoveResponse)
-async def get_expected_move(symbol: str, db: AsyncSession = Depends(get_db)) -> ExpectedMoveResponse:
+async def get_expected_move(
+    symbol: str, db: AsyncSession = Depends(get_db)
+) -> ExpectedMoveResponse:
     """
     Return expected move estimates (1-7d and 14-45d) derived from ATM straddles.
     """
@@ -68,4 +72,3 @@ async def get_volatility_overview(
     except DataNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return VolatilityOverviewResponse.from_snapshot(snapshot)
-

@@ -247,4 +247,3 @@ class VolatilityOverviewResponse(BaseModel):
             skew=skew_payload,
             warnings=snapshot.warnings,
         )
-

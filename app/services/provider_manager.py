@@ -163,6 +163,5 @@ class ProviderManager:
         return available
 
 
-
 # Global provider manager instance
 provider_manager = ProviderManager()

@@ -25,7 +25,9 @@ async def test_set_watchlist_requires_token(monkeypatch):
     db = AsyncMock()
     payload = WatchlistUpdateRequest(symbols=["SPY", "QQQ"])
 
-    request = Request(scope={"type": "http", "headers": [(b"authorization", b"Bearer secret-token")]})
+    request = Request(
+        scope={"type": "http", "headers": [(b"authorization", b"Bearer secret-token")]}
+    )
     setter = AsyncMock(return_value=["SPY", "QQQ"])
     monkeypatch.setattr(WatchlistService, "set_symbols", setter)
 
@@ -45,7 +47,9 @@ async def test_set_watchlist_rejects_invalid_payload(monkeypatch):
         AsyncMock(side_effect=WatchlistValidationError("invalid")),
     )
 
-    request = Request(scope={"type": "http", "headers": [(b"authorization", b"Bearer secret-token")]})
+    request = Request(
+        scope={"type": "http", "headers": [(b"authorization", b"Bearer secret-token")]}
+    )
 
     with pytest.raises(HTTPException) as exc_info:
         await set_watchlist(request, payload, db)

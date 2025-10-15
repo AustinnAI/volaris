@@ -20,7 +20,7 @@ from app.workers.jobs import (
 def _log_job_memory(event):
     """Log memory usage after each job execution."""
     # Only log for JOB_EXECUTED events (SchedulerEvent doesn't have exception attribute)
-    if not hasattr(event, 'job_id'):
+    if not hasattr(event, "job_id"):
         return
 
     memory = get_memory_usage()
@@ -36,6 +36,7 @@ def _log_job_memory(event):
     # Force garbage collection if memory is high
     if memory["rss_mb"] > 350:
         import gc
+
         app_logger.warning(
             "high_memory_detected_triggering_gc",
             extra={"memory_mb": memory["rss_mb"]},

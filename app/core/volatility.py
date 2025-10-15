@@ -141,7 +141,9 @@ def build_term_structure(metrics: Sequence[IVMetricSnapshot]) -> list[TermStruct
     """
     ordered = sorted(
         metrics,
-        key=lambda metric: TERM_ORDER.index(metric.term) if metric.term in TERM_ORDER else len(TERM_ORDER),
+        key=lambda metric: (
+            TERM_ORDER.index(metric.term) if metric.term in TERM_ORDER else len(TERM_ORDER)
+        ),
     )
     return [
         TermStructurePoint(
@@ -174,8 +176,12 @@ def compute_skew(
     if not contracts or underlying_price is None or underlying_price <= 0:
         return None
 
-    call_contract = _closest_delta_contract(contracts, target_delta=Decimal("0.25"), option_type="call")
-    put_contract = _closest_delta_contract(contracts, target_delta=Decimal("-0.25"), option_type="put")
+    call_contract = _closest_delta_contract(
+        contracts, target_delta=Decimal("0.25"), option_type="call"
+    )
+    put_contract = _closest_delta_contract(
+        contracts, target_delta=Decimal("-0.25"), option_type="put"
+    )
 
     if call_contract is None or put_contract is None:
         return None
@@ -218,8 +224,12 @@ def compute_expected_move(
     if not contracts or underlying_price is None or underlying_price <= 0:
         return None
 
-    call_contract = _closest_strike_contract(contracts, option_type="call", underlying_price=underlying_price)
-    put_contract = _closest_strike_contract(contracts, option_type="put", underlying_price=underlying_price)
+    call_contract = _closest_strike_contract(
+        contracts, option_type="call", underlying_price=underlying_price
+    )
+    put_contract = _closest_strike_contract(
+        contracts, option_type="put", underlying_price=underlying_price
+    )
 
     if call_contract is None or put_contract is None:
         return None
@@ -288,11 +298,7 @@ def _closest_strike_contract(
     underlying_price: Decimal,
 ) -> OptionContractData | None:
     """Return contract whose strike is closest to the underlying price."""
-    candidates = [
-        contract
-        for contract in contracts
-        if contract.option_type == option_type
-    ]
+    candidates = [contract for contract in contracts if contract.option_type == option_type]
     if not candidates:
         return None
 

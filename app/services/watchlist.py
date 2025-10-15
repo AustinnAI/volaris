@@ -167,7 +167,9 @@ class WatchlistService:
             return False
         client = await cls._get_redis_client()
         body = {"value": json.dumps(list(symbols))}
-        response = await client.post(f"/set/{WATCHLIST_KEY}", headers=cls._redis_headers(), json=body)
+        response = await client.post(
+            f"/set/{WATCHLIST_KEY}", headers=cls._redis_headers(), json=body
+        )
         response.raise_for_status()
         return True
 

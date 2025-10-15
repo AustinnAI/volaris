@@ -177,7 +177,9 @@ def build_expected_move_embed(data: dict[str, Any]) -> discord.Embed:
 
             strikes_text = ""
             if call_strike is not None and put_strike is not None:
-                strikes_text = f"\nATM Strikes: C {float(call_strike):.2f} / P {float(put_strike):.2f}"
+                strikes_text = (
+                    f"\nATM Strikes: C {float(call_strike):.2f} / P {float(put_strike):.2f}"
+                )
 
             straddle_text = ""
             if straddle_cost is not None:
