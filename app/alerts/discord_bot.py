@@ -77,6 +77,13 @@ class VolarisBot(commands.Bot):
                 self.logger.info("  - %s", cmd.name)
 
             try:
+                # Clear existing commands first to avoid conflicts
+                self.tree.clear_commands(guild=guild)
+                self.logger.info("Cleared existing guild commands")
+
+                # Copy commands to guild
+                self.tree.copy_global_to(guild=guild)
+
                 # Sync to guild (commands are already loaded)
                 synced = await asyncio.wait_for(self.tree.sync(guild=guild), timeout=30.0)
                 self.logger.info("✅ Synced %d commands to guild %s", len(synced), self.guild_id)
@@ -362,7 +369,30 @@ async def run_bot() -> None:
 
     bot = create_bot()
 
+    # Start a simple HTTP health server for Render (runs on port 10000)
+    # This prevents "no open ports" warnings when running as Web Service
+    import os
+    from aiohttp import web
+
+    async def health_check(request):
+        """Simple health endpoint for Render."""
+        return web.json_response({"status": "running", "service": "Discord Bot"})
+
+    app = web.Application()
+    app.router.add_get("/health", health_check)
+    app.router.add_get("/", health_check)
+
+    port = int(os.environ.get("PORT", 10000))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+
     try:
+        # Start HTTP server in background
+        await site.start()
+        logger.info(f"Health server started on port {port}")
+
+        # Start Discord bot (blocking)
         logger.info("Starting Discord bot...")
         await bot.start(settings.DISCORD_BOT_TOKEN)
     except Exception as exc:  # pylint: disable=broad-except
@@ -372,6 +402,7 @@ async def run_bot() -> None:
             logger.info("Shutting down scheduler...")
             scheduler.shutdown(wait=True)
             logger.info("Scheduler stopped")
+        await runner.cleanup()
 
 
 if __name__ == "__main__":

@@ -50,7 +50,7 @@ class StrategyRecommendationAPI:
         bias_reason: str | None = None,
     ) -> dict[str, Any]:
         """Call the strategy recommendation endpoint and return the JSON payload."""
-        url = f"{self.base_url}/api/v1/strategy/recommend"
+        url = f"{self.base_url}/strategy/recommend"
         body: dict[str, Any] = {
             "underlying_symbol": symbol.upper(),
             "bias": bias,
@@ -127,7 +127,7 @@ class PriceAlertAPI:
         created_by: int | None = None,
     ) -> dict[str, Any]:
         """Create a price alert."""
-        url = f"{self.base_url}/api/v1/alerts/price"
+        url = f"{self.base_url}/alerts/price"
         payload: dict[str, Any] = {
             "symbol": symbol.upper(),
             "target_price": target_price,
@@ -160,7 +160,7 @@ class PriceAlertAPI:
 
     async def list_alerts(self) -> list[dict[str, Any]]:
         """Return active server alerts."""
-        url = f"{self.base_url}/api/v1/alerts/price"
+        url = f"{self.base_url}/alerts/price"
         session = await self._get_session()
         async with session.get(url) as response:
             data = await response.json()
@@ -219,7 +219,7 @@ class PriceStreamAPI:
         created_by: int | None = None,
     ) -> dict[str, Any]:
         """Create a price stream."""
-        url = f"{self.base_url}/api/v1/streams/price"
+        url = f"{self.base_url}/streams/price"
         payload: dict[str, Any] = {
             "symbol": symbol.upper(),
             "channel_id": str(channel_id),
@@ -237,7 +237,7 @@ class PriceStreamAPI:
 
     async def list_streams(self) -> list[dict[str, Any]]:
         """Return all configured price streams."""
-        url = f"{self.base_url}/api/v1/streams/price"
+        url = f"{self.base_url}/streams/price"
         session = await self._get_session()
         async with session.get(url) as response:
             data = await response.json()
@@ -304,7 +304,7 @@ class MarketInsightsAPI:
 
     async def fetch_sentiment(self, symbol: str) -> dict[str, Any]:
         """Return ticker sentiment data."""
-        url = f"{self.base_url}/api/v1/market/sentiment/{symbol.upper()}"
+        url = f"{self.base_url}/market/sentiment/{symbol.upper()}"
         session = await self._get_session()
         async with session.get(url) as response:
             data = await response.json()
@@ -314,7 +314,7 @@ class MarketInsightsAPI:
 
     async def fetch_top_movers(self, limit: int) -> dict[str, Any]:
         """Return top gainers/losers for the S&P 500."""
-        url = f"{self.base_url}/api/v1/market/top?limit={limit}"
+        url = f"{self.base_url}/market/top?limit={limit}"
         session = await self._get_session()
         async with session.get(url) as response:
             data = await response.json()
@@ -324,7 +324,7 @@ class MarketInsightsAPI:
 
     async def fetch_sp500_symbols(self) -> list[str]:
         """Return the list of S&P 500 constituents."""
-        url = f"{self.base_url}/api/v1/market/sp500"
+        url = f"{self.base_url}/market/sp500"
         session = await self._get_session()
         async with session.get(url) as response:
             data = await response.json()
@@ -334,7 +334,7 @@ class MarketInsightsAPI:
             return symbols if isinstance(symbols, list) else []
 
     async def refresh_price(self, symbol: str) -> dict[str, Any]:
-        url = f"{self.base_url}/api/v1/market/refresh/price/{symbol.upper()}"
+        url = f"{self.base_url}/market/refresh/price/{symbol.upper()}"
         session = await self._get_session()
         async with session.post(url) as response:
             data = await response.json()
@@ -343,7 +343,7 @@ class MarketInsightsAPI:
             return data
 
     async def refresh_option_chain(self, symbol: str) -> dict[str, Any]:
-        url = f"{self.base_url}/api/v1/market/refresh/options/{symbol.upper()}"
+        url = f"{self.base_url}/market/refresh/options/{symbol.upper()}"
         session = await self._get_session()
         async with session.post(url) as response:
             data = await response.json()
@@ -352,7 +352,7 @@ class MarketInsightsAPI:
             return data
 
     async def refresh_iv_metrics(self, symbol: str) -> dict[str, Any]:
-        url = f"{self.base_url}/api/v1/market/refresh/iv/{symbol.upper()}"
+        url = f"{self.base_url}/market/refresh/iv/{symbol.upper()}"
         session = await self._get_session()
         async with session.post(url) as response:
             data = await response.json()
