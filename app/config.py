@@ -119,7 +119,7 @@ class Settings(BaseSettings):
         default=7200, description="Maximum allowed interval for price streams (seconds)"
     )
     REALTIME_SYNC_BATCH_SIZE: int = Field(
-        default=25, ge=1, description="Number of tickers to process per realtime price batch"
+        default=10, ge=1, description="Number of tickers to process per realtime price batch (reduced for memory)"
     )
     SENTIMENT_CACHE_SECONDS: int = Field(
         default=600, description="Cache TTL for sentiment responses (seconds)"

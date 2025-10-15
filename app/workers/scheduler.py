@@ -33,6 +33,25 @@ def _log_job_memory(event):
         },
     )
 
+    # Force garbage collection if memory is high
+    if memory["rss_mb"] > 350:
+        import gc
+        app_logger.warning(
+            "high_memory_detected_triggering_gc",
+            extra={"memory_mb": memory["rss_mb"]},
+        )
+        gc.collect()
+        # Log memory after GC
+        memory_after = get_memory_usage()
+        app_logger.info(
+            "gc_completed",
+            extra={
+                "memory_before_mb": memory["rss_mb"],
+                "memory_after_mb": memory_after["rss_mb"],
+                "freed_mb": memory["rss_mb"] - memory_after["rss_mb"],
+            },
+        )
+
 
 def create_scheduler() -> AsyncIOScheduler:
     """Configure the AsyncIO scheduler with recurring jobs."""
