@@ -4,8 +4,8 @@ import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 
-from app.api.v1.watchlist import get_watchlist, set_watchlist
 from app.api.v1.schemas.watchlist import WatchlistUpdateRequest
+from app.api.v1.watchlist import get_watchlist, set_watchlist
 from app.config import settings
 from app.services.watchlist import WatchlistService, WatchlistValidationError
 

@@ -5,10 +5,9 @@ Coordinates database access and volatility analytics computations.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
-from typing import Iterable, Sequence
 
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession

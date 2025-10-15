@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -215,7 +215,7 @@ async def _calculate_top_movers_from_polygon(
                 or entry.get("price")
             )
             volume_raw = day.get("v") or entry.get("volume")
-            volume = int(volume_raw) if isinstance(volume_raw, (int, float)) else None
+            volume = int(volume_raw) if isinstance(volume_raw, int | float) else None
 
             normalized.append(
                 {

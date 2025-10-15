@@ -145,9 +145,9 @@ from app.api.v1.providers import router as providers_router
 from app.api.v1.strategy_recommendation import router as strategy_router
 from app.api.v1.streams import router as streams_router
 from app.api.v1.strike_selection import router as strike_selection_router
+from app.api.v1.trade_planner import router as trade_planner_router
 from app.api.v1.volatility import router as volatility_router
 from app.api.v1.watchlist import router as watchlist_router
-from app.api.v1.trade_planner import router as trade_planner_router
 
 app.include_router(providers_router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)

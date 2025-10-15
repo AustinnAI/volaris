@@ -1,10 +1,15 @@
 """Unit tests for volatility analytics helpers."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
-from app.core.volatility import IVMetricSnapshot, compute_expected_move, compute_skew, summarize_iv
 from app.core.strike_selection import IVRegime, OptionContractData
+from app.core.volatility import (
+    IVMetricSnapshot,
+    compute_expected_move,
+    compute_skew,
+    summarize_iv,
+)
 from app.db.models import IVTerm
 
 
@@ -43,7 +48,7 @@ def test_compute_expected_move_returns_estimate() -> None:
         contracts=contracts,
         underlying_price=Decimal("100"),
         dte=5,
-        as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+        as_of=datetime(2024, 5, 1, tzinfo=UTC),
     )
 
     assert estimate is not None
@@ -75,7 +80,7 @@ def test_compute_expected_move_returns_none_when_missing_marks() -> None:
         contracts=contracts,
         underlying_price=Decimal("100"),
         dte=5,
-        as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+        as_of=datetime(2024, 5, 1, tzinfo=UTC),
     )
 
     assert estimate is None
@@ -107,14 +112,14 @@ def test_summarize_iv_prefers_thirty_day_term() -> None:
     metrics = [
         IVMetricSnapshot(
             term=IVTerm.D14,
-            as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+            as_of=datetime(2024, 5, 1, tzinfo=UTC),
             implied_vol=Decimal("0.28"),
             iv_rank=Decimal("35"),
             iv_percentile=Decimal("40"),
         ),
         IVMetricSnapshot(
             term=IVTerm.D30,
-            as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+            as_of=datetime(2024, 5, 1, tzinfo=UTC),
             implied_vol=Decimal("0.32"),
             iv_rank=Decimal("60"),
             iv_percentile=Decimal("65"),

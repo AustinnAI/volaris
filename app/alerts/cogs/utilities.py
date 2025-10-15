@@ -86,7 +86,7 @@ class AlertsCog(commands.GroupCog, name="alerts", group_description="Manage serv
                 app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
                 for sym in matches
             ]
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self.bot.logger.error("Autocomplete error in /alerts add", exc_info=True)
             return []
 
@@ -209,7 +209,7 @@ class StreamsCog(
                 app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
                 for sym in matches
             ]
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self.bot.logger.error("Autocomplete error in /streams add", exc_info=True)
             return []
 

@@ -5,10 +5,10 @@ Pure functions for implied-volatility summaries, term structure, skew, and expec
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Iterable, Sequence
 
 from app.core.strike_selection import IVRegime, OptionContractData
 from app.db.models import IVTerm

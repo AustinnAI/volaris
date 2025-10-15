@@ -52,7 +52,7 @@ class IVSummaryResponse(BaseModel):
     )
 
     @classmethod
-    def from_snapshot(cls, snapshot: "VolatilitySnapshot") -> "IVSummaryResponse":
+    def from_snapshot(cls, snapshot: VolatilitySnapshot) -> IVSummaryResponse:
         """Build response model from service snapshot."""
         return cls(
             symbol=snapshot.symbol,
@@ -94,7 +94,7 @@ class TermStructureResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list, description="Warnings emitted by service")
 
     @classmethod
-    def from_snapshot(cls, snapshot: "VolatilitySnapshot") -> "TermStructureResponse":
+    def from_snapshot(cls, snapshot: VolatilitySnapshot) -> TermStructureResponse:
         """Build response model from service snapshot."""
         return cls(
             symbol=snapshot.symbol,
@@ -158,7 +158,7 @@ class ExpectedMoveResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list, description="Warnings emitted by service")
 
     @classmethod
-    def from_snapshot(cls, snapshot: "VolatilitySnapshot") -> "ExpectedMoveResponse":
+    def from_snapshot(cls, snapshot: VolatilitySnapshot) -> ExpectedMoveResponse:
         """Build response model from service snapshot."""
         return cls(
             symbol=snapshot.symbol,
@@ -204,7 +204,7 @@ class VolatilityOverviewResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list, description="Warnings emitted by service")
 
     @classmethod
-    def from_snapshot(cls, snapshot: "VolatilitySnapshot") -> "VolatilityOverviewResponse":
+    def from_snapshot(cls, snapshot: VolatilitySnapshot) -> VolatilityOverviewResponse:
         """Build response model from service snapshot."""
         skew_payload = None
         if snapshot.skew:

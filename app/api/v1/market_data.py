@@ -14,7 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.security import require_bearer_token
 from app.config import settings
 from app.db.database import get_db
-from app.db.models import IVMetric, OptionChainSnapshot, OptionContract, PriceBar, Ticker, Timeframe
+from app.db.models import (
+    IVMetric,
+    OptionChainSnapshot,
+    OptionContract,
+    PriceBar,
+    Ticker,
+    Timeframe,
+)
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import FinnhubClient
 from app.services.index_service import (
@@ -25,12 +32,12 @@ from app.services.index_service import (
 from app.services.market_insights import fetch_sentiment, get_top_movers
 from app.services.schwab import SchwabClient
 from app.services.watchlist import WatchlistService
+from app.utils.logger import app_logger
 from app.workers.tasks import (
     compute_iv_metrics,
     fetch_option_chains,
     fetch_realtime_prices,
 )
-from app.utils.logger import app_logger
 
 router = APIRouter(prefix="/market", tags=["market-data"])
 

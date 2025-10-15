@@ -1,6 +1,6 @@
 """Tests for volatility API endpoints."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock
 
@@ -32,7 +32,7 @@ def sample_snapshot() -> VolatilitySnapshot:
             iv_rank=Decimal("45"),
             iv_percentile=Decimal("50"),
             regime=IVRegime.NEUTRAL,
-            as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+            as_of=datetime(2024, 5, 1, tzinfo=UTC),
         ),
         term_structure=[
             TermStructurePoint(
@@ -40,14 +40,14 @@ def sample_snapshot() -> VolatilitySnapshot:
                 implied_vol=Decimal("0.24"),
                 iv_rank=Decimal("30"),
                 iv_percentile=Decimal("35"),
-                as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+                as_of=datetime(2024, 5, 1, tzinfo=UTC),
             ),
             TermStructurePoint(
                 term=IVTerm.D30,
                 implied_vol=Decimal("0.28"),
                 iv_rank=Decimal("45"),
                 iv_percentile=Decimal("50"),
-                as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+                as_of=datetime(2024, 5, 1, tzinfo=UTC),
             ),
         ],
         expected_moves=[
@@ -59,7 +59,7 @@ def sample_snapshot() -> VolatilitySnapshot:
                 straddle_cost=Decimal("5.10"),
                 call_strike=Decimal("500"),
                 put_strike=Decimal("500"),
-                as_of=datetime(2024, 5, 1, tzinfo=timezone.utc),
+                as_of=datetime(2024, 5, 1, tzinfo=UTC),
             )
         ],
         skew=OptionSkew(

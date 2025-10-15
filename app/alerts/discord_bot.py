@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import aiohttp
 import discord
+from aiohttp import web
 from discord.ext import commands, tasks
 
 from app.alerts.helpers import (
@@ -378,9 +380,6 @@ async def run_bot() -> None:
 
     # Start a simple HTTP health server for Render (runs on port 10000)
     # This prevents "no open ports" warnings when running as Web Service
-    import os
-    from aiohttp import web
-
     async def health_check(request):
         """Simple health endpoint for Render."""
         return web.json_response({"status": "running", "service": "Discord Bot"})

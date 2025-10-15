@@ -11,8 +11,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from app.config import settings
-
 if TYPE_CHECKING:
     from app.alerts.discord_bot import VolarisBot
 
