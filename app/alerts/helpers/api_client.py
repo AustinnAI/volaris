@@ -282,8 +282,8 @@ class PriceStreamAPI:
             return streams if isinstance(streams, list) else []
 
 
-class MarketInsightsAPI:
-    """Client wrapper for sentiment and market insight endpoints."""
+class VolatilityAPI:
+    """Client wrapper for volatility analytics endpoints."""
 
     def __init__(self, base_url: str, timeout: int = 30) -> None:
         self.base_url = base_url.rstrip("/")
@@ -302,11 +302,66 @@ class MarketInsightsAPI:
             await self._session.close()
             self._session = None
 
+    async def fetch_overview(self, symbol: str) -> dict[str, Any]:
+        """Return full volatility overview (summary, term structure, skew, EM)."""
+        url = f"{self.base_url}/vol/overview/{symbol.upper()}"
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch volatility overview"))
+            return data
+
+    async def fetch_expected_move(self, symbol: str) -> dict[str, Any]:
+        """Return expected move estimates for the symbol."""
+        url = f"{self.base_url}/vol/expected-move/{symbol.upper()}"
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch expected move"))
+            return data
+
+    async def fetch_iv_summary(self, symbol: str) -> dict[str, Any]:
+        """Return IV summary metrics for the symbol."""
+        url = f"{self.base_url}/vol/iv/{symbol.upper()}"
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch IV metrics"))
+            return data
+
+
+class MarketInsightsAPI:
+    """Client wrapper for sentiment, market refresh, and watchlist endpoints."""
+
+    def __init__(self, base_url: str, timeout: int = 30, api_token: str | None = None) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self.api_token = api_token.strip() if api_token else None
+        self._session: aiohttp.ClientSession | None = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the shared HTTP session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
+
+    def _auth_headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.api_token}"} if self.api_token else {}
+
     async def fetch_sentiment(self, symbol: str) -> dict[str, Any]:
         """Return ticker sentiment data."""
         url = f"{self.base_url}/market/sentiment/{symbol.upper()}"
         session = await self._get_session()
-        async with session.get(url) as response:
+        async with session.get(url, headers=self._auth_headers()) as response:
             data = await response.json()
             if response.status != 200:
                 raise aiohttp.ClientError(data.get("detail", "Failed to fetch sentiment"))
@@ -316,7 +371,7 @@ class MarketInsightsAPI:
         """Return top gainers/losers for the S&P 500."""
         url = f"{self.base_url}/market/top?limit={limit}"
         session = await self._get_session()
-        async with session.get(url) as response:
+        async with session.get(url, headers=self._auth_headers()) as response:
             data = await response.json()
             if response.status != 200:
                 raise aiohttp.ClientError(data.get("detail", "Failed to fetch top movers"))
@@ -326,17 +381,41 @@ class MarketInsightsAPI:
         """Return the list of S&P 500 constituents."""
         url = f"{self.base_url}/market/sp500"
         session = await self._get_session()
-        async with session.get(url) as response:
+        async with session.get(url, headers=self._auth_headers()) as response:
             data = await response.json()
             if response.status != 200:
                 raise aiohttp.ClientError(data.get("detail", "Failed to fetch constituents"))
             symbols = data.get("symbols", [])
             return symbols if isinstance(symbols, list) else []
 
+    async def get_watchlist(self) -> list[str]:
+        """Fetch the server-side watchlist."""
+        url = f"{self.base_url}/watchlist"
+        session = await self._get_session()
+        async with session.get(url, headers=self._auth_headers()) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch watchlist"))
+            symbols = data.get("symbols", [])
+            return symbols if isinstance(symbols, list) else []
+
+    async def set_watchlist(self, symbols: list[str]) -> list[str]:
+        """Persist a new server watchlist."""
+        url = f"{self.base_url}/watchlist"
+        payload = {"symbols": symbols}
+        headers = {"Content-Type": "application/json", **self._auth_headers()}
+        session = await self._get_session()
+        async with session.post(url, headers=headers, json=payload) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to update watchlist"))
+            updated = data.get("symbols", [])
+            return updated if isinstance(updated, list) else []
+
     async def refresh_price(self, symbol: str) -> dict[str, Any]:
         url = f"{self.base_url}/market/refresh/price/{symbol.upper()}"
         session = await self._get_session()
-        async with session.post(url) as response:
+        async with session.post(url, headers=self._auth_headers()) as response:
             data = await response.json()
             if response.status not in (200, 202):
                 raise aiohttp.ClientError(data.get("detail", "Failed to refresh price"))
@@ -345,7 +424,7 @@ class MarketInsightsAPI:
     async def refresh_option_chain(self, symbol: str) -> dict[str, Any]:
         url = f"{self.base_url}/market/refresh/options/{symbol.upper()}"
         session = await self._get_session()
-        async with session.post(url) as response:
+        async with session.post(url, headers=self._auth_headers()) as response:
             data = await response.json()
             if response.status not in (200, 202):
                 raise aiohttp.ClientError(data.get("detail", "Failed to refresh option chain"))
@@ -354,8 +433,19 @@ class MarketInsightsAPI:
     async def refresh_iv_metrics(self, symbol: str) -> dict[str, Any]:
         url = f"{self.base_url}/market/refresh/iv/{symbol.upper()}"
         session = await self._get_session()
-        async with session.post(url) as response:
+        async with session.post(url, headers=self._auth_headers()) as response:
             data = await response.json()
             if response.status not in (200, 202):
                 raise aiohttp.ClientError(data.get("detail", "Failed to refresh IV metrics"))
+            return data
+
+    async def refresh_watchlist(self) -> dict[str, Any]:
+        """Trigger refresh for the stored watchlist."""
+        url = f"{self.base_url}/market/refresh/watchlist"
+        headers = {"Content-Type": "application/json", **self._auth_headers()}
+        session = await self._get_session()
+        async with session.post(url, headers=headers) as response:
+            data = await response.json()
+            if response.status not in (200, 202):
+                raise aiohttp.ClientError(data.get("detail", "Failed to refresh watchlist"))
             return data

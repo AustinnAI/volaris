@@ -22,6 +22,7 @@ from app.alerts.helpers import (
     PriceStreamAPI,
     StrategyRecommendationAPI,
     SymbolService,
+    VolatilityAPI,
     build_top_movers_embed,
 )
 from app.config import settings
@@ -39,15 +40,19 @@ class VolarisBot(commands.Bot):
         super().__init__(command_prefix="!", intents=intents)
 
         self.logger = logger
+        self.api_token = settings.VOLARIS_API_TOKEN or ""
         self.api_client = StrategyRecommendationAPI(api_base_url)
         self.alerts_api = PriceAlertAPI(api_base_url)
         self.streams_api = PriceStreamAPI(api_base_url)
-        self.market_api = MarketInsightsAPI(api_base_url)
+        self.market_api = MarketInsightsAPI(api_base_url, api_token=self.api_token, timeout=30)
+        self.volatility_api = VolatilityAPI(api_base_url)
         self.symbol_service = SymbolService()
         self.guild_id = guild_id
         self.user_command_count: dict[int, list[float]] = {}
         self.last_digest_date: str | None = None
         self.est_tz = ZoneInfo("America/New_York")
+        self.watchlist_admin_user_ids = set(settings.WATCHLIST_ADMIN_USER_IDS)
+        self.watchlist_admin_role_ids = set(settings.WATCHLIST_ADMIN_ROLE_IDS)
 
     async def setup_hook(self) -> None:
         """Load cogs first, then sync slash commands."""
@@ -57,6 +62,7 @@ class VolarisBot(commands.Bot):
             "app.alerts.cogs.market_data",
             "app.alerts.cogs.calculators",
             "app.alerts.cogs.utilities",
+            "app.alerts.cogs.watchlist",
         ]
         for extension in extensions:
             if extension in self.extensions:
@@ -115,6 +121,7 @@ class VolarisBot(commands.Bot):
         await self.alerts_api.close()
         await self.streams_api.close()
         await self.market_api.close()
+        await self.volatility_api.close()
         await super().close()
 
     async def refresh_symbol_cache(self) -> None:

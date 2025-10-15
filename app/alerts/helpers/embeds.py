@@ -141,3 +141,57 @@ def build_top_movers_embed(data: dict[str, Any], title: str = "Top Movers") -> d
     embed.add_field(name=f"Top Losers (n={limit})", value=_format(losers), inline=False)
     embed.set_footer(text="Data sourced from Tiingo and Finnhub caches")
     return embed
+
+
+def build_expected_move_embed(data: dict[str, Any]) -> discord.Embed:
+    """Build an embed summarising expected move estimates."""
+    symbol = data.get("symbol", "Unknown")
+    underlying_price = data.get("underlying_price")
+    price_text = f"${float(underlying_price):,.2f}" if underlying_price is not None else "N/A"
+
+    embed = discord.Embed(
+        title=f"{symbol} Expected Move",
+        description=f"Underlying Price: **{price_text}**",
+        color=discord.Color.orange(),
+        timestamp=discord.utils.utcnow(),
+    )
+
+    estimates = data.get("estimates") or []
+    if not estimates:
+        embed.add_field(name="Estimates", value="No expected move data available.", inline=False)
+    else:
+        for estimate in estimates:
+            label = estimate.get("label", "Window")
+            em_value = estimate.get("expected_move")
+            em_pct = estimate.get("expected_move_pct")
+            straddle_cost = estimate.get("straddle_cost")
+            call_strike = estimate.get("call_strike")
+            put_strike = estimate.get("put_strike")
+            dte = estimate.get("dte")
+
+            move_text = "—"
+            if em_value is not None:
+                move_text = f"${float(em_value):.2f}"
+            if em_pct is not None:
+                move_text += f" ({float(em_pct):.1f}%)"
+
+            strikes_text = ""
+            if call_strike is not None and put_strike is not None:
+                strikes_text = f"\nATM Strikes: C {float(call_strike):.2f} / P {float(put_strike):.2f}"
+
+            straddle_text = ""
+            if straddle_cost is not None:
+                straddle_text = f"\nStraddle Cost: ${float(straddle_cost):.2f}"
+
+            dte_text = f"\nDTE: {int(dte)}" if dte is not None else ""
+
+            field_value = f"Expected Move: **{move_text}**{strikes_text}{straddle_text}{dte_text}"
+            embed.add_field(name=label, value=field_value, inline=False)
+
+    warnings = data.get("warnings") or []
+    if warnings:
+        warning_text = "\n".join(f"⚠️ {warning}" for warning in warnings[:3])
+        embed.add_field(name="Warnings", value=warning_text, inline=False)
+
+    embed.set_footer(text="Powered by Volaris Volatility Module")
+    return embed

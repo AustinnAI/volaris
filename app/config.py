@@ -142,11 +142,36 @@ class Settings(BaseSettings):
     MARKETSTACK_API_BASE: str = Field(
         default="http://api.marketstack.com/v1", description="Marketstack API base URL"
     )
+    VOLARIS_API_TOKEN: str | None = Field(
+        default=None,
+        description="Bearer token used by internal automation (GitHub Actions, Discord admins)",
+    )
+    WATCHLIST_ADMIN_USER_IDS: list[int] = Field(
+        default_factory=list,
+        description="Discord user IDs allowed to manage the server watchlist",
+    )
+    WATCHLIST_ADMIN_ROLE_IDS: list[int] = Field(
+        default_factory=list,
+        description="Discord role IDs allowed to manage the server watchlist",
+    )
 
     @property
     def discord_guild_id_resolved(self) -> str | None:
         """Get Discord guild ID, preferring DISCORD_GUILD_ID, falling back to DISCORD_SERVER_ID."""
         return self.DISCORD_GUILD_ID or self.DISCORD_SERVER_ID
+
+    @field_validator("WATCHLIST_ADMIN_USER_IDS", "WATCHLIST_ADMIN_ROLE_IDS", mode="before")
+    @classmethod
+    def _parse_id_list(cls, value: object) -> list[int]:
+        """Parse CSV or JSON list inputs into a list of ints."""
+        if value in (None, "", []):
+            return []
+        if isinstance(value, list):
+            return [int(item) for item in value]
+        if isinstance(value, str):
+            items = [item.strip() for item in value.split(",") if item.strip()]
+            return [int(item) for item in items]
+        raise TypeError("Expected list or comma-separated string for watchlist admin IDs.")
 
     # Trading Configuration
     DEFAULT_ACCOUNT_SIZE: float = Field(

@@ -10,9 +10,11 @@ from .api_client import (
     PriceAlertAPI,
     PriceStreamAPI,
     StrategyRecommendationAPI,
+    VolatilityAPI,
 )
 from .autocomplete import PRIORITY_SYMBOLS, SymbolService
 from .embeds import (
+    build_expected_move_embed,
     build_top_movers_embed,
     create_recommendation_embed,
 )
@@ -22,10 +24,12 @@ __all__ = [
     "StrategyRecommendationAPI",
     "PriceAlertAPI",
     "PriceStreamAPI",
+    "VolatilityAPI",
     "MarketInsightsAPI",
     "SymbolService",
     "PRIORITY_SYMBOLS",
     "create_recommendation_embed",
+    "build_expected_move_embed",
     "build_top_movers_embed",
     "MoreCandidatesView",
 ]

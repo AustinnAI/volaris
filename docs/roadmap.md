@@ -357,16 +357,16 @@ app/alerts/
 **Priority:** 🟡 MEDIUM-HIGH
 
 ### 4.1 IV Metrics Dashboard
-- [ ] IV calculation (current, 30-day)
-- [ ] IV Rank (IVR) calculation
-- [ ] IV percentile tracking
-- [ ] Term structure visualization
-- [ ] Skew analysis (put/call skew)
+- [x] IV calculation (current, 30-day)
+- [x] IV Rank (IVR) calculation
+- [x] IV percentile tracking
+- [x] Term structure visualization
+- [x] Skew analysis (put/call skew)
 
 ### 4.2 Expected Move Calculator
-- [ ] 1-7 day expected move (EM)
-- [ ] 14-45 DTE expected move
-- [ ] Straddle-based EM calculation
+- [x] 1-7 day expected move (EM)
+- [x] 14-45 DTE expected move
+- [x] Straddle-based EM calculation
 - [ ] EM alerts (strike inside/outside EM warnings)
 
 ### 4.3 Volatility Alerts
@@ -378,7 +378,7 @@ app/alerts/
 ### 4.4 Expected Move + Liquidity Validation 🎯
 > _ICT Integration: Validate strike positioning relative to expected move_
 
-- [ ] EM calculation for target DTE (straddle-based)
+- [x] EM calculation for target DTE (straddle-based)
 - [ ] Strike validation: Inside vs outside EM
   - Inside EM: Higher POP, suitable for credit spreads
   - Outside EM: Lower POP, suitable for debit spreads (big move expected)

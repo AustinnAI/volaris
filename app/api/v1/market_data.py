@@ -6,10 +6,12 @@ Provides quick market data access for Discord commands.
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.security import require_bearer_token
 from app.config import settings
 from app.db.database import get_db
 from app.db.models import IVMetric, OptionChainSnapshot, OptionContract, PriceBar, Ticker, Timeframe
@@ -22,13 +24,92 @@ from app.services.index_service import (
 )
 from app.services.market_insights import fetch_sentiment, get_top_movers
 from app.services.schwab import SchwabClient
+from app.services.watchlist import WatchlistService
 from app.workers.tasks import (
     compute_iv_metrics,
     fetch_option_chains,
     fetch_realtime_prices,
 )
+from app.utils.logger import app_logger
 
 router = APIRouter(prefix="/market", tags=["market-data"])
+
+
+class MarketRefreshBatchRequest(BaseModel):
+    """Batch refresh request payload."""
+
+    symbols: list[str] = Field(..., description="Symbols to refresh", min_length=1)
+    kinds: list[str] = Field(
+        default_factory=lambda: ["price"],
+        description="Data types to refresh (price, options, iv)",
+        min_length=1,
+    )
+
+    @field_validator("symbols")
+    @classmethod
+    def normalize_symbols(cls, symbols: list[str]) -> list[str]:
+        """Uppercase and validate symbol list."""
+        normalized = [symbol.strip().upper() for symbol in symbols if symbol.strip()]
+        if not normalized:
+            raise ValueError("symbols must contain at least one non-empty value")
+        return normalized
+
+    @field_validator("kinds")
+    @classmethod
+    def validate_kinds(cls, kinds: list[str]) -> list[str]:
+        """Ensure kinds are valid and normalized to lowercase."""
+        allowed = {"price", "options", "iv"}
+        normalized: list[str] = []
+        for kind in kinds:
+            kind_lower = kind.lower().strip()
+            if kind_lower not in allowed:
+                raise ValueError(f"kinds must be a subset of {sorted(allowed)}")
+            normalized.append(kind_lower)
+        if not normalized:
+            normalized.append("price")
+        return normalized
+
+
+async def _refresh_symbols(
+    db: AsyncSession,
+    symbols: list[str],
+    kinds: list[str] | None = None,
+) -> dict[str, Any]:
+    """Shared helper to refresh market datasets for symbols."""
+    if not symbols:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No symbols supplied.")
+
+    unique_symbols: list[str] = []
+    seen: set[str] = set()
+    for raw in symbols:
+        cleaned = (raw or "").strip().upper()
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        unique_symbols.append(cleaned)
+
+    if not unique_symbols:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No valid symbols supplied after normalization.",
+        )
+    normalised_kinds = kinds or ["price", "options", "iv"]
+    kind_set = {kind.lower() for kind in normalised_kinds}
+
+    results: dict[str, int] = {}
+
+    if "price" in kind_set:
+        results["price"] = await fetch_realtime_prices(db, symbols=unique_symbols)
+    if "options" in kind_set:
+        results["options"] = await fetch_option_chains(db, symbols=unique_symbols)
+    if "iv" in kind_set:
+        results["iv"] = await compute_iv_metrics(db, symbols=unique_symbols)
+
+    app_logger.info(
+        "Refreshed market data",
+        extra={"symbols": unique_symbols, "kinds": sorted(kind_set), "results": results},
+    )
+    return {"symbols": unique_symbols, "results": results}
 
 
 def _extract_schwab_quote(payload: dict[str, Any], symbol: str) -> dict[str, Any]:
@@ -434,6 +515,30 @@ async def refresh_iv_metrics(symbol: str, db: AsyncSession = Depends(get_db)) ->
     symbol_upper = symbol.upper()
     metrics = await compute_iv_metrics(db, symbols=[symbol_upper])
     return {"metrics": metrics}
+
+
+@router.post("/refresh/batch", status_code=202)
+async def refresh_market_data_batch(
+    request: Request,
+    payload: MarketRefreshBatchRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Refresh multiple market datasets (price, options, iv) for the requested symbols.
+    """
+    require_bearer_token(request)
+    return await _refresh_symbols(db, payload.symbols, payload.kinds)
+
+
+@router.post("/refresh/watchlist", status_code=202)
+async def refresh_watchlist_data(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Refresh datasets for the stored server watchlist."""
+    require_bearer_token(request)
+    symbols = await WatchlistService.get_symbols(db)
+    return await _refresh_symbols(db, symbols, ["price", "options", "iv"])
 
 
 @router.get("/delta/{symbol}/{strike}/{option_type}/{dte}")
