@@ -25,6 +25,19 @@ class StrategyRecommendationAPI:
         """
         self.base_url = base_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self._session: aiohttp.ClientSession | None = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the shared HTTP session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
     async def recommend_strategy(
         self,
@@ -69,20 +82,20 @@ class StrategyRecommendationAPI:
         if constraints:
             body["constraints"] = constraints
 
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url, json=body) as response:
-                if response.status == 404:
+        session = await self._get_session()
+        async with session.post(url, json=body) as response:
+            if response.status == 404:
+                data = await response.json()
+                raise ValueError(data.get("detail", "No data available"))
+            if response.status != 200:
+                try:
                     data = await response.json()
-                    raise ValueError(data.get("detail", "No data available"))
-                if response.status != 200:
-                    try:
-                        data = await response.json()
-                        error_msg = data.get("detail", f"HTTP {response.status}")
-                    except Exception:  # pylint: disable=broad-except
-                        error_msg = f"HTTP {response.status}"
-                    raise aiohttp.ClientError(f"API error: {error_msg}")
+                    error_msg = data.get("detail", f"HTTP {response.status}")
+                except Exception:  # pylint: disable=broad-except
+                    error_msg = f"HTTP {response.status}"
+                raise aiohttp.ClientError(f"API error: {error_msg}")
 
-                return await response.json()
+            return await response.json()
 
 
 class PriceAlertAPI:
@@ -91,6 +104,19 @@ class PriceAlertAPI:
     def __init__(self, base_url: str, timeout: int = 30) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self._session: aiohttp.ClientSession | None = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the shared HTTP session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
     async def create_alert(
         self,
@@ -111,58 +137,58 @@ class PriceAlertAPI:
         if created_by:
             payload["created_by"] = str(created_by)
 
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url, json=payload) as response:
-                data = await response.json()
-                if response.status not in (200, 201):
-                    raise aiohttp.ClientError(data.get("detail", "Failed to create alert"))
-                return data
+        session = await self._get_session()
+        async with session.post(url, json=payload) as response:
+            data = await response.json()
+            if response.status not in (200, 201):
+                raise aiohttp.ClientError(data.get("detail", "Failed to create alert"))
+            return data
 
     async def delete_alert(self, alert_id: int) -> None:
         """Delete a price alert."""
         url = f"{self.base_url}/api/v1/alerts/price/{alert_id}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.delete(url) as response:
-                if response.status == 204:
-                    return
-                try:
-                    data = await response.json()
-                    message = data.get("detail", f"Failed to delete alert {alert_id}")
-                except Exception:  # pylint: disable=broad-except
-                    message = f"Failed to delete alert {alert_id}"
-                raise aiohttp.ClientError(message)
+        session = await self._get_session()
+        async with session.delete(url) as response:
+            if response.status == 204:
+                return
+            try:
+                data = await response.json()
+                message = data.get("detail", f"Failed to delete alert {alert_id}")
+            except Exception:  # pylint: disable=broad-except
+                message = f"Failed to delete alert {alert_id}"
+            raise aiohttp.ClientError(message)
 
     async def list_alerts(self) -> list[dict[str, Any]]:
         """Return active server alerts."""
         url = f"{self.base_url}/api/v1/alerts/price"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to fetch alerts"))
-                alerts = data.get("alerts", [])
-                return alerts if isinstance(alerts, list) else []
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch alerts"))
+            alerts = data.get("alerts", [])
+            return alerts if isinstance(alerts, list) else []
 
     async def evaluate_alerts(self) -> list[dict[str, Any]]:
         """Evaluate server alerts and return any triggers."""
         url = f"{self.base_url}/api/v1/alerts/price/evaluate"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url) as response:
-                # Handle 502/503 (service not ready yet) gracefully
-                if response.status in (502, 503):
-                    return []
-                try:
-                    data = await response.json()
-                except Exception:  # pylint: disable=broad-except
-                    # If response is HTML (service error), return empty
-                    return []
-                if response.status == 404:
-                    # No alerts configured - return empty list
-                    return []
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to evaluate alerts"))
-                triggered = data.get("triggered", [])
-                return triggered if isinstance(triggered, list) else []
+        session = await self._get_session()
+        async with session.post(url) as response:
+            # Handle 502/503 (service not ready yet) gracefully
+            if response.status in (502, 503):
+                return []
+            try:
+                data = await response.json()
+            except Exception:  # pylint: disable=broad-except
+                # If response is HTML (service error), return empty
+                return []
+            if response.status == 404:
+                # No alerts configured - return empty list
+                return []
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to evaluate alerts"))
+            triggered = data.get("triggered", [])
+            return triggered if isinstance(triggered, list) else []
 
 
 class PriceStreamAPI:
@@ -171,6 +197,19 @@ class PriceStreamAPI:
     def __init__(self, base_url: str, timeout: int = 30) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self._session: aiohttp.ClientSession | None = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the shared HTTP session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
     async def create_stream(
         self,
@@ -189,58 +228,58 @@ class PriceStreamAPI:
         if created_by:
             payload["created_by"] = str(created_by)
 
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url, json=payload) as response:
-                data = await response.json()
-                if response.status not in (200, 201):
-                    raise aiohttp.ClientError(data.get("detail", "Failed to create stream"))
-                return data
+        session = await self._get_session()
+        async with session.post(url, json=payload) as response:
+            data = await response.json()
+            if response.status not in (200, 201):
+                raise aiohttp.ClientError(data.get("detail", "Failed to create stream"))
+            return data
 
     async def list_streams(self) -> list[dict[str, Any]]:
         """Return all configured price streams."""
         url = f"{self.base_url}/api/v1/streams/price"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to fetch streams"))
-                streams = data.get("streams", [])
-                return streams if isinstance(streams, list) else []
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch streams"))
+            streams = data.get("streams", [])
+            return streams if isinstance(streams, list) else []
 
     async def delete_stream(self, stream_id: int) -> None:
         """Delete a price stream."""
         url = f"{self.base_url}/api/v1/streams/price/{stream_id}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.delete(url) as response:
-                if response.status == 204:
-                    return
-                try:
-                    data = await response.json()
-                    message = data.get("detail", f"Failed to delete stream {stream_id}")
-                except Exception:  # pylint: disable=broad-except
-                    message = f"Failed to delete stream {stream_id}"
-                raise aiohttp.ClientError(message)
+        session = await self._get_session()
+        async with session.delete(url) as response:
+            if response.status == 204:
+                return
+            try:
+                data = await response.json()
+                message = data.get("detail", f"Failed to delete stream {stream_id}")
+            except Exception:  # pylint: disable=broad-except
+                message = f"Failed to delete stream {stream_id}"
+            raise aiohttp.ClientError(message)
 
     async def evaluate_streams(self) -> list[dict[str, Any]]:
         """Evaluate active streams and return payloads to broadcast."""
         url = f"{self.base_url}/api/v1/streams/price/evaluate"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url) as response:
-                # Handle 502/503 (service not ready yet) gracefully
-                if response.status in (502, 503):
-                    return []
-                try:
-                    data = await response.json()
-                except Exception:  # pylint: disable=broad-except
-                    # If response is HTML (service error), return empty
-                    return []
-                if response.status == 404:
-                    # No streams configured - return empty list
-                    return []
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to evaluate streams"))
-                streams = data.get("streams", [])
-                return streams if isinstance(streams, list) else []
+        session = await self._get_session()
+        async with session.post(url) as response:
+            # Handle 502/503 (service not ready yet) gracefully
+            if response.status in (502, 503):
+                return []
+            try:
+                data = await response.json()
+            except Exception:  # pylint: disable=broad-except
+                # If response is HTML (service error), return empty
+                return []
+            if response.status == 404:
+                # No streams configured - return empty list
+                return []
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to evaluate streams"))
+            streams = data.get("streams", [])
+            return streams if isinstance(streams, list) else []
 
 
 class MarketInsightsAPI:
@@ -249,61 +288,74 @@ class MarketInsightsAPI:
     def __init__(self, base_url: str, timeout: int = 30) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self._session: aiohttp.ClientSession | None = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the shared HTTP session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
     async def fetch_sentiment(self, symbol: str) -> dict[str, Any]:
         """Return ticker sentiment data."""
         url = f"{self.base_url}/api/v1/market/sentiment/{symbol.upper()}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to fetch sentiment"))
-                return data
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch sentiment"))
+            return data
 
     async def fetch_top_movers(self, limit: int) -> dict[str, Any]:
         """Return top gainers/losers for the S&P 500."""
         url = f"{self.base_url}/api/v1/market/top?limit={limit}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to fetch top movers"))
-                return data
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch top movers"))
+            return data
 
     async def fetch_sp500_symbols(self) -> list[str]:
         """Return the list of S&P 500 constituents."""
         url = f"{self.base_url}/api/v1/market/sp500"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                if response.status != 200:
-                    raise aiohttp.ClientError(data.get("detail", "Failed to fetch constituents"))
-                symbols = data.get("symbols", [])
-                return symbols if isinstance(symbols, list) else []
+        session = await self._get_session()
+        async with session.get(url) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch constituents"))
+            symbols = data.get("symbols", [])
+            return symbols if isinstance(symbols, list) else []
 
     async def refresh_price(self, symbol: str) -> dict[str, Any]:
         url = f"{self.base_url}/api/v1/market/refresh/price/{symbol.upper()}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url) as response:
-                data = await response.json()
-                if response.status not in (200, 202):
-                    raise aiohttp.ClientError(data.get("detail", "Failed to refresh price"))
-                return data
+        session = await self._get_session()
+        async with session.post(url) as response:
+            data = await response.json()
+            if response.status not in (200, 202):
+                raise aiohttp.ClientError(data.get("detail", "Failed to refresh price"))
+            return data
 
     async def refresh_option_chain(self, symbol: str) -> dict[str, Any]:
         url = f"{self.base_url}/api/v1/market/refresh/options/{symbol.upper()}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url) as response:
-                data = await response.json()
-                if response.status not in (200, 202):
-                    raise aiohttp.ClientError(data.get("detail", "Failed to refresh option chain"))
-                return data
+        session = await self._get_session()
+        async with session.post(url) as response:
+            data = await response.json()
+            if response.status not in (200, 202):
+                raise aiohttp.ClientError(data.get("detail", "Failed to refresh option chain"))
+            return data
 
     async def refresh_iv_metrics(self, symbol: str) -> dict[str, Any]:
         url = f"{self.base_url}/api/v1/market/refresh/iv/{symbol.upper()}"
-        async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            async with session.post(url) as response:
-                data = await response.json()
-                if response.status not in (200, 202):
-                    raise aiohttp.ClientError(data.get("detail", "Failed to refresh IV metrics"))
-                return data
+        session = await self._get_session()
+        async with session.post(url) as response:
+            data = await response.json()
+            if response.status not in (200, 202):
+                raise aiohttp.ClientError(data.get("detail", "Failed to refresh IV metrics"))
+            return data

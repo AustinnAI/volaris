@@ -50,7 +50,7 @@ def create_scheduler() -> AsyncIOScheduler:
         kwargs={"timeframe": Timeframe.ONE_MINUTE},
         id="prices_1m",
         max_instances=1,
-        misfire_grace_time=30,  # Skip if job is 30s late
+        misfire_grace_time=120,  # Skip if job is 120s late (prevent overlap)
     )
 
     # REMOVED: prices_5m job (redundant with prices_1m)
@@ -71,7 +71,7 @@ def create_scheduler() -> AsyncIOScheduler:
         minutes=settings.OPTION_CHAIN_JOB_INTERVAL_MINUTES,
         id="options_refresh",
         max_instances=1,
-        misfire_grace_time=120,  # Skip if job is 2 min late
+        misfire_grace_time=300,  # Skip if job is 5 min late (long-running job)
     )
 
     scheduler.add_job(
@@ -80,7 +80,7 @@ def create_scheduler() -> AsyncIOScheduler:
         minutes=settings.IV_METRICS_JOB_INTERVAL_MINUTES,
         id="iv_metrics",
         max_instances=1,
-        misfire_grace_time=120,  # Skip if job is 2 min late
+        misfire_grace_time=300,  # Skip if job is 5 min late
     )
 
     scheduler.add_job(

@@ -40,7 +40,13 @@ class BaseAPIClient:
         self.provider_name = provider_name
         self.timeout = timeout
         self.max_retries = max_retries
-        self.client = httpx.AsyncClient(timeout=timeout)
+        # Configure httpx with connection pooling limits to prevent memory leaks
+        limits = httpx.Limits(
+            max_connections=10,  # Max total connections
+            max_keepalive_connections=5,  # Max persistent connections
+            keepalive_expiry=30.0,  # Close idle connections after 30s
+        )
+        self.client = httpx.AsyncClient(timeout=timeout, limits=limits)
 
     async def close(self):
         """Close the HTTP client"""

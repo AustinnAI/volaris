@@ -1,45 +1,3 @@
-2025-10-14T23:28:09.745803094Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
-2025-10-14T23:28:33.900450346Z INFO:     Shutting down
-2025-10-14T23:28:34.001041523Z INFO:     Waiting for application shutdown.
-2025-10-14T23:28:34.001923256Z Error notifying listener
-2025-10-14T23:28:34.001937666Z Traceback (most recent call last):
-2025-10-14T23:28:34.001941146Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/apscheduler/schedulers/base.py", line 845, in _dispatch_event
-2025-10-14T23:28:34.001943766Z     cb(event)
-2025-10-14T23:28:34.001947716Z   File "/opt/render/project/src/app/workers/scheduler.py", line 22, in _log_job_memory
-2025-10-14T23:28:34.001950716Z     if event.exception:
-2025-10-14T23:28:34.001954546Z        ^^^^^^^^^^^^^^^
-2025-10-14T23:28:34.001957816Z AttributeError: 'SchedulerEvent' object has no attribute 'exception'
-2025-10-14T23:28:34.001974447Z INFO:     Application shutdown complete.
-2025-10-14T23:28:34.002065429Z INFO:     Finished server process [55]
-2025-10-14T23:29:06.96704147Z ==> Deploying...
-2025-10-14T23:29:09.766976367Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
-2025-10-14T23:29:56.321748405Z 2025-10-14 23:29:56 - INFO - volaris - Environment: production
-2025-10-14T23:30:01.421140653Z INFO:     Started server process [56]
-2025-10-14T23:30:01.421169834Z INFO:     Waiting for application startup.
-2025-10-14T23:30:02.64396465Z 2025-10-14 23:30:02 - INFO - volaris - S&P 500 constituents ensured
-2025-10-14T23:30:02.927734123Z 2025-10-14 23:30:02 - INFO - volaris - APScheduler configured with background jobs
-2025-10-14T23:30:02.929609272Z Error notifying listener
-2025-10-14T23:30:02.929619083Z Traceback (most recent call last):
-2025-10-14T23:30:02.929622893Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/apscheduler/schedulers/base.py", line 845, in _dispatch_event
-2025-10-14T23:30:02.929626963Z     cb(event)
-2025-10-14T23:30:02.929630063Z   File "/opt/render/project/src/app/workers/scheduler.py", line 22, in _log_job_memory
-2025-10-14T23:30:02.929633283Z     if event.exception:
-2025-10-14T23:30:02.929636143Z        ^^^^^^^^^^^^^^^
-2025-10-14T23:30:02.929639513Z AttributeError: 'SchedulerEvent' object has no attribute 'exception'
-2025-10-14T23:30:02.930030854Z INFO:     Application startup complete.
-2025-10-14T23:30:02.930206608Z INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
-2025-10-14T23:30:03.69368531Z INFO:     127.0.0.1:57368 - "HEAD / HTTP/1.1" 405 Method Not Allowed
-2025-10-14T23:30:07.778047635Z ==> Your service is live 🎉
-2025-10-14T23:30:07.881002838Z ==> 
-2025-10-14T23:30:07.962298492Z ==> ///////////////////////////////////////////////////////////
-2025-10-14T23:30:08.551360359Z ==> 
-2025-10-14T23:30:08.628519064Z ==> Available at your primary URL https://volaris-yz19.onrender.com
-2025-10-14T23:30:08.702678828Z ==> 
-2025-10-14T23:30:08.778311542Z ==> ///////////////////////////////////////////////////////////
-2025-10-14T23:30:11.167590618Z INFO:     35.230.45.39:0 - "GET / HTTP/1.1" 200 OK
-2025-10-14T23:30:13.554267696Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
-2025-10-14T23:30:13.562831221Z INFO:     216.24.60.125:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
-2025-10-14T23:31:07.619842685Z INFO:     Shutting down
 2025-10-14T23:31:07.720841359Z INFO:     Waiting for application shutdown.
 2025-10-14T23:31:07.721772919Z Error notifying listener
 2025-10-14T23:31:07.721787679Z Traceback (most recent call last):
@@ -103,6 +61,7 @@
 2025-10-14T23:42:28.017941737Z INFO:     35.227.183.65:0 - "GET / HTTP/1.1" 200 OK
 2025-10-14T23:42:53.224266128Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
 2025-10-14T23:42:53.225928664Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:43:26.050349848Z INFO:     Shutting down
 2025-10-14T23:43:26.151185339Z INFO:     Waiting for application shutdown.
 2025-10-14T23:43:26.151839507Z Error notifying listener
 2025-10-14T23:43:26.151848437Z Traceback (most recent call last):
@@ -150,3 +109,44 @@
 2025-10-14T23:49:24.164281875Z INFO:     Finished server process [55]
 2025-10-14T23:49:55.007790533Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
 2025-10-14T23:49:55.017447708Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:50:54.97419564Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:50:54.975079951Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:51:55.007370404Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:51:55.008369767Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:52:54.967638297Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:52:54.975389838Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:53:16.339027626Z 2025-10-14 23:53:16 - INFO - volaris - Selected provider for realtime_minute: schwab
+2025-10-14T23:53:54.962461748Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:53:54.964723331Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:54:53.157063796Z INFO:     216.24.60.125:0 - "GET /api/v1/market/sp500 HTTP/1.1" 404 Not Found
+2025-10-14T23:54:54.970221703Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:54:54.975042316Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:54:55.543150943Z INFO:     216.24.60.125:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:54:55.545874987Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:55:54.434710917Z ==> Deploying...
+2025-10-14T23:55:55.634518385Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:56:25.74060668Z ==> Running 'uvicorn app.main:app --host 0.0.0.0 --port 10000'
+2025-10-14T23:56:36.444274827Z 2025-10-14 23:56:36 - INFO - volaris - Logging initialized - Level: INFO
+2025-10-14T23:56:36.444295648Z 2025-10-14 23:56:36 - INFO - volaris - Environment: production
+2025-10-14T23:56:41.237263369Z INFO:     Started server process [56]
+2025-10-14T23:56:41.23730229Z INFO:     Waiting for application startup.
+2025-10-14T23:56:42.265185488Z 2025-10-14 23:56:42 - INFO - volaris - S&P 500 constituents ensured
+2025-10-14T23:56:42.534001434Z 2025-10-14 23:56:42 - INFO - volaris - APScheduler configured with background jobs
+2025-10-14T23:56:42.539940624Z INFO:     Application startup complete.
+2025-10-14T23:56:42.539963544Z INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+2025-10-14T23:56:43.142684392Z INFO:     127.0.0.1:43354 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2025-10-14T23:56:45.203550939Z ==> Your service is live 🎉
+2025-10-14T23:56:45.315615401Z ==> 
+2025-10-14T23:56:45.395296925Z ==> ///////////////////////////////////////////////////////////
+2025-10-14T23:56:45.476021829Z ==> 
+2025-10-14T23:56:45.553225223Z ==> Available at your primary URL https://volaris-yz19.onrender.com
+2025-10-14T23:56:45.633013688Z ==> 
+2025-10-14T23:56:45.709628732Z ==> ///////////////////////////////////////////////////////////
+2025-10-14T23:56:55.580303814Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:56:55.59335062Z INFO:     216.24.60.125:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:57:45.040163647Z INFO:     Shutting down
+2025-10-14T23:57:45.140344099Z INFO:     Waiting for application shutdown.
+2025-10-14T23:57:45.141489776Z INFO:     Application shutdown complete.
+2025-10-14T23:57:45.141547438Z INFO:     Finished server process [55]
+2025-10-14T23:57:55.575412699Z INFO:     216.24.60.125:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 404 Not Found
+2025-10-14T23:57:55.586125523Z INFO:     216.24.60.125:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 404 Not Found

@@ -101,6 +101,15 @@ class VolarisBot(commands.Bot):
         """Log bot identity when it becomes ready."""
         self.logger.info("Bot ready as %s (ID: %s)", self.user.name, self.user.id)
 
+    async def close(self) -> None:
+        """Cleanup resources before shutting down."""
+        self.logger.info("Closing API client sessions...")
+        await self.api_client.close()
+        await self.alerts_api.close()
+        await self.streams_api.close()
+        await self.market_api.close()
+        await super().close()
+
     async def refresh_symbol_cache(self) -> None:
         """Refresh S&P 500 symbols from the API for autocomplete."""
         try:
