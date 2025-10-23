@@ -12,7 +12,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from app.alerts.helpers import build_top_movers_embed
 from app.config import settings
 
 if TYPE_CHECKING:
@@ -121,34 +120,10 @@ class MarketDataCog(commands.Cog):
         ]
 
     # -------------------------------------------------------------------------
-    # Top movers digest
+    # Top movers - REMOVED in V1 (requires Polygon or populated price_bars)
     # -------------------------------------------------------------------------
-    @app_commands.command(name="top", description="Show top S&P 500 gainers and losers")
-    @app_commands.describe(limit="Number of gainers/losers to show (default from config)")
-    async def top(self, interaction: discord.Interaction, limit: int | None = None) -> None:
-        """Display top movers using cached Tiingo/Finnhub data."""
-        await interaction.response.defer()
-
-        movers_limit = limit or settings.TOP_MOVERS_LIMIT
-        try:
-            data = await self.bot.market_api.fetch_top_movers(movers_limit)
-        except aiohttp.ClientError as exc:
-            error_msg = str(exc)
-            if "403" in error_msg or "forbidden" in error_msg.lower():
-                await interaction.followup.send(
-                    "❌ Polygon API access denied. The `/top` command requires a Polygon.io "
-                    "subscription with access to the Stocks Snapshot API.\n"
-                    "• Check that `POLYGON_API_KEY` is set in environment variables\n"
-                    "• Verify your Polygon subscription includes snapshot data\n"
-                    "• Free tier may not have access to this endpoint"
-                )
-            else:
-                await interaction.followup.send(f"❌ Unable to fetch top movers: {exc}")
-            return
-
-        data["limit"] = movers_limit
-        embed = build_top_movers_embed(data, title=f"Top {movers_limit} S&P 500 Movers")
-        await interaction.followup.send(embed=embed)
+    # See legacy/ for removed /top command
+    # Restore in V2 when scheduler populates price_bars or Polygon is added
 
     # -------------------------------------------------------------------------
     # Price command

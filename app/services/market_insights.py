@@ -1,4 +1,4 @@
-"""Higher-level market insight helpers (sentiment, top movers)."""
+"""Higher-level market insight helpers (sentiment, top movers) - V1 Core MVP."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from app.config import settings
 from app.db.models import PriceBar, Ticker, Timeframe
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
-from app.services.polygon import polygon_client
 from app.utils.cache import cache
 
 
@@ -32,12 +31,7 @@ async def fetch_sentiment(symbol: str) -> dict:
     except Exception:
         news_raw = []
 
-    if polygon_client:
-        try:
-            polygon_news = await polygon_client.get_news(symbol_upper, limit=5)
-            news_raw.extend(polygon_news)
-        except Exception:
-            pass
+    # V1: News from Finnhub only (Polygon removed)
 
     latest_recommendation = recommendations_raw[0] if recommendations_raw else None
     recent_news = [
@@ -75,10 +69,10 @@ async def fetch_sentiment(symbol: str) -> dict:
 
 
 async def get_top_movers(
-    limit: int, sp500_symbols: set[str], db: AsyncSession | None = None
+    limit: int, sp500_symbols: set[str], db: AsyncSession
 ) -> dict[str, list[dict]]:
     """
-    Get top gainers and losers from S&P 500.
+    Get top gainers and losers from S&P 500 - V1: Database-only (no Polygon).
 
     Uses in-house calculation from price_bars data (free, no external API needed).
     Calculates daily % change from today's OHLCV data.
@@ -86,19 +80,13 @@ async def get_top_movers(
     Args:
         limit: Number of gainers/losers to return
         sp500_symbols: Set of S&P 500 ticker symbols
-        db: Database session (required for in-house calculation)
+        db: Database session (required)
 
     Returns:
         {"gainers": [...], "losers": [...]}
     """
-    # Use in-house calculation from price_bars (free, no API limits)
-    if db is not None:
-        try:
-            return await _calculate_top_movers_from_db(limit, sp500_symbols, db)
-        except DataNotFoundError:
-            if polygon_client is None:
-                raise
-    return await _calculate_top_movers_from_polygon(limit, sp500_symbols)
+    # V1: Database-only calculation (Polygon fallback removed)
+    return await _calculate_top_movers_from_db(limit, sp500_symbols, db)
 
 
 async def _calculate_top_movers_from_db(
@@ -181,57 +169,5 @@ async def _calculate_top_movers_from_db(
     # Sort by percent change
     gainers = sorted(movers, key=lambda x: x["percent"], reverse=True)[:limit]
     losers = sorted(movers, key=lambda x: x["percent"])[:limit]
-
-    return {"gainers": gainers, "losers": losers}
-
-
-async def _calculate_top_movers_from_polygon(
-    limit: int, sp500_symbols: set[str]
-) -> dict[str, list[dict]]:
-    """Fallback to Polygon API when database data is unavailable."""
-
-    if polygon_client is None:
-        raise DataNotFoundError("Polygon client not configured", provider="Polygon")
-
-    gainers_raw = await polygon_client.get_top_movers("gainers")
-    losers_raw = await polygon_client.get_top_movers("losers")
-
-    def _normalize(entries: list[dict]) -> list[dict]:
-        normalized: list[dict] = []
-        for entry in entries:
-            symbol = (entry.get("ticker") or "").upper()
-            if symbol not in sp500_symbols:
-                continue
-            percent = entry.get("todaysChangePerc")
-            if percent is None:
-                continue
-            change = entry.get("todaysChange")
-            last_trade = entry.get("lastTrade") or {}
-            day = entry.get("day") or {}
-            price = (
-                last_trade.get("p")
-                or entry.get("lastPrice")
-                or entry.get("close")
-                or entry.get("price")
-            )
-            volume_raw = day.get("v") or entry.get("volume")
-            volume = int(volume_raw) if isinstance(volume_raw, int | float) else None
-
-            normalized.append(
-                {
-                    "symbol": symbol,
-                    "price": float(price) if price is not None else None,
-                    "change": float(change) if change is not None else None,
-                    "percent": float(percent),
-                    "volume": volume,
-                }
-            )
-        return normalized
-
-    gainers = _normalize(gainers_raw)[:limit]
-    losers = _normalize(losers_raw)[:limit]
-
-    if not gainers and not losers:
-        raise DataNotFoundError("No Polygon data available for top movers", provider="Polygon")
 
     return {"gainers": gainers, "losers": losers}

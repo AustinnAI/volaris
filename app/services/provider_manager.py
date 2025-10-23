@@ -1,21 +1,20 @@
 """
-Provider Manager
+Provider Manager - V1 Core MVP
 Manages provider selection and fallback logic based on data type and availability.
 
-Hierarchy (from spec):
-- Schwab: Primary real-time (1m/5m)
+V1 Provider Hierarchy:
+- Schwab: Primary real-time (1m/5m) + options chains
+- Tiingo: EOD data + historical
 - Alpaca: Minute delayed fallback
-- Databento: Historical backfills
-- Tiingo: EOD data
 - Finnhub: Fundamentals & news
+
+Removed in V1: Databento, Polygon, Marketstack (see legacy/services/)
 """
 
 from enum import Enum
 
 from app.services.alpaca import alpaca_client
-from app.services.databento import databento_client
 from app.services.finnhub import finnhub_client
-from app.services.marketstack import marketstack_client
 from app.services.schwab import schwab_client
 from app.services.tiingo import tiingo_client
 from app.utils.logger import app_logger
@@ -36,31 +35,30 @@ class DataType(str, Enum):
 
 class ProviderManager:
     """
-    Manages provider selection with fallback logic.
+    Manages provider selection with fallback logic - V1 Core MVP.
 
     Provider hierarchy:
     - Real-time (1m/5m): Schwab (primary) → Alpaca (fallback)
-    - EOD: Tiingo
-    - Historical: Databento
+    - EOD: Tiingo (primary) → Alpaca (fallback)
+    - Historical: Tiingo (primary) → Alpaca (fallback)
     - Fundamentals/News: Finnhub
+    - Options: Schwab only
     """
 
     def __init__(self):
         self.providers = {
             "schwab": schwab_client,
             "alpaca": alpaca_client,
-            "databento": databento_client,
             "tiingo": tiingo_client,
             "finnhub": finnhub_client,
-            "marketstack": marketstack_client,
         }
 
-        # Provider hierarchy by data type
+        # Provider hierarchy by data type (V1 - removed Databento/Polygon/Marketstack)
         self.hierarchy = {
             DataType.REALTIME_MINUTE: ["schwab", "alpaca"],
             DataType.MINUTE_DELAYED: ["alpaca", "schwab"],
-            DataType.EOD: ["tiingo", "marketstack"],
-            DataType.HISTORICAL: ["databento", "alpaca"],
+            DataType.EOD: ["tiingo", "alpaca"],
+            DataType.HISTORICAL: ["tiingo", "alpaca"],
             DataType.FUNDAMENTALS: ["finnhub"],
             DataType.NEWS: ["finnhub"],
             DataType.QUOTE: ["schwab", "alpaca", "tiingo"],
