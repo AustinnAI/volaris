@@ -91,3 +91,7 @@ secrets/
 *.pem
 *.key
 *.crt
+
+# Workspace notes (personal/temporary)
+agents.md
+claude.md

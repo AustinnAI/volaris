@@ -454,7 +454,7 @@ async def get_sentiment(symbol: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/top")
 async def get_top_movers_endpoint(
-    limit: int = Query(default=settings.TOP_MOVERS_LIMIT, ge=1, le=25),
+    limit: int = Query(default=5, ge=1, le=25),
     db: AsyncSession = Depends(get_db),
 ):
     sp500_symbols = await get_index_constituents_symbols(db)

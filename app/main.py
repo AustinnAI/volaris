@@ -15,7 +15,6 @@ from app.config import settings
 from app.db.database import async_session_maker, close_db, init_db
 from app.services.index_service import ensure_sp500_constituents
 from app.utils.logger import app_logger
-from app.workers import create_scheduler
 
 # Initialize Sentry for error tracking
 SENTRY_DSN = (settings.SENTRY_DSN or "").strip()
@@ -37,8 +36,9 @@ async def lifespan(app: FastAPI):
     """
     Application lifespan manager.
     Handles startup and shutdown events.
+
+    Note: APScheduler removed in V1. Use GitHub Actions for batch refresh.
     """
-    scheduler = None
     await init_db()
     async with async_session_maker() as session:
         try:
@@ -55,13 +55,8 @@ async def lifespan(app: FastAPI):
                 extra={"error": str(exc)},
             )
     try:
-        if settings.SCHEDULER_ENABLED:
-            scheduler = create_scheduler()
-            scheduler.start()
         yield
     finally:
-        if scheduler:
-            scheduler.shutdown(wait=False)
         await close_db()
 
 

@@ -76,12 +76,6 @@ class Settings(BaseSettings):
         default="https://paper-api.alpaca.markets", description="Alpaca API base URL"
     )
 
-    # Databento (Historical backfills)
-    DATABENTO_API_KEY: str | None = Field(default=None, description="Databento API key")
-    DATABENTO_API_BASE: str = Field(
-        default="https://hist.databento.com", description="Databento API base URL"
-    )
-
     # Finnhub (Fundamentals & news)
     FINNHUB_API_KEY: str | None = Field(default=None, description="Finnhub API key")
     FINNHUB_WEBHOOK_SECRET: str | None = Field(default=None, description="Finnhub webhook secret")
@@ -125,24 +119,6 @@ class Settings(BaseSettings):
     )
     SENTIMENT_CACHE_SECONDS: int = Field(
         default=600, description="Cache TTL for sentiment responses (seconds)"
-    )
-    TOP_MOVERS_LIMIT: int = Field(
-        default=5, description="Number of gainers/losers to display in top command"
-    )
-    DISCORD_DEFAULT_CHANNEL_ID: str | None = Field(
-        default=None, description="Default Discord channel for scheduled digests"
-    )
-    POLYGON_API_KEY: str | None = Field(
-        default=None, description="Polygon.io API key for market data"
-    )
-    POLYGON_API_BASE: str = Field(
-        default="https://api.polygon.io", description="Polygon API base URL"
-    )
-    MARKETSTACK_API_KEY: str | None = Field(
-        default=None, description="Marketstack API key for EOD fallback"
-    )
-    MARKETSTACK_API_BASE: str = Field(
-        default="http://api.marketstack.com/v1", description="Marketstack API base URL"
     )
     VOLARIS_API_TOKEN: str | None = Field(
         default=None,
@@ -247,55 +223,12 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS: int = Field(default=100, description="Max requests per window")
     RATE_LIMIT_WINDOW: int = Field(default=60, description="Rate limit window in seconds")
 
-    # Scheduler
+    # V1: Scheduler removed - use GitHub Actions for batch refresh
+    # Stub for backward compatibility with on-demand refresh logic
     SCHEDULER_ENABLED: bool = Field(
         default=False,
-        description="Enable background APScheduler jobs",
+        description="[V1 STUB] Always False - scheduler removed, on-demand refresh enabled",
     )
-    SCHEDULER_TIMEZONE: str = Field(
-        default="UTC",
-        description="Timezone for APScheduler jobs",
-    )
-    REALTIME_JOB_INTERVAL_SECONDS: int = Field(
-        default=120,
-        description="Interval for price sync job (2 min for memory optimization)",
-    )
-    FIVE_MINUTE_JOB_INTERVAL_SECONDS: int = Field(
-        default=300,
-        description="[DEPRECATED] 5-minute job removed for memory optimization",
-    )
-    OPTION_CHAIN_JOB_INTERVAL_MINUTES: int = Field(
-        default=30,
-        description="Interval for option chain refresh (30 min for memory optimization)",
-    )
-    IV_METRICS_JOB_INTERVAL_MINUTES: int = Field(
-        default=60,
-        description="Interval for IV metric calculation (60 min for memory optimization)",
-    )
-    EOD_SYNC_CRON_HOUR: int = Field(
-        default=22,
-        description="Hour (24h) for daily Tiingo EOD sync",
-    )
-    EOD_SYNC_CRON_MINUTE: int = Field(
-        default=15,
-        description="Minute for daily Tiingo EOD sync",
-    )
-    HISTORICAL_BACKFILL_CRON_HOUR: int = Field(
-        default=3,
-        description="Hour (24h) for historical backfill job",
-    )
-    HISTORICAL_BACKFILL_LOOKBACK_DAYS: int = Field(
-        default=30,
-        description="Lookback window (days) for historical backfill",
-    )
-    SP500_REFRESH_CRON_DAY: str = Field(
-        default="mon",
-        description="Day of week for S&P 500 constituent refresh (cron expression, e.g., mon)",
-    )
-    SP500_REFRESH_CRON_HOUR: int = Field(
-        default=6, description="Hour (24h) for S&P 500 refresh job"
-    )
-    SP500_REFRESH_CRON_MINUTE: int = Field(default=0, description="Minute for S&P 500 refresh job")
 
     @field_validator("ENVIRONMENT")
     @classmethod

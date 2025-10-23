@@ -1,5 +1,9 @@
-"""Background worker helpers."""
+"""
+Workers package - V1 cleanup.
 
-from .scheduler import create_scheduler
+APScheduler removed in V1 Core MVP. Use GitHub Actions for batch refresh instead.
+See legacy/workers/ for removed scheduler implementation.
+"""
 
-__all__ = ["create_scheduler"]
+# No exports - scheduler moved to legacy/
+__all__ = []

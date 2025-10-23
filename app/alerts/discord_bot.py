@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -25,7 +24,6 @@ from app.alerts.helpers import (
     StrategyRecommendationAPI,
     SymbolService,
     VolatilityAPI,
-    build_top_movers_embed,
 )
 from app.config import settings
 
@@ -109,8 +107,6 @@ class VolarisBot(commands.Bot):
             self.poll_price_alerts.start()
         if not self.poll_price_streams.is_running():
             self.poll_price_streams.start()
-        if not self.daily_top_digest.is_running():
-            self.daily_top_digest.start()
 
     async def on_ready(self) -> None:
         """Log bot identity when it becomes ready."""
@@ -288,54 +284,7 @@ class VolarisBot(commands.Bot):
     # ---------------------------------------------------------------------
     # Daily top movers digest
     # ---------------------------------------------------------------------
-    @tasks.loop(seconds=60)
-    async def daily_top_digest(self) -> None:
-        channel_id = settings.DISCORD_DEFAULT_CHANNEL_ID
-        if not channel_id:
-            return
-
-        now_est = datetime.now(self.est_tz)
-        if now_est.weekday() >= 5:
-            return
-
-        if now_est.hour == 16 and now_est.minute == 0:
-            today_key = now_est.strftime("%Y-%m-%d")
-            if self.last_digest_date == today_key:
-                return
-
-            try:
-                data = await self.market_api.fetch_top_movers(settings.TOP_MOVERS_LIMIT)
-            except aiohttp.ClientError as exc:
-                self.logger.error("Failed to fetch top movers for digest: %s", exc)
-                return
-            except Exception:  # pylint: disable=broad-except
-                self.logger.exception("Unexpected error fetching top movers")
-                return
-
-            channel = self.get_channel(int(channel_id))
-            if channel is None:
-                try:
-                    channel = await self.fetch_channel(int(channel_id))
-                except Exception:  # pylint: disable=broad-except
-                    self.logger.warning(
-                        "Unable to locate channel for daily digest",
-                        extra={"channel_id": channel_id},
-                    )
-                    return
-
-            data["limit"] = settings.TOP_MOVERS_LIMIT
-            embed = build_top_movers_embed(data, title="🏁 S&P 500 Closing Movers")
-            embed.set_footer(text="Automated daily digest • 4:00 PM ET")
-
-            try:
-                await channel.send(embed=embed)
-                self.last_digest_date = today_key
-            except Exception:  # pylint: disable=broad-except
-                self.logger.exception("Failed to send daily digest")
-
-    @daily_top_digest.before_loop
-    async def before_top_digest_loop(self) -> None:
-        await self.wait_until_ready()
+    # V1: daily_top_digest removed (requires Polygon API or populated price_bars)
 
 
 bot: VolarisBot | None = None
@@ -360,21 +309,8 @@ async def run_bot() -> None:
         logger.info("Discord bot disabled (DISCORD_BOT_ENABLED=false)")
         return
 
-    scheduler = None
-    if settings.SCHEDULER_ENABLED:
-        try:
-            from app.db.database import init_db
-            from app.workers import create_scheduler
-
-            logger.info("Initializing database for scheduler...")
-            await init_db()
-
-            scheduler = create_scheduler()
-            scheduler.start()
-            logger.info("✅ Background scheduler started alongside Discord bot")
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("Failed to start scheduler: %s", exc)
-            logger.warning("Discord bot will continue without scheduler")
+    # V1: Scheduler removed - on-demand refresh only
+    # Discord commands will trigger refresh per symbol as needed
 
     bot = create_bot()
 
@@ -404,10 +340,7 @@ async def run_bot() -> None:
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Bot error: %s", exc)
     finally:
-        if scheduler:
-            logger.info("Shutting down scheduler...")
-            scheduler.shutdown(wait=True)
-            logger.info("Scheduler stopped")
+        # V1: No scheduler to shut down
         await runner.cleanup()
 
 

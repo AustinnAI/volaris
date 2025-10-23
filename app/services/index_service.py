@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import IndexConstituent, Ticker
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
-from app.services.polygon import polygon_client
 from app.services.sp500_scraper import fetch_sp500_symbols_wikipedia
 from app.services.tickers import get_or_create_ticker
 from app.utils.logger import app_logger
@@ -23,20 +22,12 @@ async def refresh_index_constituents(
     db: AsyncSession,
     index_symbol: str = SP500_SYMBOL,
 ) -> list[str]:
-    """Refresh constituents for the given index symbol using Finnhub."""
+    """Refresh constituents for the given index symbol using Finnhub → Wikipedia → CSV fallback."""
 
     symbols: list[str] = []
 
-    if polygon_client:
-        try:
-            symbols = await polygon_client.get_sp500_constituents()
-        except Exception as exc:  # pylint: disable=broad-except
-            app_logger.warning(
-                "Polygon constituents unavailable, attempting Finnhub",
-                extra={"error": str(exc)},
-            )
-
-    if not symbols and finnhub_client:
+    # V1: Try Finnhub first (Polygon removed)
+    if finnhub_client:
         try:
             response = await finnhub_client.get_index_constituents(index_symbol)
             symbols = response.get("constituents") or []

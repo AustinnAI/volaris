@@ -1,8 +1,8 @@
 name: refresh-watchlist
 
 on:
-  schedule:
-    - cron: "*/15 13-20 * * 1-5"
+  # schedule:
+  #   - cron: "*/15 13-20 * * 1-5"
   workflow_dispatch:
     inputs:
       symbols:
