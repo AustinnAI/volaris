@@ -309,21 +309,8 @@ async def run_bot() -> None:
         logger.info("Discord bot disabled (DISCORD_BOT_ENABLED=false)")
         return
 
-    scheduler = None
-    if settings.SCHEDULER_ENABLED:
-        try:
-            from app.db.database import init_db
-            from app.workers import create_scheduler
-
-            logger.info("Initializing database for scheduler...")
-            await init_db()
-
-            scheduler = create_scheduler()
-            scheduler.start()
-            logger.info("✅ Background scheduler started alongside Discord bot")
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("Failed to start scheduler: %s", exc)
-            logger.warning("Discord bot will continue without scheduler")
+    # V1: Scheduler removed - on-demand refresh only
+    # Discord commands will trigger refresh per symbol as needed
 
     bot = create_bot()
 
@@ -353,10 +340,7 @@ async def run_bot() -> None:
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Bot error: %s", exc)
     finally:
-        if scheduler:
-            logger.info("Shutting down scheduler...")
-            scheduler.shutdown(wait=True)
-            logger.info("Scheduler stopped")
+        # V1: No scheduler to shut down
         await runner.cleanup()
 
 

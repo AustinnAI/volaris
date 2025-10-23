@@ -224,6 +224,11 @@ class Settings(BaseSettings):
     RATE_LIMIT_WINDOW: int = Field(default=60, description="Rate limit window in seconds")
 
     # V1: Scheduler removed - use GitHub Actions for batch refresh
+    # Stub for backward compatibility with on-demand refresh logic
+    SCHEDULER_ENABLED: bool = Field(
+        default=False,
+        description="[V1 STUB] Always False - scheduler removed, on-demand refresh enabled",
+    )
 
     @field_validator("ENVIRONMENT")
     @classmethod

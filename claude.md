@@ -189,6 +189,10 @@ gh pr create --title "PR Title" --base main
 - Provide **arrange–act–assert** examples and **fixture** usage.
 - Include **CI** steps (GitHub Actions) for: lint → format check → tests.
 - Add **mocks** for external APIs; no live calls in tests.
+- **Required pre-flight checks before hand-off** (run locally and report results):
+  - `venv/bin/python -m black app tests`
+  - `venv/bin/ruff check app/ tests/`
+  - `venv/bin/python -m pytest`
 
 ---
 
@@ -199,8 +203,9 @@ gh pr create --title "PR Title" --base main
 3. **`.env.example`** updates (if applicable).
 4. **Docker** or local run instructions.
 5. **Manual test steps** (curl/httpie examples, expected responses).
-6. **Git commands** to branch, commit, push, and open PR.
-7. **Follow-ups**: list of open questions, risks, and next tasks.
+6. **Lint/format/test results** (copy the commands in §9 and summarize outcomes).
+7. **Git commands** to branch, commit, push, and open PR.
+8. **Follow-ups**: list of open questions, risks, and next tasks.
 
 ---
 
