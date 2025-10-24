@@ -21,21 +21,29 @@
 - [x] Sentry monitoring integration
 
 ### 🔹 Phase 2 – News & Sentiment Engine
-**Status:** 📋 Not Started
+**Status:** ✅ Complete
 
 **Deliverables:**
-- [ ] Fetch top headlines for tickers from Polygon/Finnhub/NewsAPI
-- [ ] Lightweight sentiment analysis (VADER or FinBERT lite)
-- [ ] Cache daily results (1-day TTL in Redis)
-- [ ] `/api/v1/news/{ticker}` and `/api/v1/sentiment/{ticker}` endpoints
-- [ ] Ranked summary endpoint for multi-ticker sentiment
-- [ ] Optional: GitHub Action or cron job to refresh watchlist news hourly
+- [x] Fetch top headlines for tickers from Finnhub
+- [x] Lightweight sentiment analysis (VADER)
+- [x] Cache sentiment results (10-min TTL in Redis)
+- [x] `/api/v1/news/{ticker}` and `/api/v1/news/{ticker}/sentiment` endpoints
+- [x] Ranked summary endpoint for multi-ticker sentiment (`/api/v1/news/sentiment/summary`)
+- [x] GitHub Action workflow for automated refresh (every 3h market hours + overnight)
+- [x] Database model with 30-day retention and URL-based deduplication
+- [x] Batch refresh endpoint for S&P 500 (`/api/v1/news/refresh/batch`)
+- [x] Exponential recency weighting (24h half-life) for sentiment aggregation
+- [x] Weekly pruning of old articles via GitHub Actions
 
 **Key Features:**
-- Real-time news aggregation with deduplication
-- Sentiment scoring with confidence levels
-- Ticker-level aggregate scores weighted by recency
-- Fallback to cached scores when NLP is offline
+- ✅ Real-time news aggregation with URL deduplication
+- ✅ VADER sentiment scoring with compound scores
+- ✅ Ticker-level aggregate scores weighted by recency
+- ✅ Redis caching for sentiment responses (10-min TTL)
+- ✅ Automated batch refresh via GitHub Actions
+- ✅ 30-day article retention with automated pruning
+
+**Documentation:** See [docs/PHASE_2.md](docs/PHASE_2.md)
 
 ### 🔹 Phase 3 – Options Flow Monitor
 **Status:** 📋 Not Started

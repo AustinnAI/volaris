@@ -120,6 +120,12 @@ class Settings(BaseSettings):
     SENTIMENT_CACHE_SECONDS: int = Field(
         default=600, description="Cache TTL for sentiment responses (seconds)"
     )
+    NEWS_RETENTION_DAYS: int = Field(
+        default=30, description="Number of days to retain news articles before pruning"
+    )
+    NEWS_REFRESH_LOOKBACK_DAYS: int = Field(
+        default=7, description="Default lookback window for news refresh (days)"
+    )
     VOLARIS_API_TOKEN: str | None = Field(
         default=None,
         description="Bearer token used by internal automation (GitHub Actions, Discord admins)",

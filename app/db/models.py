@@ -113,6 +113,14 @@ class JournalSentiment(str, enum.Enum):
     NEGATIVE = "negative"
 
 
+class NewsSentimentLabel(str, enum.Enum):
+    """Sentiment classification for news articles."""
+
+    POSITIVE = "positive"
+    NEUTRAL = "neutral"
+    NEGATIVE = "negative"
+
+
 class MarketLevelType(str, enum.Enum):
     """Market-structure level classification."""
 
@@ -178,6 +186,11 @@ class Ticker(TimestampMixin, Base):
     )
     index_memberships: Mapped[list[IndexConstituent]] = relationship(
         "IndexConstituent",
+        back_populates="ticker",
+        cascade="all, delete-orphan",
+    )
+    news_articles: Mapped[list[NewsArticle]] = relationship(
+        "NewsArticle",
         back_populates="ticker",
         cascade="all, delete-orphan",
     )
@@ -508,4 +521,32 @@ class TradeJournalEntry(TimestampMixin, Base):
     )
     execution: Mapped[TradeExecution | None] = relationship(
         "TradeExecution", back_populates="journal_entries"
+    )
+
+
+class NewsArticle(TimestampMixin, Base):
+    """Stores news articles with VADER sentiment analysis for tickers."""
+
+    __tablename__ = "news_articles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker_id: Mapped[int] = mapped_column(
+        ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False
+    )
+    headline: Mapped[str] = mapped_column(String(512), nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str | None] = mapped_column(String(128))
+    url: Mapped[str] = mapped_column(String(1024), unique=True, nullable=False)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sentiment_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
+    sentiment_label: Mapped[NewsSentimentLabel | None] = mapped_column(
+        enum_column(NewsSentimentLabel, length=16)
+    )
+    sentiment_compound: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
+
+    ticker: Mapped[Ticker] = relationship("Ticker", back_populates="news_articles")
+
+    __table_args__ = (
+        Index("ix_news_articles_ticker_published", "ticker_id", "published_at"),
+        Index("ix_news_articles_url", "url", unique=True),
     )

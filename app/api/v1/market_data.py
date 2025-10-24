@@ -22,6 +22,11 @@ from app.db.models import (
     Ticker,
     Timeframe,
 )
+from app.services.data_ingestion import (
+    compute_iv_metrics,
+    fetch_option_chains,
+    fetch_realtime_prices,
+)
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import FinnhubClient
 from app.services.index_service import (
@@ -33,11 +38,6 @@ from app.services.market_insights import fetch_sentiment, get_top_movers
 from app.services.schwab import SchwabClient
 from app.services.watchlist import WatchlistService
 from app.utils.logger import app_logger
-from app.workers.tasks import (
-    compute_iv_metrics,
-    fetch_option_chains,
-    fetch_realtime_prices,
-)
 
 router = APIRouter(prefix="/market", tags=["market-data"])
 

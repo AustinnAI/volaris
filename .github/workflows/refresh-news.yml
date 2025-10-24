@@ -1,0 +1,78 @@
+name: Refresh News & Sentiment
+
+on:
+  schedule:
+    # Market hours (9:30 AM - 4:00 PM ET = 13:30-20:00 UTC): Every 3 hours
+    - cron: "30 13,16,19 * * 1-5"  # Mon-Fri at 1:30 PM, 4:30 PM, 7:30 PM UTC
+    # Overnight heartbeat (2:00 AM UTC = 9:00 PM ET previous day)
+    - cron: "0 2 * * 2-6"  # Tue-Sat at 2:00 AM UTC (Mon-Fri ET)
+
+  workflow_dispatch:
+    inputs:
+      symbols:
+        description: "Symbols to refresh (comma-separated) or 'sp500' for all"
+        required: false
+        default: "sp500"
+      days:
+        description: "Lookback days for news fetch"
+        required: false
+        default: "7"
+
+env:
+  VOLARIS_API_URL: ${{ secrets.VOLARIS_API_URL || 'https://volaris.onrender.com' }}
+  VOLARIS_API_TOKEN: ${{ secrets.VOLARIS_API_TOKEN }}
+
+jobs:
+  refresh-news:
+    name: Refresh News & Sentiment
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Refresh News via API
+        run: |
+          SYMBOLS="${{ github.event.inputs.symbols || 'sp500' }}"
+          DAYS="${{ github.event.inputs.days || '7' }}"
+
+          echo "Refreshing news for symbols: $SYMBOLS (lookback: $DAYS days)"
+
+          RESPONSE=$(curl -s -X POST \
+            "$VOLARIS_API_URL/api/v1/news/refresh/batch?symbols=$SYMBOLS&days=$DAYS" \
+            -H "Authorization: Bearer $VOLARIS_API_TOKEN" \
+            -H "Content-Type: application/json")
+
+          echo "Response: $RESPONSE"
+
+          # Extract counts using jq
+          TOTAL=$(echo "$RESPONSE" | jq -r '.total_symbols // 0')
+          SUCCESSFUL=$(echo "$RESPONSE" | jq -r '.successful // 0')
+          FAILED=$(echo "$RESPONSE" | jq -r '.failed // 0')
+
+          echo "✓ Refreshed $TOTAL symbols: $SUCCESSFUL successful, $FAILED failed"
+
+          # Fail workflow if all requests failed
+          if [ "$TOTAL" -gt 0 ] && [ "$SUCCESSFUL" -eq 0 ]; then
+            echo "❌ All refresh requests failed"
+            exit 1
+          fi
+
+      - name: Prune Old Articles (weekly only)
+        if: github.event.schedule == '0 2 * * 2-6'
+        run: |
+          echo "Pruning news articles older than 30 days"
+
+          RESPONSE=$(curl -s -X POST \
+            "$VOLARIS_API_URL/api/v1/news/prune?days=30" \
+            -H "Authorization: Bearer $VOLARIS_API_TOKEN" \
+            -H "Content-Type: application/json")
+
+          echo "Response: $RESPONSE"
+
+          DELETED=$(echo "$RESPONSE" | jq -r '.deleted_count // 0')
+          echo "✓ Pruned $DELETED old articles"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "⚠️ News refresh workflow failed"
+          echo "Check logs for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

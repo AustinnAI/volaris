@@ -34,6 +34,9 @@ beautifulsoup4==4.12.3
 aiosqlite==0.20.0
 numpy==2.1.2
 
+# Sentiment Analysis (Phase 2)
+vaderSentiment==3.3.2
+
 # V1: APScheduler removed - use GitHub Actions for batch refresh
 
 # Discord Integration (Phase 8)
