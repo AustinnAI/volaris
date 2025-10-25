@@ -95,6 +95,7 @@ secrets/
 # Workspace notes (personal/temporary)
 agents.md
 claude.md
+volaris-api-logs.txt
 
 # Archive (old logs and reference docs)
 archive/

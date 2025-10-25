@@ -19,6 +19,7 @@ from discord.ext import commands, tasks
 
 from app.alerts.helpers import (
     MarketInsightsAPI,
+    NewsAPI,
     PriceAlertAPI,
     PriceStreamAPI,
     StrategyRecommendationAPI,
@@ -46,6 +47,7 @@ class VolarisBot(commands.Bot):
         self.streams_api = PriceStreamAPI(api_base_url)
         self.market_api = MarketInsightsAPI(api_base_url, api_token=self.api_token, timeout=30)
         self.volatility_api = VolatilityAPI(api_base_url)
+        self.news_api = NewsAPI(api_base_url, api_token=self.api_token, timeout=30)
         self.symbol_service = SymbolService()
         self.guild_id = guild_id
         self.user_command_count: dict[int, list[float]] = {}
@@ -63,6 +65,7 @@ class VolarisBot(commands.Bot):
             "app.alerts.cogs.calculators",
             "app.alerts.cogs.utilities",
             "app.alerts.cogs.watchlist",
+            "app.alerts.cogs.news",
         ]
         for extension in extensions:
             if extension in self.extensions:
@@ -120,6 +123,7 @@ class VolarisBot(commands.Bot):
         await self.streams_api.close()
         await self.market_api.close()
         await self.volatility_api.close()
+        await self.news_api.close()
         await super().close()
 
     async def refresh_symbol_cache(self) -> None:

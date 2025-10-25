@@ -449,3 +449,105 @@ class MarketInsightsAPI:
             if response.status not in (200, 202):
                 raise aiohttp.ClientError(data.get("detail", "Failed to refresh watchlist"))
             return data
+
+
+class NewsAPI:
+    """Client wrapper for Phase 2 News & Sentiment API."""
+
+    def __init__(self, base_url: str, api_token: str = "", timeout: int = 30) -> None:
+        """
+        Initialize News API client.
+
+        Args:
+            base_url: Base URL of the Volaris API.
+            api_token: Optional bearer token for authenticated endpoints.
+            timeout: Total request timeout in seconds.
+        """
+        self.base_url = base_url.rstrip("/")
+        self.api_token = api_token
+        self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self._session: aiohttp.ClientSession | None = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the shared HTTP session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
+
+    def _auth_headers(self) -> dict[str, str]:
+        """Return authorization headers if token is available."""
+        return {"Authorization": f"Bearer {self.api_token}"} if self.api_token else {}
+
+    async def get_news(self, symbol: str, limit: int = 10, days: int = 7) -> dict[str, Any]:
+        """
+        Get recent news articles with sentiment for a ticker.
+
+        Args:
+            symbol: Ticker symbol (e.g., AAPL).
+            limit: Maximum number of articles to return (1-100).
+            days: Lookback period in days (1-30).
+
+        Returns:
+            Response with articles and sentiment scores.
+        """
+        url = f"{self.base_url}/api/v1/news/{symbol.upper()}"
+        params = {"limit": min(max(limit, 1), 100), "days": min(max(days, 1), 30)}
+        session = await self._get_session()
+        async with session.get(url, params=params) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(
+                    data.get("detail", f"Failed to fetch news: HTTP {response.status}")
+                )
+            return data
+
+    async def get_sentiment(self, symbol: str, days: int = 7) -> dict[str, Any]:
+        """
+        Get aggregated news sentiment for a ticker.
+
+        Args:
+            symbol: Ticker symbol (e.g., AAPL).
+            days: Lookback period in days (1-30).
+
+        Returns:
+            Aggregated sentiment scores with bullish/bearish percentages.
+        """
+        url = f"{self.base_url}/api/v1/news/{symbol.upper()}/sentiment"
+        params = {"days": min(max(days, 1), 30)}
+        session = await self._get_session()
+        async with session.get(url, params=params) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(
+                    data.get("detail", f"Failed to fetch sentiment: HTTP {response.status}")
+                )
+            return data
+
+    async def refresh_news(self, symbol: str, days: int = 7) -> dict[str, Any]:
+        """
+        Force refresh news articles for a ticker.
+
+        Args:
+            symbol: Ticker symbol (e.g., AAPL).
+            days: Lookback period in days (1-30).
+
+        Returns:
+            Refresh result with count of new articles.
+        """
+        url = f"{self.base_url}/api/v1/news/{symbol.upper()}/refresh"
+        params = {"days": min(max(days, 1), 30)}
+        headers = {"Content-Type": "application/json", **self._auth_headers()}
+        session = await self._get_session()
+        async with session.post(url, params=params, headers=headers) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(
+                    data.get("detail", f"Failed to refresh news: HTTP {response.status}")
+                )
+            return data

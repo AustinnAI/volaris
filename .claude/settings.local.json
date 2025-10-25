@@ -30,7 +30,15 @@
       "Bash(venv/bin/pip install:*)",
       "Bash(venv/bin/black:*)",
       "Bash(venv/bin/alembic upgrade head)",
-      "Bash(venv/bin/python:*)"
+      "Bash(venv/bin/python:*)",
+      "Bash(chmod:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(venv/bin/alembic current)",
+      "Bash(venv/bin/alembic history)",
+      "Bash(for f in /Users/aidaewor/Dev/volaris/app/alerts/cogs/*.py)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

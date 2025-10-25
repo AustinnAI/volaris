@@ -7,6 +7,7 @@ including API clients, embed builders, and autocomplete helpers.
 
 from .api_client import (
     MarketInsightsAPI,
+    NewsAPI,
     PriceAlertAPI,
     PriceStreamAPI,
     StrategyRecommendationAPI,
@@ -26,6 +27,7 @@ __all__ = [
     "PriceStreamAPI",
     "VolatilityAPI",
     "MarketInsightsAPI",
+    "NewsAPI",
     "SymbolService",
     "PRIORITY_SYMBOLS",
     "create_recommendation_embed",
