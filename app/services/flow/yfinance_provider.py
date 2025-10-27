@@ -45,6 +45,13 @@ class YFinanceFlowProvider(FlowProvider):
         """
         self.avg_volume_lookback_days = avg_volume_lookback_days
 
+        # Monkey-patch yfinance User-Agent to avoid Yahoo Finance rate limiting
+        # Yahoo blocks requests from cloud/datacenter IPs without proper User-Agent
+        yf.utils.get_user_agent = lambda: (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+
     async def get_option_chain(
         self, symbol: str, expiration: datetime | None = None
     ) -> OptionChain:
@@ -126,6 +133,17 @@ class YFinanceFlowProvider(FlowProvider):
                 if not contract_symbol:
                     continue
 
+                # Handle NaN values from yfinance (common with illiquid options)
+                import math
+
+                volume = row.get("volume", 0)
+                if math.isnan(volume):
+                    volume = 0
+
+                open_interest = row.get("openInterest", 0)
+                if math.isnan(open_interest):
+                    open_interest = 0
+
                 contracts.append(
                     OptionContract(
                         contract_symbol=contract_symbol,
@@ -135,8 +153,8 @@ class YFinanceFlowProvider(FlowProvider):
                         last_price=Decimal(str(row.get("lastPrice", 0))),
                         bid=Decimal(str(row.get("bid", 0))),
                         ask=Decimal(str(row.get("ask", 0))),
-                        volume=int(row.get("volume", 0)),
-                        open_interest=int(row.get("openInterest", 0)),
+                        volume=int(volume),
+                        open_interest=int(open_interest),
                         implied_volatility=float(row.get("impliedVolatility", 0)),
                     )
                 )
