@@ -102,8 +102,10 @@ async def get_unusual_flow(
 
             flags = json.loads(record.flags) if record.flags else []
 
-            # Convert detected_at to EST
-            detected_at_est = record.detected_at.astimezone(EST).isoformat()
+            # Convert detected_at to EST with readable format
+            detected_at_est = record.detected_at.astimezone(EST).strftime(
+                "%b %d, %Y %I:%M:%S %p EST"
+            )
 
             unusual_trades.append(
                 UnusualTradeResponse(
@@ -122,8 +124,8 @@ async def get_unusual_flow(
                 )
             )
 
-        # Current time in EST
-        detection_time_est = datetime.now(EST).isoformat()
+        # Current time in EST with readable format
+        detection_time_est = datetime.now(EST).strftime("%b %d, %Y %I:%M:%S %p EST")
 
         return FlowResponse(
             symbol=symbol.upper(),
@@ -175,8 +177,10 @@ async def get_flow_history(
 
             flags = json.loads(record.flags) if record.flags else []
 
-            # Convert detected_at to EST
-            detected_at_est = record.detected_at.astimezone(EST).isoformat()
+            # Convert detected_at to EST with readable format
+            detected_at_est = record.detected_at.astimezone(EST).strftime(
+                "%b %d, %Y %I:%M:%S %p EST"
+            )
 
             unusual_trades.append(
                 UnusualTradeResponse(
@@ -195,8 +199,8 @@ async def get_flow_history(
                 )
             )
 
-        # Current time in EST
-        detection_time_est = datetime.now(EST).isoformat()
+        # Current time in EST with readable format
+        detection_time_est = datetime.now(EST).strftime("%b %d, %Y %I:%M:%S %p EST")
 
         return FlowResponse(
             symbol=symbol.upper(),
