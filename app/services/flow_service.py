@@ -29,7 +29,7 @@ class FlowService:
         symbol: str,
         min_score: float = 0.7,
         lookback_minutes: int = 60,
-    ) -> list[OptionFlow]:
+    ) -> tuple[list[OptionFlow], str]:
         """
         Detect unusual activity and store in database.
 
@@ -40,7 +40,7 @@ class FlowService:
             lookback_minutes: Lookback period (not used by yfinance).
 
         Returns:
-            List of OptionFlow records created.
+            Tuple of (list of OptionFlow records, provider name used).
 
         Raises:
             ValueError: If ticker not found or providers fail.
@@ -49,13 +49,13 @@ class FlowService:
         ticker = await self._get_or_create_ticker(db, symbol)
 
         # Detect unusual activity
-        unusual_trades = await self.provider_manager.get_unusual_activity(
+        unusual_trades, provider_name = await self.provider_manager.get_unusual_activity(
             symbol, min_score, lookback_minutes
         )
 
         if not unusual_trades:
             app_logger.info(f"No unusual activity detected for {symbol}")
-            return []
+            return [], provider_name
 
         # Store in database
         flow_records = []
@@ -80,7 +80,7 @@ class FlowService:
 
         await db.commit()
         app_logger.info(f"Stored {len(flow_records)} unusual trades for {symbol}")
-        return flow_records
+        return flow_records, provider_name
 
     async def get_recent_unusual_activity(
         self,

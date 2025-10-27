@@ -42,6 +42,7 @@ class FlowResponse(BaseModel):
     unusual_trades: list[UnusualTradeResponse]
     min_score: float
     detection_time: str
+    provider: str  # Which provider was used (Schwab, AlphaVantage, YFinance)
 
 
 @router.get("/{symbol}", response_model=FlowResponse)
@@ -65,10 +66,12 @@ async def get_unusual_flow(
     try:
         flow_service = FlowService()
 
+        provider_name = None
+
         if force_refresh:
             # Detect and store new unusual activity
             app_logger.info(f"Force refresh: detecting unusual activity for {symbol}")
-            flow_records = await flow_service.detect_and_store_unusual_activity(
+            flow_records, provider_name = await flow_service.detect_and_store_unusual_activity(
                 db, symbol, min_score=min_score
             )
         else:
@@ -81,9 +84,11 @@ async def get_unusual_flow(
             # If no cached data, fetch fresh
             if not flow_records:
                 app_logger.info(f"No cached data, detecting fresh activity for {symbol}")
-                flow_records = await flow_service.detect_and_store_unusual_activity(
+                flow_records, provider_name = await flow_service.detect_and_store_unusual_activity(
                     db, symbol, min_score=min_score
                 )
+            else:
+                provider_name = "cached"
 
         # Convert to response format
         unusual_trades = []
@@ -116,6 +121,7 @@ async def get_unusual_flow(
             unusual_trades=unusual_trades,
             min_score=min_score,
             detection_time=datetime.now().isoformat(),
+            provider=provider_name or "unknown",
         )
 
     except ValueError as e:
@@ -182,6 +188,7 @@ async def get_flow_history(
             unusual_trades=unusual_trades,
             min_score=min_score,
             detection_time=datetime.now().isoformat(),
+            provider="database",  # History endpoint always queries from database
         )
 
     except Exception as e:

@@ -25,17 +25,17 @@ class FlowProviderManager:
     """
 
     def __init__(self):
-        """Initialize provider manager with Alpha Vantage as primary."""
+        """Initialize provider manager with Schwab as primary (real-time data)."""
         self.providers: list[FlowProvider] = []
 
-        # Add Alpha Vantage if API key is configured
+        # Add Schwab first (real-time options data, requires valid tokens)
+        self.providers.append(SchwabFlowProvider())
+
+        # Add Alpha Vantage as fallback (historical/EOD data)
         if settings.ALPHA_VANTAGE_API_KEY:
             self.providers.append(AlphaVantageFlowProvider(api_key=settings.ALPHA_VANTAGE_API_KEY))
 
-        # Add Schwab (requires valid tokens)
-        self.providers.append(SchwabFlowProvider())
-
-        # Add yfinance (works locally, blocked on cloud)
+        # Add yfinance as last resort (works locally, blocked on cloud)
         self.providers.append(YFinanceFlowProvider())
 
     @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5))
@@ -73,7 +73,7 @@ class FlowProviderManager:
         symbol: str,
         min_score: float = 0.7,
         lookback_minutes: int = 60,
-    ) -> list[UnusualTrade]:
+    ) -> tuple[list[UnusualTrade], str]:
         """
         Detect unusual activity from first available provider.
 
@@ -85,17 +85,19 @@ class FlowProviderManager:
             lookback_minutes: Lookback period for activity detection.
 
         Returns:
-            List of unusual trades from first successful provider.
+            Tuple of (list of unusual trades, provider name used).
 
         Raises:
             ValueError: If all providers fail.
         """
         for provider in self.providers:
             try:
+                provider_name = provider.__class__.__name__.replace("FlowProvider", "")
                 app_logger.info(
                     f"Detecting unusual activity for {symbol} from {provider.__class__.__name__}"
                 )
-                return await provider.get_unusual_activity(symbol, min_score, lookback_minutes)
+                trades = await provider.get_unusual_activity(symbol, min_score, lookback_minutes)
+                return trades, provider_name
             except Exception as e:
                 app_logger.warning(f"{provider.__class__.__name__} failed for {symbol}: {e}")
                 continue
