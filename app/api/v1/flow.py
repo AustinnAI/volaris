@@ -5,6 +5,7 @@ Provides endpoints for detecting and querying unusual options activity.
 """
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -13,6 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
 from app.services.flow_service import FlowService
 from app.utils.logger import app_logger
+
+# EST timezone
+EST = ZoneInfo("America/New_York")
 
 router = APIRouter(prefix="/flow", tags=["options-flow"])
 
@@ -98,6 +102,9 @@ async def get_unusual_flow(
 
             flags = json.loads(record.flags) if record.flags else []
 
+            # Convert detected_at to EST
+            detected_at_est = record.detected_at.astimezone(EST).isoformat()
+
             unusual_trades.append(
                 UnusualTradeResponse(
                     contract_symbol=record.contract_symbol,
@@ -111,16 +118,19 @@ async def get_unusual_flow(
                     premium=float(record.premium),
                     anomaly_score=float(record.anomaly_score),
                     flags=flags,
-                    detected_at=record.detected_at.isoformat(),
+                    detected_at=detected_at_est,
                 )
             )
+
+        # Current time in EST
+        detection_time_est = datetime.now(EST).isoformat()
 
         return FlowResponse(
             symbol=symbol.upper(),
             detected_count=len(unusual_trades),
             unusual_trades=unusual_trades,
             min_score=min_score,
-            detection_time=datetime.now().isoformat(),
+            detection_time=detection_time_est,
             provider=provider_name or "unknown",
         )
 
@@ -165,6 +175,9 @@ async def get_flow_history(
 
             flags = json.loads(record.flags) if record.flags else []
 
+            # Convert detected_at to EST
+            detected_at_est = record.detected_at.astimezone(EST).isoformat()
+
             unusual_trades.append(
                 UnusualTradeResponse(
                     contract_symbol=record.contract_symbol,
@@ -178,16 +191,19 @@ async def get_flow_history(
                     premium=float(record.premium),
                     anomaly_score=float(record.anomaly_score),
                     flags=flags,
-                    detected_at=record.detected_at.isoformat(),
+                    detected_at=detected_at_est,
                 )
             )
+
+        # Current time in EST
+        detection_time_est = datetime.now(EST).isoformat()
 
         return FlowResponse(
             symbol=symbol.upper(),
             detected_count=len(unusual_trades),
             unusual_trades=unusual_trades,
             min_score=min_score,
-            detection_time=datetime.now().isoformat(),
+            detection_time=detection_time_est,
             provider="database",  # History endpoint always queries from database
         )
 
