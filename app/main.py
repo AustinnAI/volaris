@@ -135,6 +135,7 @@ async def health_check():
 from app.api.v1.alerts import router as alerts_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.debug import router as debug_router
+from app.api.v1.flow import router as flow_router
 from app.api.v1.market_data import router as market_data_router
 from app.api.v1.news import router as news_router
 from app.api.v1.providers import router as providers_router
@@ -152,6 +153,7 @@ app.include_router(strike_selection_router, prefix=settings.API_V1_PREFIX)
 app.include_router(strategy_router, prefix=settings.API_V1_PREFIX)
 app.include_router(market_data_router, prefix=settings.API_V1_PREFIX)
 app.include_router(news_router, prefix=settings.API_V1_PREFIX)
+app.include_router(flow_router, prefix=settings.API_V1_PREFIX)
 app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
 app.include_router(streams_router, prefix=settings.API_V1_PREFIX)
 app.include_router(volatility_router, prefix=settings.API_V1_PREFIX)

@@ -194,6 +194,11 @@ class Ticker(TimestampMixin, Base):
         back_populates="ticker",
         cascade="all, delete-orphan",
     )
+    option_flows: Mapped[list[OptionFlow]] = relationship(
+        "OptionFlow",
+        back_populates="ticker",
+        cascade="all, delete-orphan",
+    )
 
 
 class Watchlist(TimestampMixin, Base):
@@ -549,4 +554,39 @@ class NewsArticle(TimestampMixin, Base):
     __table_args__ = (
         Index("ix_news_articles_ticker_published", "ticker_id", "published_at"),
         Index("ix_news_articles_url", "url", unique=True),
+    )
+
+
+class OptionFlow(TimestampMixin, Base):
+    """Stores detected unusual options activity (Phase 3)."""
+
+    __tablename__ = "option_flow"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker_id: Mapped[int] = mapped_column(ForeignKey("tickers.id", ondelete="CASCADE"))
+    contract_symbol: Mapped[str] = mapped_column(
+        String(32), nullable=False, index=True
+    )  # e.g., "SPY250131C600"
+    option_type: Mapped[str] = mapped_column(String(4), nullable=False)  # "call" | "put"
+    strike: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    expiration: Mapped[date] = mapped_column(Date, nullable=False)
+    last_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    volume: Mapped[int] = mapped_column(Integer, nullable=False)
+    open_interest: Mapped[int] = mapped_column(Integer, nullable=False)
+    volume_oi_ratio: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    premium: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)  # volume × price × 100
+    anomaly_score: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False)  # 0.00 to 1.00
+    flags: Mapped[str] = mapped_column(
+        String(256), nullable=False
+    )  # JSON array as string: ["high_volume", "volume_spike"]
+    detected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    ticker: Mapped[Ticker] = relationship("Ticker", back_populates="option_flows")
+
+    __table_args__ = (
+        Index("ix_option_flow_ticker_detected", "ticker_id", "detected_at"),
+        Index("ix_option_flow_contract_detected", "contract_symbol", "detected_at"),
+        Index("ix_option_flow_anomaly_score", "anomaly_score"),
     )

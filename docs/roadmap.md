@@ -48,19 +48,54 @@
 ### 🔹 Phase 3 – Options Flow Monitor
 **Status:** 📋 Not Started
 
-**Deliverables:**
-- [ ] Integrate one flow provider (Unusual Whales or alternative)
-- [ ] Pull large trades/sweeps for SPY & QQQ (and top large caps on demand)
-- [ ] Detect spikes in volume vs. average; store top N events in DB
-- [ ] `/api/v1/flow/{ticker}` endpoint
-- [ ] "Unusual activity" Discord alert webhook
-- [ ] Rate-limiting + backoff logic per provider
+**Provider Strategy:**
+- **Phase 3.0 (MVP - Week 1):** yfinance (primary) with custom anomaly detection
+- **Phase 3.1 (Week 2-3):** Add Alpha Vantage as EOD validator
+- **Phase 3.2 (Month 2):** Evaluate Unusual Whales free tier, upgrade if superior
+- **V2 (Future):** Add Tradier for real-time data, Unusual Whales premium for alerts
+
+**Phase 3.0 MVP - Custom Flow Detection (yfinance)**
+- [ ] Create `FlowProvider` interface pattern (ABC)
+- [ ] Implement `YFinanceFlowProvider` with custom anomaly logic
+- [ ] Build anomaly detection: volume/OI ratio > 3.0, volume > 3× avg, bid-ask < 10%
+- [ ] Create `option_flow` database table for unusual activity storage
+- [ ] Add `/api/v1/flow/{ticker}` endpoint (returns unusual contracts)
+- [ ] Implement `FlowProviderManager` with yfinance-only fallback
+- [ ] Add Discord `/flow` command to query unusual activity
+- [ ] Focus: SPY, QQQ, + S&P 500 top 50 by market cap
+
+**Phase 3.1 - Validation Layer (Alpha Vantage)**
+- [ ] Implement `AlphaVantageFlowProvider`
+- [ ] Add to fallback hierarchy: yfinance → Alpha Vantage
+- [ ] Daily comparison report (yfinance vs Alpha Vantage unusual flags)
+- [ ] Rate limiting: 500 req/day = 1 check per ticker every 3 hours
+
+**Phase 3.2 - Premium Upgrade Path (Unusual Whales)**
+- [ ] Test Unusual Whales free tier (Shamu plan) for SPY/QQQ
+- [ ] Compare custom anomaly logic vs Whales pre-built flags
+- [ ] If Whales superior: implement `UnusualWhalesProvider` and upgrade to paid
+- [ ] Add Discord webhook for instant unusual activity alerts (if paid plan)
+- [ ] Keep yfinance as fallback if Whales API down
 
 **Key Features:**
-- Real-time flow detection for large block trades
-- Volume anomaly detection (vs. 30-day average)
-- Discord alerts for significant flow events
+- Custom anomaly scoring (0-1) based on volume, OI, liquidity, premium
+- Volume spike detection (vs. 30-day rolling average)
+- Block trade identification (premium > $50k)
 - Historical flow data storage for pattern analysis
+- Discord alerts for significant flow events
+- Provider abstraction for easy swapping/upgrading
+
+**Technical Decisions:**
+- **No Tradier in V1:** Requires OAuth flow, adds complexity without critical value for MVP
+- **No Intrinio:** 2-week trial only, too expensive for indie project
+- **No Polygon.io:** Free tier excludes options data
+- **Memory Budget:** <100MB for yfinance pandas operations (within 512MB Render limit)
+
+**Dependencies:**
+- `yfinance` - Free Yahoo Finance API (will add in Phase 3.0)
+- `pandas==2.2.3` - Already installed (Phase 2)
+- `numpy==2.1.2` - Already installed (Phase 2)
+- Alpha Vantage API key (free tier, 500 req/day) - will add in Phase 3.1
 
 ### 🔹 Phase 4 – Trade Planning Tools (SPY/QQQ)
 **Status:** 🟢 Partial (Core complete, IV/EM pending)
@@ -229,24 +264,24 @@
 ## Priority Queue
 
 ### Immediate (This Week)
-1. Complete Phase 4 IV/EM endpoints
-2. Optimize memory usage in existing commands
-3. Add `/em` Discord command for expected move queries
+1. ✅ ~~Complete Phase 2 (News & Sentiment Engine)~~ - DONE
+2. Begin Phase 3.0 (Options Flow Monitor MVP with yfinance)
+3. Create flow provider architecture and custom anomaly detection
 
 ### Near-term (2-3 Weeks)
-1. Implement Phase 2 (News & Sentiment Engine)
-2. Add watchlist management API
-3. Optimize Docker builds for faster deployments
+1. Complete Phase 3.0 (yfinance flow detection + Discord `/flow` command)
+2. Implement Phase 3.1 (Add Alpha Vantage validation layer)
+3. Test and refine custom anomaly scoring logic
 
 ### Mid-term (1-2 Months)
-1. Implement Phase 3 (Options Flow Monitor)
-2. Complete Phase 5 (Deployment Hardening)
-3. Evaluate infrastructure upgrade path for V2
+1. Phase 3.2: Evaluate Unusual Whales free tier vs custom logic
+2. Decide on paid upgrade path (Whales premium vs stick with yfinance)
+3. Complete Phase 5 (Deployment Hardening) - memory optimization
 
 ### Long-term (3+ Months)
-1. Begin Version 2 development (Market Structure & Alerting)
-2. Enhanced bot interactions with user preferences
-3. Portfolio & trade analytics dashboard
+1. Phase 4 enhancements: Complete IV/EM endpoints, add `/em` Discord command
+2. Begin Version 2 development (Market Structure & Alerting with Tradier)
+3. Enhanced bot interactions with user preferences and portfolio tracking
 
 ---
 
