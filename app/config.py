@@ -83,6 +83,9 @@ class Settings(BaseSettings):
         default="https://finnhub.io/api/v1", description="Finnhub API base URL"
     )
 
+    # Alpha Vantage (Options data - Phase 3.1)
+    ALPHA_VANTAGE_API_KEY: str | None = Field(default=None, description="Alpha Vantage API key")
+
     # Discord Integration (Phase 8)
     DISCORD_BOT_TOKEN: str | None = Field(default=None, description="Discord bot token")
     DISCORD_WEBHOOK_URL: str | None = Field(

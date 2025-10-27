@@ -7,8 +7,10 @@ for resilience. Phase 3.0 MVP: yfinance only.
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from app.config import settings
 from app.utils.logger import app_logger
 
+from .alphavantage_provider import AlphaVantageFlowProvider
 from .base_provider import FlowProvider, OptionChain, UnusualTrade
 from .schwab_provider import SchwabFlowProvider
 from .yfinance_provider import YFinanceFlowProvider
@@ -18,16 +20,23 @@ class FlowProviderManager:
     """
     Manages fallback hierarchy for options flow providers.
 
-    Phase 3.0: Schwab (primary, works on cloud) → yfinance (fallback, local only)
-    Phase 3.2: Unusual Whales → Schwab → yfinance
+    Phase 3.1: Alpha Vantage (primary, free, cloud-friendly) → Schwab → yfinance
+    Phase 3.2: Unusual Whales → Alpha Vantage → Schwab → yfinance
     """
 
     def __init__(self):
-        """Initialize provider manager with Schwab as primary, yfinance as fallback."""
-        self.providers: list[FlowProvider] = [
-            SchwabFlowProvider(),  # Primary: Official API, works on cloud
-            YFinanceFlowProvider(),  # Fallback: Blocked on cloud, works locally
-        ]
+        """Initialize provider manager with Alpha Vantage as primary."""
+        self.providers: list[FlowProvider] = []
+
+        # Add Alpha Vantage if API key is configured
+        if settings.ALPHA_VANTAGE_API_KEY:
+            self.providers.append(AlphaVantageFlowProvider(api_key=settings.ALPHA_VANTAGE_API_KEY))
+
+        # Add Schwab (requires valid tokens)
+        self.providers.append(SchwabFlowProvider())
+
+        # Add yfinance (works locally, blocked on cloud)
+        self.providers.append(YFinanceFlowProvider())
 
     @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5))
     async def get_option_chain(self, symbol: str, expiration=None) -> OptionChain:
