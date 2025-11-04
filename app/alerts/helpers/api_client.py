@@ -450,6 +450,19 @@ class MarketInsightsAPI:
                 raise aiohttp.ClientError(data.get("detail", "Failed to refresh watchlist"))
             return data
 
+    async def fetch_flow(
+        self, symbol: str, min_score: float = 0.7, force_refresh: bool = False
+    ) -> dict[str, Any]:
+        """Fetch unusual options flow for a ticker."""
+        url = f"{self.base_url}/flow/{symbol.upper()}"
+        params = {"min_score": min_score, "force_refresh": str(force_refresh).lower()}
+        session = await self._get_session()
+        async with session.get(url, params=params, headers=self._auth_headers()) as response:
+            data = await response.json()
+            if response.status != 200:
+                raise aiohttp.ClientError(data.get("detail", "Failed to fetch flow"))
+            return data
+
 
 class NewsAPI:
     """Client wrapper for Phase 2 News & Sentiment API."""

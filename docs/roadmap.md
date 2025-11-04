@@ -46,29 +46,33 @@
 **Documentation:** See [docs/PHASE_2.md](docs/PHASE_2.md)
 
 ### 🔹 Phase 3 – Options Flow Monitor
-**Status:** 📋 Not Started
+**Status:** ✅ Phase 3.0 Complete | ✅ Phase 3.1 Complete | 📋 Phase 3.2 Not Started
 
 **Provider Strategy:**
-- **Phase 3.0 (MVP - Week 1):** yfinance (primary) with custom anomaly detection
-- **Phase 3.1 (Week 2-3):** Add Alpha Vantage as EOD validator
-- **Phase 3.2 (Month 2):** Evaluate Unusual Whales free tier, upgrade if superior
-- **V2 (Future):** Add Tradier for real-time data, Unusual Whales premium for alerts
+- **Phase 3.0 (MVP):** ✅ Schwab (primary), Alpha Vantage (fallback), yfinance (local dev)
+- **Phase 3.1:** ✅ Alpha Vantage integration complete
+- **Phase 3.2 (Next):** Evaluate Unusual Whales free tier, upgrade if superior
+- **V2 (Future):** Add instant Discord alerts, flow leaderboard, anomaly trends
 
-**Phase 3.0 MVP - Custom Flow Detection (yfinance)**
-- [ ] Create `FlowProvider` interface pattern (ABC)
-- [ ] Implement `YFinanceFlowProvider` with custom anomaly logic
-- [ ] Build anomaly detection: volume/OI ratio > 3.0, volume > 3× avg, bid-ask < 10%
-- [ ] Create `option_flow` database table for unusual activity storage
-- [ ] Add `/api/v1/flow/{ticker}` endpoint (returns unusual contracts)
-- [ ] Implement `FlowProviderManager` with yfinance-only fallback
-- [ ] Add Discord `/flow` command to query unusual activity
-- [ ] Focus: SPY, QQQ, + S&P 500 top 50 by market cap
+**Phase 3.0 MVP - Custom Flow Detection** ✅ Complete
+- [x] Create `FlowProvider` interface pattern (ABC)
+- [x] Implement `YFinanceFlowProvider` (local dev fallback)
+- [x] Implement `SchwabFlowProvider` (primary - real-time data)
+- [x] Implement `AlphaVantageFlowProvider` (EOD fallback)
+- [x] Build anomaly detection: volume/OI > 3.0, volume > 3× avg, bid-ask < 10%, premium > $50k
+- [x] Create `option_flow` database table for unusual activity storage
+- [x] Add `/api/v1/flow/{ticker}` endpoint (returns unusual contracts)
+- [x] Add `/api/v1/flow/{ticker}/history` endpoint (historical query)
+- [x] Implement `FlowProviderManager` with Schwab → Alpha Vantage → yfinance fallback
+- [x] Add Discord `/flow` command to query unusual activity
+- [x] Convert timestamps to EST with human-readable format
+- [x] Add `provider` field to API responses
+- [x] Focus: SPY, QQQ, + S&P 500 (all tickers with autocomplete)
 
-**Phase 3.1 - Validation Layer (Alpha Vantage)**
-- [ ] Implement `AlphaVantageFlowProvider`
-- [ ] Add to fallback hierarchy: yfinance → Alpha Vantage
-- [ ] Daily comparison report (yfinance vs Alpha Vantage unusual flags)
-- [ ] Rate limiting: 500 req/day = 1 check per ticker every 3 hours
+**Phase 3.1 - Alpha Vantage Integration** ✅ Complete
+- [x] Implement `AlphaVantageFlowProvider`
+- [x] Add to fallback hierarchy: Schwab → Alpha Vantage → yfinance
+- [x] Rate limiting: 25 req/day (free tier)
 
 **Phase 3.2 - Premium Upgrade Path (Unusual Whales)**
 - [ ] Test Unusual Whales free tier (Shamu plan) for SPY/QQQ

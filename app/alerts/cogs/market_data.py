@@ -606,6 +606,312 @@ class MarketDataCog(commands.Cog):
             for sym in matches
         ]
 
+    # -------------------------------------------------------------------------
+    # Options Flow (Phase 3)
+    # -------------------------------------------------------------------------
+    @app_commands.command(
+        name="flow",
+        description="Detect unusual options activity (high volume, block trades, etc.)",
+    )
+    @app_commands.describe(
+        ticker="Ticker symbol (e.g., SPY, QQQ, AAPL)",
+        min_score="Minimum anomaly score (0.0-1.0, default 0.7)",
+        force_refresh="Force fresh detection (ignores 1hr cache)",
+    )
+    async def flow(
+        self,
+        interaction: discord.Interaction,
+        ticker: str,
+        min_score: float = 0.7,
+        force_refresh: bool = False,
+    ) -> None:
+        """Show unusual options flow for a ticker."""
+        await interaction.response.defer()
+
+        # Validate min_score range
+        if not 0.0 <= min_score <= 1.0:
+            await interaction.followup.send("❌ `min_score` must be between 0.0 and 1.0")
+            return
+
+        try:
+            data = await self.bot.market_api.fetch_flow(
+                ticker, min_score=min_score, force_refresh=force_refresh
+            )
+        except aiohttp.ClientError as exc:
+            await interaction.followup.send(f"❌ Unable to fetch flow: {exc}")
+            return
+
+        symbol = data.get("symbol", ticker.upper())
+        detected_count = data.get("detected_count", 0)
+        unusual_trades = data.get("unusual_trades", [])
+        provider = data.get("provider", "unknown")
+        detection_time = data.get("detection_time", "")
+
+        if detected_count == 0:
+            embed = discord.Embed(
+                title=f"📊 {symbol} Options Flow",
+                description=f"No unusual activity detected (min_score ≥ {min_score:.2f})",
+                color=discord.Color.light_gray(),
+                timestamp=discord.utils.utcnow(),
+            )
+            embed.set_footer(text=f"Data source: {provider} • {detection_time}")
+            await interaction.followup.send(embed=embed)
+            return
+
+        # Show summary embed with top 5 unusual trades
+        color = discord.Color.gold()
+        embed = discord.Embed(
+            title=f"🔥 {symbol} Unusual Options Flow",
+            description=f"Detected {detected_count} unusual contracts (score ≥ {min_score:.2f})",
+            color=color,
+            timestamp=discord.utils.utcnow(),
+        )
+
+        # Show top 5 trades by anomaly score
+        top_trades = sorted(unusual_trades, key=lambda t: t["anomaly_score"], reverse=True)[:5]
+
+        for i, trade in enumerate(top_trades, 1):
+            contract = trade["contract_symbol"]
+            option_type = trade["option_type"].upper()
+            strike = trade["strike"]
+            expiration = trade["expiration"]
+            volume = trade["volume"]
+            open_interest = trade["open_interest"]
+            vol_oi_ratio = trade["volume_oi_ratio"]
+            premium = trade["premium"]
+            score = trade["anomaly_score"]
+            flags = ", ".join(trade["flags"])
+
+            # Format premium in millions/thousands
+            if premium >= 1_000_000:
+                premium_str = f"${premium / 1_000_000:.2f}M"
+            elif premium >= 1_000:
+                premium_str = f"${premium / 1_000:.1f}k"
+            else:
+                premium_str = f"${premium:.0f}"
+
+            field_value = (
+                f"**Strike:** ${strike:.2f} {option_type}\n"
+                f"**Expiration:** {expiration}\n"
+                f"**Volume:** {volume:,} | **OI:** {open_interest:,}\n"
+                f"**Vol/OI:** {vol_oi_ratio:.2f}x | **Premium:** {premium_str}\n"
+                f"**Score:** {score:.2f} | **Flags:** {flags}"
+            )
+
+            embed.add_field(
+                name=f"#{i}: {contract}",
+                value=field_value,
+                inline=False,
+            )
+
+        embed.set_footer(text=f"Data source: {provider} • {detection_time}")
+
+        await interaction.followup.send(embed=embed)
+
+    @flow.autocomplete("ticker")
+    async def flow_ticker_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for /flow ticker."""
+        _ = interaction
+        matches = self.bot.symbol_service.matches(current)
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
+
+    # -------------------------------------------------------------------------
+    # Flow Subscriptions (Phase 3.2 - Automated Alerts)
+    # -------------------------------------------------------------------------
+    @app_commands.command(
+        name="flow-subscribe",
+        description="Subscribe to automatic unusual flow alerts for a ticker",
+    )
+    @app_commands.describe(
+        ticker="Ticker symbol (e.g., SPY, QQQ)",
+        min_score="Minimum anomaly score for alerts (0.0-1.0, default 0.75)",
+    )
+    async def flow_subscribe(
+        self,
+        interaction: discord.Interaction,
+        ticker: str,
+        min_score: float = 0.75,
+    ) -> None:
+        """Subscribe to unusual flow alerts for a ticker."""
+        await interaction.response.defer(ephemeral=True)
+
+        # Validate min_score
+        if not 0.0 <= min_score <= 1.0:
+            await interaction.followup.send(
+                "❌ `min_score` must be between 0.0 and 1.0", ephemeral=True
+            )
+            return
+
+        symbol = ticker.upper().strip()
+        user_id = str(interaction.user.id)
+        channel_id = str(interaction.channel_id)
+
+        try:
+            url = f"{self.bot.api_client.base_url}/api/v1/flow/subscribe"
+            payload = {
+                "user_id": user_id,
+                "symbol": symbol,
+                "channel_id": channel_id,
+                "min_score": min_score,
+            }
+
+            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
+                async with session.post(url, json=payload) as response:
+                    if response.status == 200:
+                        await interaction.followup.send(
+                            f"✅ Subscribed to **{symbol}** flow alerts (score ≥ {min_score:.2f})\n"
+                            f"You'll receive notifications in this channel when unusual activity is detected.",
+                            ephemeral=True,
+                        )
+                    elif response.status == 409:
+                        await interaction.followup.send(
+                            f"ℹ️ You're already subscribed to **{symbol}** flow alerts.\n"
+                            f"Use `/flow-unsubscribe {symbol}` to remove, then resubscribe with new settings.",
+                            ephemeral=True,
+                        )
+                    else:
+                        error_data = await response.json()
+                        await interaction.followup.send(
+                            f"❌ Failed to subscribe: {error_data.get('detail', 'Unknown error')}",
+                            ephemeral=True,
+                        )
+        except Exception as exc:
+            self.bot.logger.error("Error in /flow-subscribe", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {exc}", ephemeral=True)
+
+    @flow_subscribe.autocomplete("ticker")
+    async def flow_subscribe_ticker_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for /flow-subscribe ticker."""
+        _ = interaction
+        matches = self.bot.symbol_service.matches(current)
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
+
+    @app_commands.command(
+        name="flow-unsubscribe",
+        description="Unsubscribe from unusual flow alerts for a ticker",
+    )
+    @app_commands.describe(ticker="Ticker symbol (e.g., SPY, QQQ)")
+    async def flow_unsubscribe(self, interaction: discord.Interaction, ticker: str) -> None:
+        """Unsubscribe from flow alerts for a ticker."""
+        await interaction.response.defer(ephemeral=True)
+
+        symbol = ticker.upper().strip()
+        user_id = str(interaction.user.id)
+
+        try:
+            url = f"{self.bot.api_client.base_url}/api/v1/flow/unsubscribe"
+            payload = {"user_id": user_id, "symbol": symbol}
+
+            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
+                async with session.post(url, json=payload) as response:
+                    if response.status == 200:
+                        await interaction.followup.send(
+                            f"✅ Unsubscribed from **{symbol}** flow alerts", ephemeral=True
+                        )
+                    elif response.status == 404:
+                        await interaction.followup.send(
+                            f"ℹ️ You don't have an active subscription to **{symbol}**",
+                            ephemeral=True,
+                        )
+                    else:
+                        error_data = await response.json()
+                        await interaction.followup.send(
+                            f"❌ Failed to unsubscribe: {error_data.get('detail', 'Unknown error')}",
+                            ephemeral=True,
+                        )
+        except Exception as exc:
+            self.bot.logger.error("Error in /flow-unsubscribe", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {exc}", ephemeral=True)
+
+    @flow_unsubscribe.autocomplete("ticker")
+    async def flow_unsubscribe_ticker_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for /flow-unsubscribe ticker."""
+        _ = interaction
+        matches = self.bot.symbol_service.matches(current)
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
+
+    @app_commands.command(
+        name="flow-subscriptions",
+        description="List your active flow alert subscriptions",
+    )
+    async def flow_subscriptions(self, interaction: discord.Interaction) -> None:
+        """List user's flow subscriptions."""
+        await interaction.response.defer(ephemeral=True)
+
+        user_id = str(interaction.user.id)
+
+        try:
+            url = f"{self.bot.api_client.base_url}/api/v1/flow/subscriptions/{user_id}"
+
+            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        error_data = await response.json()
+                        await interaction.followup.send(
+                            f"❌ Failed to fetch subscriptions: {error_data.get('detail', 'Unknown error')}",
+                            ephemeral=True,
+                        )
+                        return
+
+                    data = await response.json()
+                    subscriptions = data.get("subscriptions", [])
+
+                    if not subscriptions:
+                        await interaction.followup.send(
+                            "📭 You don't have any active flow subscriptions.\n"
+                            "Use `/flow-subscribe` to get alerts for unusual options activity!",
+                            ephemeral=True,
+                        )
+                        return
+
+                    embed = discord.Embed(
+                        title="📊 Your Flow Alert Subscriptions",
+                        description=f"You're subscribed to {len(subscriptions)} ticker(s)",
+                        color=discord.Color.blue(),
+                    )
+
+                    for sub in subscriptions[:25]:  # Discord max 25 fields
+                        symbol = sub.get("symbol", "???")
+                        min_score = sub.get("min_score", 0.75)
+                        created_at = sub.get("created_at", "")
+
+                        embed.add_field(
+                            name=f"📍 {symbol}",
+                            value=f"Min Score: {min_score:.2f} • Since: {created_at}",
+                            inline=True,
+                        )
+
+                    embed.set_footer(
+                        text="Use /flow-unsubscribe to remove • Alerts sent to this channel"
+                    )
+
+                    await interaction.followup.send(embed=embed, ephemeral=True)
+
+        except Exception as exc:
+            self.bot.logger.error("Error in /flow-subscriptions", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {exc}", ephemeral=True)
+
 
 async def setup(bot: VolarisBot) -> None:
     """Register the market data cog."""

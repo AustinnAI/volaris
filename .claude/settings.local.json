@@ -39,7 +39,9 @@
       "Bash(venv/bin/alembic history)",
       "Bash(for f in /Users/aidaewor/Dev/volaris/app/alerts/cogs/*.py)",
       "Bash(done)",
-      "Bash(venv/bin/alembic revision --autogenerate -m \"add_option_flow_table\")"
+      "Bash(venv/bin/alembic revision --autogenerate -m \"add_option_flow_table\")",
+      "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table\")",
+      "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table_v2\")"
     ],
     "deny": [],
     "ask": []

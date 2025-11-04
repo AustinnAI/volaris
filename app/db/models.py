@@ -199,6 +199,11 @@ class Ticker(TimestampMixin, Base):
         back_populates="ticker",
         cascade="all, delete-orphan",
     )
+    flow_subscriptions: Mapped[list[FlowSubscription]] = relationship(  # type: ignore[name-defined]
+        "FlowSubscription",
+        back_populates="ticker",
+        cascade="all, delete-orphan",
+    )
 
 
 class Watchlist(TimestampMixin, Base):
@@ -420,6 +425,31 @@ class PriceStream(TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("ticker_id", "channel_id", name="uq_price_stream_channel"),
         Index("ix_price_streams_next_run", "next_run_at"),
+    )
+
+
+class FlowSubscription(TimestampMixin, Base):
+    """User subscription to unusual options flow alerts for specific tickers."""
+
+    __tablename__ = "flow_subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False)  # Discord user ID
+    ticker_id: Mapped[int] = mapped_column(
+        ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False
+    )
+    channel_id: Mapped[str] = mapped_column(String(64), nullable=False)  # Where to send alerts
+    min_score: Mapped[Decimal] = mapped_column(
+        Numeric(3, 2), nullable=False, server_default="0.75"
+    )  # Minimum anomaly score (0.0-1.0)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+
+    ticker: Mapped[Ticker] = relationship("Ticker", back_populates="flow_subscriptions")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "ticker_id", name="uq_flow_subscription_user_ticker"),
+        Index("ix_flow_subscriptions_user", "user_id"),
+        Index("ix_flow_subscriptions_ticker_active", "ticker_id", "is_active"),
     )
 
 

@@ -1,0 +1,961 @@
+(venv) Austins-MacBook-Air-2:volaris aidaewor$ curl -s "https://volaris-yz19.onrender.com/api/v1/flow/SPY?min_score=0.5" | jq
+{
+  "symbol": "SPY",
+  "detected_count": 50,
+  "unusual_trades": [
+    {
+      "contract_symbol": "SPY   251027C00679000",
+      "option_type": "call",
+      "strike": 679.0,
+      "expiration": "2025-10-27",
+      "last_price": 4.6,
+      "volume": 13464,
+      "open_interest": 4095,
+      "volume_oi_ratio": 3.29,
+      "premium": 6193440.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.662715+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251027C00682000",
+      "option_type": "call",
+      "strike": 682.0,
+      "expiration": "2025-10-27",
+      "last_price": 1.71,
+      "volume": 118380,
+      "open_interest": 1470,
+      "volume_oi_ratio": 80.53,
+      "premium": 20242980.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.662745+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251027C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-10-27",
+      "last_price": 0.88,
+      "volume": 363171,
+      "open_interest": 5365,
+      "volume_oi_ratio": 67.69,
+      "premium": 31959048.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.662755+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251027C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-10-27",
+      "last_price": 0.33,
+      "volume": 333267,
+      "open_interest": 12402,
+      "volume_oi_ratio": 26.87,
+      "premium": 10997811.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.662764+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251027C00685000",
+      "option_type": "call",
+      "strike": 685.0,
+      "expiration": "2025-10-27",
+      "last_price": 0.11,
+      "volume": 208519,
+      "open_interest": 1762,
+      "volume_oi_ratio": 118.34,
+      "premium": 2293709.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.662774+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251028C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-10-28",
+      "last_price": 1.83,
+      "volume": 47936,
+      "open_interest": 2741,
+      "volume_oi_ratio": 17.49,
+      "premium": 8772288.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663072+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251028C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-10-28",
+      "last_price": 1.22,
+      "volume": 49609,
+      "open_interest": 6470,
+      "volume_oi_ratio": 7.67,
+      "premium": 6052298.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663082+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251028C00685000",
+      "option_type": "call",
+      "strike": 685.0,
+      "expiration": "2025-10-28",
+      "last_price": 0.77,
+      "volume": 28038,
+      "open_interest": 2116,
+      "volume_oi_ratio": 13.25,
+      "premium": 2158926.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663091+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251028C00687000",
+      "option_type": "call",
+      "strike": 687.0,
+      "expiration": "2025-10-28",
+      "last_price": 0.26,
+      "volume": 14452,
+      "open_interest": 1517,
+      "volume_oi_ratio": 9.53,
+      "premium": 375752.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663111+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251028C00688000",
+      "option_type": "call",
+      "strike": 688.0,
+      "expiration": "2025-10-28",
+      "last_price": 0.14,
+      "volume": 9311,
+      "open_interest": 2450,
+      "volume_oi_ratio": 3.8,
+      "premium": 130354.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663120+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00682000",
+      "option_type": "call",
+      "strike": 682.0,
+      "expiration": "2025-10-29",
+      "last_price": 3.74,
+      "volume": 3221,
+      "open_interest": 629,
+      "volume_oi_ratio": 5.12,
+      "premium": 1204654.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663366+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-10-29",
+      "last_price": 3.1,
+      "volume": 7156,
+      "open_interest": 1152,
+      "volume_oi_ratio": 6.21,
+      "premium": 2218360.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663376+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-10-29",
+      "last_price": 2.49,
+      "volume": 4380,
+      "open_interest": 962,
+      "volume_oi_ratio": 4.55,
+      "premium": 1090620.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663385+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00685000",
+      "option_type": "call",
+      "strike": 685.0,
+      "expiration": "2025-10-29",
+      "last_price": 2.0,
+      "volume": 6932,
+      "open_interest": 1447,
+      "volume_oi_ratio": 4.79,
+      "premium": 1386400.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663405+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00687000",
+      "option_type": "call",
+      "strike": 687.0,
+      "expiration": "2025-10-29",
+      "last_price": 1.17,
+      "volume": 3156,
+      "open_interest": 965,
+      "volume_oi_ratio": 3.27,
+      "premium": 369252.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663424+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00688000",
+      "option_type": "call",
+      "strike": 688.0,
+      "expiration": "2025-10-29",
+      "last_price": 0.87,
+      "volume": 2174,
+      "open_interest": 637,
+      "volume_oi_ratio": 3.41,
+      "premium": 189138.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663432+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00689000",
+      "option_type": "call",
+      "strike": 689.0,
+      "expiration": "2025-10-29",
+      "last_price": 0.62,
+      "volume": 7929,
+      "open_interest": 1557,
+      "volume_oi_ratio": 5.09,
+      "premium": 491598.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663441+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251029C00691000",
+      "option_type": "call",
+      "strike": 691.0,
+      "expiration": "2025-10-29",
+      "last_price": 0.32,
+      "volume": 2128,
+      "open_interest": 136,
+      "volume_oi_ratio": 15.65,
+      "premium": 68096.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.663458+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251030C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-10-30",
+      "last_price": 3.5,
+      "volume": 1968,
+      "open_interest": 428,
+      "volume_oi_ratio": 4.6,
+      "premium": 688800.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748497+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251030C00686000",
+      "option_type": "call",
+      "strike": 686.0,
+      "expiration": "2025-10-30",
+      "last_price": 2.46,
+      "volume": 674,
+      "open_interest": 222,
+      "volume_oi_ratio": 3.04,
+      "premium": 165804.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748509+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251031C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-10-31",
+      "last_price": 4.76,
+      "volume": 12749,
+      "open_interest": 3331,
+      "volume_oi_ratio": 3.83,
+      "premium": 6068524.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748716+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00667000",
+      "option_type": "call",
+      "strike": 667.0,
+      "expiration": "2025-11-03",
+      "last_price": 17.84,
+      "volume": 89,
+      "open_interest": 0,
+      "volume_oi_ratio": 89.0,
+      "premium": 158776.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748861+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-11-03",
+      "last_price": 5.3,
+      "volume": 5436,
+      "open_interest": 812,
+      "volume_oi_ratio": 6.69,
+      "premium": 2881080.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748935+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-11-03",
+      "last_price": 4.73,
+      "volume": 800,
+      "open_interest": 219,
+      "volume_oi_ratio": 3.65,
+      "premium": 378400.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748940+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00687000",
+      "option_type": "call",
+      "strike": 687.0,
+      "expiration": "2025-11-03",
+      "last_price": 3.18,
+      "volume": 626,
+      "open_interest": 61,
+      "volume_oi_ratio": 10.26,
+      "premium": 199068.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748954+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00688000",
+      "option_type": "call",
+      "strike": 688.0,
+      "expiration": "2025-11-03",
+      "last_price": 2.71,
+      "volume": 1467,
+      "open_interest": 301,
+      "volume_oi_ratio": 4.87,
+      "premium": 397557.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748960+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00689000",
+      "option_type": "call",
+      "strike": 689.0,
+      "expiration": "2025-11-03",
+      "last_price": 2.28,
+      "volume": 986,
+      "open_interest": 158,
+      "volume_oi_ratio": 6.24,
+      "premium": 224808.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748965+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00690000",
+      "option_type": "call",
+      "strike": 690.0,
+      "expiration": "2025-11-03",
+      "last_price": 1.93,
+      "volume": 3790,
+      "open_interest": 718,
+      "volume_oi_ratio": 5.28,
+      "premium": 731470.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.748970+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251103C00700000",
+      "option_type": "call",
+      "strike": 700.0,
+      "expiration": "2025-11-03",
+      "last_price": 0.24,
+      "volume": 3346,
+      "open_interest": 763,
+      "volume_oi_ratio": 4.39,
+      "premium": 80304.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749023+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251104C00677000",
+      "option_type": "call",
+      "strike": 677.0,
+      "expiration": "2025-11-04",
+      "last_price": 9.76,
+      "volume": 87,
+      "open_interest": 14,
+      "volume_oi_ratio": 6.21,
+      "premium": 84912.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749156+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251104C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-11-04",
+      "last_price": 5.64,
+      "volume": 860,
+      "open_interest": 153,
+      "volume_oi_ratio": 5.62,
+      "premium": 485040.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749213+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251104C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-11-04",
+      "last_price": 5.03,
+      "volume": 317,
+      "open_interest": 20,
+      "volume_oi_ratio": 15.85,
+      "premium": 159451.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749223+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251104C00689000",
+      "option_type": "call",
+      "strike": 689.0,
+      "expiration": "2025-11-04",
+      "last_price": 2.59,
+      "volume": 241,
+      "open_interest": 20,
+      "volume_oi_ratio": 12.05,
+      "premium": 62419.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749274+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251104C00693000",
+      "option_type": "call",
+      "strike": 693.0,
+      "expiration": "2025-11-04",
+      "last_price": 1.36,
+      "volume": 887,
+      "open_interest": 20,
+      "volume_oi_ratio": 44.35,
+      "premium": 120632.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749325+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251104C00700000",
+      "option_type": "call",
+      "strike": 700.0,
+      "expiration": "2025-11-04",
+      "last_price": 0.31,
+      "volume": 1889,
+      "open_interest": 182,
+      "volume_oi_ratio": 10.38,
+      "premium": 58559.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749391+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251105C00677000",
+      "option_type": "call",
+      "strike": 677.0,
+      "expiration": "2025-11-05",
+      "last_price": 9.95,
+      "volume": 70,
+      "open_interest": 2,
+      "volume_oi_ratio": 35.0,
+      "premium": 69650.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749487+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251105C00682000",
+      "option_type": "call",
+      "strike": 682.0,
+      "expiration": "2025-11-05",
+      "last_price": 6.51,
+      "volume": 149,
+      "open_interest": 23,
+      "volume_oi_ratio": 6.48,
+      "premium": 96999.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749530+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251105C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-11-05",
+      "last_price": 6.14,
+      "volume": 387,
+      "open_interest": 102,
+      "volume_oi_ratio": 3.79,
+      "premium": 237618.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749541+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251105C00684000",
+      "option_type": "call",
+      "strike": 684.0,
+      "expiration": "2025-11-05",
+      "last_price": 5.53,
+      "volume": 510,
+      "open_interest": 65,
+      "volume_oi_ratio": 7.85,
+      "premium": 282030.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749579+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251106C00681000",
+      "option_type": "call",
+      "strike": 681.0,
+      "expiration": "2025-11-06",
+      "last_price": 7.6,
+      "volume": 247,
+      "open_interest": 0,
+      "volume_oi_ratio": 247.0,
+      "premium": 187720.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749871+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251106C00682000",
+      "option_type": "call",
+      "strike": 682.0,
+      "expiration": "2025-11-06",
+      "last_price": 7.02,
+      "volume": 105,
+      "open_interest": 2,
+      "volume_oi_ratio": 52.5,
+      "premium": 73710.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749881+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251106C00683000",
+      "option_type": "call",
+      "strike": 683.0,
+      "expiration": "2025-11-06",
+      "last_price": 6.37,
+      "volume": 323,
+      "open_interest": 0,
+      "volume_oi_ratio": 323.0,
+      "premium": 205751.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.749891+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251107C00692000",
+      "option_type": "call",
+      "strike": 692.0,
+      "expiration": "2025-11-07",
+      "last_price": 2.52,
+      "volume": 341,
+      "open_interest": 0,
+      "volume_oi_ratio": 341.0,
+      "premium": 85932.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.750388+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251110C00670000",
+      "option_type": "call",
+      "strike": 670.0,
+      "expiration": "2025-11-10",
+      "last_price": 17.25,
+      "volume": 38,
+      "open_interest": 0,
+      "volume_oi_ratio": 38.0,
+      "premium": 65550.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.750477+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251110C00675000",
+      "option_type": "call",
+      "strike": 675.0,
+      "expiration": "2025-11-10",
+      "last_price": 13.12,
+      "volume": 50,
+      "open_interest": 0,
+      "volume_oi_ratio": 50.0,
+      "premium": 65600.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.750482+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251110C00680000",
+      "option_type": "call",
+      "strike": 680.0,
+      "expiration": "2025-11-10",
+      "last_price": 9.39,
+      "volume": 437,
+      "open_interest": 0,
+      "volume_oi_ratio": 437.0,
+      "premium": 410343.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.750488+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251110C00685000",
+      "option_type": "call",
+      "strike": 685.0,
+      "expiration": "2025-11-10",
+      "last_price": 6.26,
+      "volume": 403,
+      "open_interest": 0,
+      "volume_oi_ratio": 403.0,
+      "premium": 252278.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.750494+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251110C00695000",
+      "option_type": "call",
+      "strike": 695.0,
+      "expiration": "2025-11-10",
+      "last_price": 1.99,
+      "volume": 325,
+      "open_interest": 0,
+      "volume_oi_ratio": 325.0,
+      "premium": 64675.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.750505+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251205C00673000",
+      "option_type": "call",
+      "strike": 673.0,
+      "expiration": "2025-12-05",
+      "last_price": 20.66,
+      "volume": 81,
+      "open_interest": 25,
+      "volume_oi_ratio": 3.24,
+      "premium": 167346.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.751323+00:00"
+    },
+    {
+      "contract_symbol": "SPY   251205C00674000",
+      "option_type": "call",
+      "strike": 674.0,
+      "expiration": "2025-12-05",
+      "last_price": 20.31,
+      "volume": 96,
+      "open_interest": 17,
+      "volume_oi_ratio": 5.65,
+      "premium": 194976.0,
+      "anomaly_score": 1.0,
+      "flags": [
+        "high_volume",
+        "volume_spike",
+        "liquid",
+        "block_trade"
+      ],
+      "detected_at": "2025-10-27T16:20:36.751328+00:00"
+    }
+  ],
+  "min_score": 0.5,
+  "detection_time": "2025-10-27T16:20:58.699647",
+  "provider": "cached"
+}
+(venv) Austins-MacBook-Air-2:volaris aidaewor$ 

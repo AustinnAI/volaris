@@ -1,0 +1,147 @@
+name: Unusual Flow Alerts
+
+on:
+  schedule:
+    # Market hours (9:30 AM - 4:00 PM ET = 13:30-20:00 UTC): Every 10 minutes
+    - cron: "*/10 13-20 * * 1-5"  # Mon-Fri, every 10 min during market hours
+
+  workflow_dispatch:
+    inputs:
+      min_score:
+        description: "Minimum anomaly score (0.0-1.0)"
+        required: false
+        default: "0.75"
+
+env:
+  VOLARIS_API_URL: ${{ secrets.VOLARIS_API_URL || 'https://volaris.onrender.com' }}
+  VOLARIS_API_TOKEN: ${{ secrets.VOLARIS_API_TOKEN }}
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+jobs:
+  scan-and-alert:
+    name: Scan Flow & Send Alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Scan Subscribed Tickers
+        id: scan
+        run: |
+          MIN_SCORE="${{ github.event.inputs.min_score || '0.75' }}"
+
+          echo "Scanning subscribed tickers for unusual flow (min_score=$MIN_SCORE)"
+
+          RESPONSE=$(curl -s -X GET \
+            "$VOLARIS_API_URL/api/v1/flow/scan?min_score=$MIN_SCORE" \
+            -H "Authorization: Bearer $VOLARIS_API_TOKEN" \
+            -H "Content-Type: application/json")
+
+          echo "Response: $RESPONSE"
+
+          # Save response to file for next step
+          echo "$RESPONSE" > scan_results.json
+
+          # Extract counts
+          SCANNED=$(echo "$RESPONSE" | jq -r '.scanned_count // 0')
+          DETECTED=$(echo "$RESPONSE" | jq -r '.detected_tickers // 0')
+
+          echo "✓ Scanned $SCANNED tickers, detected unusual activity in $DETECTED"
+          echo "scanned=$SCANNED" >> $GITHUB_OUTPUT
+          echo "detected=$DETECTED" >> $GITHUB_OUTPUT
+
+      - name: Send Discord Alerts
+        if: steps.scan.outputs.detected > 0
+        run: |
+          echo "Processing alerts for ${{ steps.scan.outputs.detected }} tickers with unusual activity"
+
+          # Read scan results
+          RESULTS=$(cat scan_results.json | jq -r '.results')
+
+          # Process each ticker with detected activity
+          echo "$RESULTS" | jq -c '.[] | select(.detected_count > 0)' | while read -r ticker_data; do
+            SYMBOL=$(echo "$ticker_data" | jq -r '.symbol')
+            DETECTED_COUNT=$(echo "$ticker_data" | jq -r '.detected_count')
+            TOP_SCORE=$(echo "$ticker_data" | jq -r '.top_score // 0')
+            PROVIDER=$(echo "$ticker_data" | jq -r '.provider')
+            UNUSUAL_TRADES=$(echo "$ticker_data" | jq -c '.unusual_trades')
+            SUBSCRIBERS=$(echo "$ticker_data" | jq -c '.subscribers')
+
+            echo "📊 $SYMBOL: $DETECTED_COUNT unusual contracts (top score: $TOP_SCORE)"
+
+            # Get top 3 trades for Discord embed
+            TOP_TRADES=$(echo "$UNUSUAL_TRADES" | jq -c '[limit(3; .[])]')
+
+            # Build Discord embed fields for top trades
+            FIELDS="[]"
+            TRADE_NUM=1
+            echo "$TOP_TRADES" | jq -c '.[]' | while read -r trade; do
+              CONTRACT=$(echo "$trade" | jq -r '.contract_symbol')
+              OPTION_TYPE=$(echo "$trade" | jq -r '.option_type' | tr '[:lower:]' '[:upper:]')
+              STRIKE=$(echo "$trade" | jq -r '.strike')
+              EXPIRATION=$(echo "$trade" | jq -r '.expiration')
+              VOLUME=$(echo "$trade" | jq -r '.volume')
+              OI=$(echo "$trade" | jq -r '.open_interest')
+              VOL_OI=$(echo "$trade" | jq -r '.volume_oi_ratio')
+              PREMIUM=$(echo "$trade" | jq -r '.premium')
+              SCORE=$(echo "$trade" | jq -r '.anomaly_score')
+              FLAGS=$(echo "$trade" | jq -r '.flags | join(", ")')
+
+              # Format premium (M/k notation)
+              if (( $(echo "$PREMIUM >= 1000000" | bc -l) )); then
+                PREMIUM_STR=$(echo "scale=2; $PREMIUM / 1000000" | bc)"M"
+              elif (( $(echo "$PREMIUM >= 1000" | bc -l) )); then
+                PREMIUM_STR=$(echo "scale=1; $PREMIUM / 1000" | bc)"k"
+              else
+                PREMIUM_STR=$(printf "%.0f" $PREMIUM)
+              fi
+
+              FIELD_VALUE="**Strike:** \$$STRIKE $OPTION_TYPE\n**Expiration:** $EXPIRATION\n**Volume:** $(printf "%'d" $VOLUME) | **OI:** $(printf "%'d" $OI)\n**Vol/OI:** ${VOL_OI}x | **Premium:** \$${PREMIUM_STR}\n**Score:** $SCORE | **Flags:** $FLAGS"
+
+              # Add field to embed (would need proper JSON construction in real impl)
+              echo "  #$TRADE_NUM: $CONTRACT (score: $SCORE)"
+              TRADE_NUM=$((TRADE_NUM + 1))
+            done
+
+            # Get unique channel IDs from subscribers
+            CHANNELS=$(echo "$SUBSCRIBERS" | jq -r '.[].channel_id' | sort -u)
+
+            # Send alert to each subscribed channel
+            echo "$CHANNELS" | while read -r CHANNEL_ID; do
+              echo "  → Sending alert to channel $CHANNEL_ID"
+
+              # Build Discord webhook payload
+              # Note: In production, you'd build proper JSON with embeds
+              # For now, sending simple content message
+              WEBHOOK_PAYLOAD=$(jq -n \
+                --arg content "🔥 **$SYMBOL Unusual Options Flow Detected**\n\n**Detected $DETECTED_COUNT unusual contracts** (top score: $TOP_SCORE)\n\nCheck \`/flow $SYMBOL\` for details.\n\n_Data source: $PROVIDER_" \
+                '{content: $content}')
+
+              # Send to Discord webhook (if configured)
+              if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+                curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+                  -H "Content-Type: application/json" \
+                  -d "$WEBHOOK_PAYLOAD" || echo "  ⚠️ Failed to send webhook"
+              else
+                echo "  ⚠️ DISCORD_WEBHOOK_URL not configured, skipping webhook"
+              fi
+
+              # Rate limit: Discord allows 30 req/min per webhook
+              sleep 0.5
+            done
+          done
+
+          echo "✓ Alerts sent for all detected tickers"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "Flow Alert Scan Summary:"
+          echo "  Scanned: ${{ steps.scan.outputs.scanned }} tickers"
+          echo "  Detected: ${{ steps.scan.outputs.detected }} with unusual activity"
+          echo "  Workflow: ${{ job.status }}"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "⚠️ Flow alerts workflow failed"
+          echo "Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
