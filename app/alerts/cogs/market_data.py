@@ -4,7 +4,6 @@ Market data and analytics slash commands.
 
 from __future__ import annotations
 
-from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 import aiohttp
@@ -269,174 +268,14 @@ class MarketDataCog(commands.Cog):
         ]
 
     # -------------------------------------------------------------------------
-    # Quote
+    # Quote - REMOVED (redundant with /price)
     # -------------------------------------------------------------------------
-    @app_commands.command(
-        name="quote", description="Get full quote with price, volume, and bid/ask"
-    )
-    @app_commands.describe(ticker="Ticker symbol (e.g., SPY, AAPL)")
-    async def quote(self, interaction: discord.Interaction, ticker: str) -> None:
-        """Return a richer quote with bid/ask context."""
-        await interaction.response.defer()
-
-        try:
-            symbol_clean = ticker.upper().strip()
-            await self._maybe_refresh_price(symbol_clean)
-            url = f"{self.bot.api_client.base_url}/api/v1/market/quote/{symbol_clean}"
-
-            # DEBUG: Log the URL being called
-            self.bot.logger.info(f"Calling quote API: {url}")
-
-            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        await interaction.followup.send(f"❌ API error: {error_text}")
-                        return
-                    data = await response.json()
-
-            price = data.get("price", 0.0)
-            bid = data.get("bid", 0.0)
-            ask = data.get("ask", 0.0)
-            volume = data.get("volume", 0)
-            avg_volume = data.get("avg_volume", volume)
-            change_pct = data.get("change_pct", 0.0)
-
-            # DEBUG: Log what API returned
-            self.bot.logger.info(
-                f"Quote API response for {symbol_clean}: change_pct={change_pct}, data={data}"
-            )
-
-            if change_pct > 0:
-                color = discord.Color.green()
-            elif change_pct < 0:
-                color = discord.Color.red()
-            else:
-                color = discord.Color.greyple()
-
-            embed = discord.Embed(title=f"📋 {symbol_clean} Quote", color=color)
-            embed.add_field(name="Last Price", value=f"**${price:.2f}**", inline=True)
-            embed.add_field(name="Bid", value=f"${bid:.2f}", inline=True)
-            embed.add_field(name="Ask", value=f"${ask:.2f}", inline=True)
-
-            spread = ask - bid
-            spread_pct = (spread / price * 100) if price > 0 else 0
-            embed.add_field(
-                name="Bid-Ask Spread", value=f"${spread:.2f} ({spread_pct:.2f}%)", inline=True
-            )
-            embed.add_field(name="Change", value=f"{change_pct:+.2f}%", inline=True)
-            embed.add_field(name="Volume", value=f"{volume:,}", inline=True)
-
-            if avg_volume > 0:
-                volume_ratio = volume / avg_volume
-                embed.add_field(name="Avg Volume", value=f"{avg_volume:,}", inline=True)
-                embed.add_field(name="Volume Ratio", value=f"{volume_ratio:.2f}x", inline=True)
-
-            embed.set_footer(text=f"Real-time quote • {symbol_clean}")
-
-            await interaction.followup.send(embed=embed)
-
-        except Exception as exc:  # pylint: disable=broad-except
-            self.bot.logger.error("Error in /quote", exc_info=True)
-            await interaction.followup.send(f"❌ Error: {exc}")
-
-    @quote.autocomplete("ticker")
-    async def quote_symbol_autocomplete(
-        self,
-        interaction: discord.Interaction,
-        current: str,
-    ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for /quote."""
-        _ = interaction
-        matches = self.bot.symbol_service.matches(current)
-        return [
-            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
-            for sym in matches
-        ]
+    # Entire /quote command commented out - use /price instead
 
     # -------------------------------------------------------------------------
-    # Earnings
+    # Earnings - REMOVED (low priority for V1 sentiment/flow focus)
     # -------------------------------------------------------------------------
-    @app_commands.command(name="earnings", description="Get next earnings date for a stock")
-    @app_commands.describe(ticker="Ticker symbol (e.g., AAPL)")
-    async def earnings(self, interaction: discord.Interaction, ticker: str) -> None:
-        """Return next earnings date and how far out it is."""
-        await interaction.response.defer()
-
-        try:
-            symbol_clean = ticker.upper().strip()
-            url = f"{self.bot.api_client.base_url}/api/v1/market/earnings/{symbol_clean}"
-
-            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        await interaction.followup.send(f"❌ API error: {error_text}")
-                        return
-                    data = await response.json()
-
-            earnings_date_str = data.get("earnings_date")
-            if not earnings_date_str:
-                await interaction.followup.send(f"❌ No earnings date available for {symbol_clean}")
-                return
-
-            earnings_date = datetime.fromisoformat(earnings_date_str.replace("Z", "+00:00")).date()
-            today = date.today()
-            days_until = (earnings_date - today).days
-
-            if days_until < 0:
-                color = discord.Color.greyple()
-                emoji = "📅"
-                status = "Past"
-            elif days_until <= 7:
-                color = discord.Color.red()
-                emoji = "⚠️"
-                status = "Imminent (Avoid trades)"
-            elif days_until <= 30:
-                color = discord.Color.gold()
-                emoji = "📊"
-                status = "Upcoming (Use caution)"
-            else:
-                color = discord.Color.green()
-                emoji = "✅"
-                status = "Far out (Safe to trade)"
-
-            embed = discord.Embed(title=f"{emoji} {symbol_clean} Earnings", color=color)
-            embed.add_field(
-                name="Next Earnings", value=earnings_date.strftime("%B %d, %Y"), inline=True
-            )
-            embed.add_field(name="Days Until", value=f"**{days_until}** days", inline=True)
-            embed.add_field(name="Status", value=status, inline=True)
-
-            if days_until <= 7:
-                recommendation = "❌ Avoid new positions (high IV crush risk, unpredictable moves)"
-            elif days_until <= 30:
-                recommendation = "⚠️ Use shorter DTE or wait (IV may be elevated)"
-            else:
-                recommendation = "✅ Safe to trade (no immediate earnings risk)"
-
-            embed.add_field(name="💡 Trading Recommendation", value=recommendation, inline=False)
-            embed.set_footer(text=f"Earnings data • {symbol_clean}")
-
-            await interaction.followup.send(embed=embed)
-
-        except Exception as exc:  # pylint: disable=broad-except
-            self.bot.logger.error("Error in /earnings", exc_info=True)
-            await interaction.followup.send(f"❌ Error: {exc}")
-
-    @earnings.autocomplete("ticker")
-    async def earnings_symbol_autocomplete(
-        self,
-        interaction: discord.Interaction,
-        current: str,
-    ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for /earnings."""
-        _ = interaction
-        matches = self.bot.symbol_service.matches(current)
-        return [
-            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
-            for sym in matches
-        ]
+    # Entire /earnings command commented out - may be added back in Phase 4
 
     # -------------------------------------------------------------------------
     # 52-week range

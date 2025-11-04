@@ -1,5 +1,9 @@
 """
 Calculator-style slash commands (POP, contracts, risk, DTE, delta, spread checks).
+
+PHASE 4 - COMMENTED OUT UNTIL IV/EM DATA IMPLEMENTED
+This cog contains /pop, /contracts, /risk, /dte, /delta, /spread-width commands.
+These are disabled in V1 MVP to focus on news sentiment + options flow.
 """
 
 from __future__ import annotations
@@ -395,6 +399,7 @@ class CalculatorsCog(commands.Cog):
         ]
 
 
-async def setup(bot: VolarisBot) -> None:
-    """Register the calculators cog."""
-    await bot.add_cog(CalculatorsCog(bot))
+# PHASE 4 - Commented out until IV/EM data implemented
+# async def setup(bot: VolarisBot) -> None:
+#     """Register the calculators cog."""
+#     await bot.add_cog(CalculatorsCog(bot))

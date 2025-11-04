@@ -1,5 +1,9 @@
 """
 Strategy planning and sizing slash commands.
+
+PHASE 4 - COMMENTED OUT UNTIL IV/EM DATA IMPLEMENTED
+This cog contains /plan, /calc, /size, /breakeven commands.
+These are disabled in V1 MVP to focus on news sentiment + options flow.
 """
 
 from __future__ import annotations
@@ -662,6 +666,7 @@ class StrategyCog(commands.Cog):
             await interaction.followup.send(f"❌ Error: {exc}")
 
 
-async def setup(bot: VolarisBot) -> None:
-    """Add the strategy cog to the bot."""
-    await bot.add_cog(StrategyCog(bot))
+# PHASE 4 - Commented out until IV/EM data implemented
+# async def setup(bot: VolarisBot) -> None:
+#     """Add the strategy cog to the bot."""
+#     await bot.add_cog(StrategyCog(bot))
