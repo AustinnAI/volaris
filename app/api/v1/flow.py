@@ -24,6 +24,10 @@ EST = ZoneInfo("America/New_York")
 router = APIRouter(prefix="/flow", tags=["options-flow"])
 
 
+# NOTE: Route order matters! More specific routes (like /scan) must come before
+# catch-all routes (like /{symbol}) to avoid incorrect matching.
+
+
 class UnusualTradeResponse(BaseModel):
     """Response model for a single unusual trade."""
 
@@ -50,6 +54,188 @@ class FlowResponse(BaseModel):
     min_score: float
     detection_time: str
     provider: str  # Which provider was used (Schwab, AlphaVantage, YFinance)
+
+
+class SubscriptionResponse(BaseModel):
+    """Response model for a single subscription."""
+
+    symbol: str
+    min_score: float
+    channel_id: str
+    created_at: str
+
+
+class SubscriptionsListResponse(BaseModel):
+    """Response model for listing user subscriptions."""
+
+    user_id: str
+    subscription_count: int
+    subscriptions: list[SubscriptionResponse]
+
+
+class BatchScanResult(BaseModel):
+    """Result for a single ticker in batch scan."""
+
+    symbol: str
+    detected_count: int
+    top_score: float | None
+    unusual_trades: list[UnusualTradeResponse]
+    provider: str
+    subscribers: list[dict]  # List of {user_id, channel_id, min_score}
+
+
+class BatchScanResponse(BaseModel):
+    """Response model for batch flow scan."""
+
+    scanned_count: int
+    detected_tickers: int
+    results: list[BatchScanResult]
+    scan_time: str
+
+
+# -------------------------------------------------------------------------
+# SPECIFIC ROUTES (must come before catch-all /{symbol} route)
+# -------------------------------------------------------------------------
+
+
+@router.get("/scan", response_model=BatchScanResponse)
+async def batch_scan_subscribed_tickers(
+    min_score: float = Query(default=0.75, ge=0.0, le=1.0),
+    db: AsyncSession = Depends(get_db),
+) -> BatchScanResponse:
+    """
+    Batch scan all tickers with active subscriptions for unusual flow.
+
+    This endpoint is called by GitHub Actions workflow to detect unusual activity
+    and notify subscribed users via Discord webhooks.
+
+    Args:
+        min_score: Global minimum anomaly score (can be overridden per subscription).
+
+    Returns:
+        BatchScanResponse with detected unusual activity and subscriber lists.
+    """
+    try:
+        # Get all tickers with active subscriptions
+        stmt = (
+            select(Ticker, FlowSubscription)
+            .join(FlowSubscription, FlowSubscription.ticker_id == Ticker.id)
+            .where(FlowSubscription.is_active)
+            .order_by(Ticker.symbol)
+        )
+        result = await db.execute(stmt)
+        rows = result.all()
+
+        # Group subscriptions by ticker
+        ticker_subs = {}
+        for ticker, sub in rows:
+            if ticker.symbol not in ticker_subs:
+                ticker_subs[ticker.symbol] = {"ticker": ticker, "subscribers": []}
+
+            ticker_subs[ticker.symbol]["subscribers"].append(
+                {
+                    "user_id": sub.user_id,
+                    "channel_id": sub.channel_id,
+                    "min_score": float(sub.min_score),
+                }
+            )
+
+        # Scan each ticker for unusual flow
+        flow_service = FlowService()
+        results = []
+        detected_tickers = 0
+
+        for symbol, data in ticker_subs.items():
+            try:
+                # Use lowest min_score from all subscribers for this ticker
+                ticker_min_score = min(
+                    [sub["min_score"] for sub in data["subscribers"]],
+                    default=min_score,
+                )
+
+                # Detect unusual activity (with 1hr cache)
+                flow_records = await flow_service.get_recent_unusual_activity(
+                    db, symbol, hours=1, min_score=ticker_min_score
+                )
+
+                # If no cached data, fetch fresh
+                if not flow_records:
+                    flow_records, provider_name = (
+                        await flow_service.detect_and_store_unusual_activity(
+                            db, symbol, min_score=ticker_min_score
+                        )
+                    )
+                else:
+                    provider_name = "cached"
+
+                # Convert to response format
+                unusual_trades = []
+                top_score = None
+
+                for record in flow_records:
+                    import json
+
+                    flags = json.loads(record.flags) if record.flags else []
+                    detected_at_est = record.detected_at.astimezone(EST).strftime(
+                        "%b %d, %Y %I:%M:%S %p EST"
+                    )
+
+                    unusual_trades.append(
+                        UnusualTradeResponse(
+                            contract_symbol=record.contract_symbol,
+                            option_type=record.option_type,
+                            strike=float(record.strike),
+                            expiration=record.expiration.isoformat(),
+                            last_price=float(record.last_price),
+                            volume=record.volume,
+                            open_interest=record.open_interest,
+                            volume_oi_ratio=float(record.volume_oi_ratio),
+                            premium=float(record.premium),
+                            anomaly_score=float(record.anomaly_score),
+                            flags=flags,
+                            detected_at=detected_at_est,
+                        )
+                    )
+
+                    if top_score is None or float(record.anomaly_score) > top_score:
+                        top_score = float(record.anomaly_score)
+
+                if unusual_trades:
+                    detected_tickers += 1
+
+                results.append(
+                    BatchScanResult(
+                        symbol=symbol,
+                        detected_count=len(unusual_trades),
+                        top_score=top_score,
+                        unusual_trades=unusual_trades,
+                        provider=provider_name,
+                        subscribers=data["subscribers"],
+                    )
+                )
+
+            except Exception as ticker_error:
+                app_logger.error(f"Failed to scan {symbol} in batch: {ticker_error}", exc_info=True)
+                # Continue with next ticker
+                continue
+
+        scan_time_est = datetime.now(EST).strftime("%b %d, %Y %I:%M:%S %p EST")
+
+        return BatchScanResponse(
+            scanned_count=len(ticker_subs),
+            detected_tickers=detected_tickers,
+            results=results,
+            scan_time=scan_time_est,
+        )
+
+    except Exception as e:
+        app_logger.error(f"Batch flow scan failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Batch scan failed")
+
+
+# -------------------------------------------------------------------------
+# CATCH-ALL ROUTES (must come after specific routes)
+# -------------------------------------------------------------------------
 
 
 @router.get("/{symbol}", response_model=FlowResponse)
@@ -240,43 +426,6 @@ class UnsubscribeRequest(BaseModel):
     symbol: str = Field(..., description="Ticker symbol")
 
 
-class SubscriptionResponse(BaseModel):
-    """Response model for a single subscription."""
-
-    symbol: str
-    min_score: float
-    channel_id: str
-    created_at: str
-
-
-class SubscriptionsListResponse(BaseModel):
-    """Response model for listing user subscriptions."""
-
-    user_id: str
-    subscription_count: int
-    subscriptions: list[SubscriptionResponse]
-
-
-class BatchScanResult(BaseModel):
-    """Result for a single ticker in batch scan."""
-
-    symbol: str
-    detected_count: int
-    top_score: float | None
-    unusual_trades: list[UnusualTradeResponse]
-    provider: str
-    subscribers: list[dict]  # List of {user_id, channel_id, min_score}
-
-
-class BatchScanResponse(BaseModel):
-    """Response model for batch flow scan."""
-
-    scanned_count: int
-    detected_tickers: int
-    results: list[BatchScanResult]
-    scan_time: str
-
-
 @router.post("/subscribe")
 async def subscribe_to_flow(
     request: SubscribeRequest,
@@ -448,138 +597,3 @@ async def get_user_subscriptions(
     except Exception as e:
         app_logger.error(f"Failed to fetch subscriptions for user {user_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch subscriptions")
-
-
-@router.get("/scan", response_model=BatchScanResponse)
-async def batch_scan_subscribed_tickers(
-    min_score: float = Query(default=0.75, ge=0.0, le=1.0),
-    db: AsyncSession = Depends(get_db),
-) -> BatchScanResponse:
-    """
-    Batch scan all tickers with active subscriptions for unusual flow.
-
-    This endpoint is called by GitHub Actions workflow to detect unusual activity
-    and notify subscribed users via Discord webhooks.
-
-    Args:
-        min_score: Global minimum anomaly score (can be overridden per subscription).
-
-    Returns:
-        BatchScanResponse with detected unusual activity and subscriber lists.
-    """
-    try:
-        # Get all tickers with active subscriptions
-        stmt = (
-            select(Ticker, FlowSubscription)
-            .join(FlowSubscription, FlowSubscription.ticker_id == Ticker.id)
-            .where(FlowSubscription.is_active)
-            .order_by(Ticker.symbol)
-        )
-        result = await db.execute(stmt)
-        rows = result.all()
-
-        # Group subscriptions by ticker
-        ticker_subs = {}
-        for ticker, sub in rows:
-            if ticker.symbol not in ticker_subs:
-                ticker_subs[ticker.symbol] = {"ticker": ticker, "subscribers": []}
-
-            ticker_subs[ticker.symbol]["subscribers"].append(
-                {
-                    "user_id": sub.user_id,
-                    "channel_id": sub.channel_id,
-                    "min_score": float(sub.min_score),
-                }
-            )
-
-        # Scan each ticker for unusual flow
-        flow_service = FlowService()
-        results = []
-        detected_tickers = 0
-
-        for symbol, data in ticker_subs.items():
-            try:
-                # Use lowest min_score from all subscribers for this ticker
-                ticker_min_score = min(
-                    [sub["min_score"] for sub in data["subscribers"]],
-                    default=min_score,
-                )
-
-                # Detect unusual activity (with 1hr cache)
-                flow_records = await flow_service.get_recent_unusual_activity(
-                    db, symbol, hours=1, min_score=ticker_min_score
-                )
-
-                # If no cached data, fetch fresh
-                if not flow_records:
-                    flow_records, provider_name = (
-                        await flow_service.detect_and_store_unusual_activity(
-                            db, symbol, min_score=ticker_min_score
-                        )
-                    )
-                else:
-                    provider_name = "cached"
-
-                # Convert to response format
-                unusual_trades = []
-                top_score = None
-
-                for record in flow_records:
-                    import json
-
-                    flags = json.loads(record.flags) if record.flags else []
-                    detected_at_est = record.detected_at.astimezone(EST).strftime(
-                        "%b %d, %Y %I:%M:%S %p EST"
-                    )
-
-                    unusual_trades.append(
-                        UnusualTradeResponse(
-                            contract_symbol=record.contract_symbol,
-                            option_type=record.option_type,
-                            strike=float(record.strike),
-                            expiration=record.expiration.isoformat(),
-                            last_price=float(record.last_price),
-                            volume=record.volume,
-                            open_interest=record.open_interest,
-                            volume_oi_ratio=float(record.volume_oi_ratio),
-                            premium=float(record.premium),
-                            anomaly_score=float(record.anomaly_score),
-                            flags=flags,
-                            detected_at=detected_at_est,
-                        )
-                    )
-
-                    if top_score is None or float(record.anomaly_score) > top_score:
-                        top_score = float(record.anomaly_score)
-
-                if unusual_trades:
-                    detected_tickers += 1
-
-                results.append(
-                    BatchScanResult(
-                        symbol=symbol,
-                        detected_count=len(unusual_trades),
-                        top_score=top_score,
-                        unusual_trades=unusual_trades,
-                        provider=provider_name,
-                        subscribers=data["subscribers"],
-                    )
-                )
-
-            except Exception as ticker_error:
-                app_logger.error(f"Failed to scan {symbol} in batch: {ticker_error}", exc_info=True)
-                # Continue with next ticker
-                continue
-
-        scan_time_est = datetime.now(EST).strftime("%b %d, %Y %I:%M:%S %p EST")
-
-        return BatchScanResponse(
-            scanned_count=len(ticker_subs),
-            detected_tickers=detected_tickers,
-            results=results,
-            scan_time=scan_time_est,
-        )
-
-    except Exception as e:
-        app_logger.error(f"Batch flow scan failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Batch scan failed")

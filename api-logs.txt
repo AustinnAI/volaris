@@ -1,500 +1,83 @@
-2025-10-27T15:37:49.898005703Z     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-2025-10-27T15:37:49.898009133Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:49.898015413Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 355, in raw_decode
-2025-10-27T15:37:49.898019463Z     raise JSONDecodeError("Expecting value", s, err.value) from None
-2025-10-27T15:37:49.898022963Z json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:49.898026234Z 
-2025-10-27T15:37:49.898030084Z During handling of the above exception, another exception occurred:
-2025-10-27T15:37:49.898033424Z 
-2025-10-27T15:37:49.898036914Z Traceback (most recent call last):
-2025-10-27T15:37:49.898053594Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in get_option_chain
-2025-10-27T15:37:49.898055874Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:37:49.898057954Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:49.898060104Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-2025-10-27T15:37:49.898062175Z     result = self.fn(*self.args, **self.kwargs)
-2025-10-27T15:37:49.898064215Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:49.898066984Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in <lambda>
-2025-10-27T15:37:49.898069175Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:37:49.898071265Z                                                            ^^^^^^^^^^^^^^
-2025-10-27T15:37:49.898073335Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 287, in options
-2025-10-27T15:37:49.898076055Z     self._download_options()
-2025-10-27T15:37:49.898078415Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 48, in _download_options
-2025-10-27T15:37:49.898080525Z     r = self._data.get(url=url, proxy=self.proxy).json()
-2025-10-27T15:37:49.898082615Z         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:49.898084745Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 980, in json
-2025-10-27T15:37:49.898086865Z     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
-2025-10-27T15:37:49.898088975Z requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:49.898103585Z 2025-10-27 15:37:49 - WARNING - volaris - YFinanceFlowProvider failed for SPY: Failed to fetch options for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:50.89791436Z 2025-10-27 15:37:50 - INFO - volaris - Detecting unusual activity for SPY from YFinanceFlowProvider
-2025-10-27T15:37:51.782483995Z 2025-10-27 15:37:51 - ERROR - volaris - Failed to fetch option chain for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:51.782502895Z Traceback (most recent call last):
-2025-10-27T15:37:51.782506426Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 976, in json
-2025-10-27T15:37:51.782509476Z     return complexjson.loads(self.text, **kwargs)
-2025-10-27T15:37:51.782511716Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782514176Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/__init__.py", line 346, in loads
-2025-10-27T15:37:51.782516386Z     return _default_decoder.decode(s)
-2025-10-27T15:37:51.782518676Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782521376Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 337, in decode
-2025-10-27T15:37:51.782523576Z     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-2025-10-27T15:37:51.782526136Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782528836Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 355, in raw_decode
-2025-10-27T15:37:51.782532446Z     raise JSONDecodeError("Expecting value", s, err.value) from None
-2025-10-27T15:37:51.782535656Z json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:51.782537736Z 
-2025-10-27T15:37:51.782539907Z During handling of the above exception, another exception occurred:
-2025-10-27T15:37:51.782541916Z 
-2025-10-27T15:37:51.782543956Z Traceback (most recent call last):
-2025-10-27T15:37:51.782555817Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in get_option_chain
-2025-10-27T15:37:51.782558157Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:37:51.782560287Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782562567Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-2025-10-27T15:37:51.782564767Z     result = self.fn(*self.args, **self.kwargs)
-2025-10-27T15:37:51.782566987Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782569987Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in <lambda>
-2025-10-27T15:37:51.782572277Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:37:51.782574827Z                                                            ^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782577417Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 287, in options
-2025-10-27T15:37:51.782580687Z     self._download_options()
-2025-10-27T15:37:51.782583148Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 48, in _download_options
-2025-10-27T15:37:51.782585437Z     r = self._data.get(url=url, proxy=self.proxy).json()
-2025-10-27T15:37:51.782587608Z         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.782589688Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 980, in json
-2025-10-27T15:37:51.782591708Z     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
-2025-10-27T15:37:51.782593768Z requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:51.782765032Z 2025-10-27 15:37:51 - WARNING - volaris - YFinanceFlowProvider failed for SPY: Failed to fetch options for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:37:51.785182127Z 2025-10-27 15:37:51 - ERROR - volaris - Unexpected error detecting flow for SPY: RetryError[<Future at 0x75d5bc227e10 state=finished raised ValueError>]
-2025-10-27T15:37:51.785194747Z Traceback (most recent call last):
-2025-10-27T15:37:51.785199157Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
-2025-10-27T15:37:51.785201497Z     result = await fn(*args, **kwargs)
-2025-10-27T15:37:51.785203637Z              ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.785206877Z   File "/opt/render/project/src/app/services/flow/provider_manager.py", line 93, in get_unusual_activity
-2025-10-27T15:37:51.785210547Z     raise ValueError(f"All providers failed to detect activity for {symbol}")
-2025-10-27T15:37:51.785245988Z ValueError: All providers failed to detect activity for SPY
-2025-10-27T15:37:51.785248848Z 
-2025-10-27T15:37:51.785251698Z The above exception was the direct cause of the following exception:
-2025-10-27T15:37:51.785254078Z 
-2025-10-27T15:37:51.785256538Z Traceback (most recent call last):
-2025-10-27T15:37:51.785260098Z   File "/opt/render/project/src/app/api/v1/flow.py", line 84, in get_unusual_flow
-2025-10-27T15:37:51.785262528Z     flow_records = await flow_service.detect_and_store_unusual_activity(
-2025-10-27T15:37:51.785264949Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.785267278Z   File "/opt/render/project/src/app/services/flow_service.py", line 52, in detect_and_store_unusual_activity
-2025-10-27T15:37:51.785269329Z     unusual_trades = await self.provider_manager.get_unusual_activity(
-2025-10-27T15:37:51.785271399Z                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.785282689Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
-2025-10-27T15:37:51.78532136Z     return await copy(fn, *args, **kwargs)
-2025-10-27T15:37:51.78532436Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.78532685Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
-2025-10-27T15:37:51.7853295Z     do = await self.iter(retry_state=retry_state)
-2025-10-27T15:37:51.78533221Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.78533479Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
-2025-10-27T15:37:51.78533718Z     result = await action(retry_state)
-2025-10-27T15:37:51.78533928Z              ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.78534141Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/_utils.py", line 99, in inner
-2025-10-27T15:37:51.78534495Z     return call(*args, **kwargs)
-2025-10-27T15:37:51.78534725Z            ^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:37:51.7853493Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 419, in exc_check
-2025-10-27T15:37:51.785351511Z     raise retry_exc from fut.exception()
-2025-10-27T15:37:51.78535374Z tenacity.RetryError: RetryError[<Future at 0x75d5bc227e10 state=finished raised ValueError>]
-2025-10-27T15:37:51.790955008Z INFO:     76.232.53.209:0 - "GET /api/v1/flow/SPY?min_score=0.7 HTTP/1.1" 500 Internal Server Error
-2025-10-27T15:38:15.078064595Z INFO:     Shutting down
-2025-10-27T15:38:15.179006167Z INFO:     Waiting for application shutdown.
-2025-10-27T15:38:15.17949837Z INFO:     Application shutdown complete.
-2025-10-27T15:38:15.179583622Z INFO:     Finished server process [54]
-2025-10-27T15:41:25.633308122Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:42:19.940676317Z ==> Detected service running on port 10000
-2025-10-27T15:42:20.133994087Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
-2025-10-27T15:42:25.814172471Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:42:25.823880032Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:43:25.893933107Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:43:25.89934627Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:44:25.680554007Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:44:25.692160211Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:45:25.603331807Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:45:25.640884111Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:45:57.564749414Z ==> Deploying...
-2025-10-27T15:47:04.013659674Z ==> No open ports detected, continuing to scan...
-2025-10-27T15:47:04.236112893Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
-2025-10-27T15:47:08.10174004Z ==> Running './start.sh'
-2025-10-27T15:47:08.10846711Z Running database migrations...
-2025-10-27T15:47:15.314303456Z INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
-2025-10-27T15:47:15.31445655Z INFO  [alembic.runtime.migration] Will assume transactional DDL.
-2025-10-27T15:47:16.602880396Z Starting uvicorn server...
-2025-10-27T15:47:25.701963929Z 2025-10-27 15:47:25 - INFO - volaris - Logging initialized - Level: INFO
-2025-10-27T15:47:25.7019826Z 2025-10-27 15:47:25 - INFO - volaris - Environment: production
-2025-10-27T15:47:25.881847313Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:47:25.885943736Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:47:38.708996091Z INFO:     Started server process [56]
-2025-10-27T15:47:38.709024172Z INFO:     Waiting for application startup.
-2025-10-27T15:47:40.699739086Z 2025-10-27 15:47:40 - INFO - volaris - S&P 500 constituents ensured
-2025-10-27T15:47:40.700235929Z INFO:     Application startup complete.
-2025-10-27T15:47:40.700494506Z INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
-2025-10-27T15:47:40.887036992Z INFO:     127.0.0.1:56216 - "HEAD / HTTP/1.1" 405 Method Not Allowed
-2025-10-27T15:47:48.341913371Z ==> Your service is live 🎉
-2025-10-27T15:47:48.425430838Z ==> 
-2025-10-27T15:47:48.507947827Z ==> ///////////////////////////////////////////////////////////
-2025-10-27T15:47:48.587096384Z ==> 
-2025-10-27T15:47:48.668923422Z ==> Available at your primary URL https://volaris-yz19.onrender.com
-2025-10-27T15:47:48.7483322Z ==> 
-2025-10-27T15:47:48.827259407Z ==> ///////////////////////////////////////////////////////////
-2025-10-27T15:47:50.305149717Z INFO:     35.197.80.206:0 - "GET / HTTP/1.1" 200 OK
-2025-10-27T15:48:25.804206437Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:48:25.843093213Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:48:32.782357474Z INFO:     216.24.60.153:0 - "GET /market/sp500 HTTP/1.1" 404 Not Found
-2025-10-27T15:48:36.023724076Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:48:36.025507614Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:48:48.081286736Z INFO:     Shutting down
-2025-10-27T15:48:48.181714911Z INFO:     Waiting for application shutdown.
-2025-10-27T15:48:48.182174562Z INFO:     Application shutdown complete.
-2025-10-27T15:48:48.182243553Z INFO:     Finished server process [55]
-2025-10-27T15:49:25.633620369Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:49:25.646203818Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:49:35.904683181Z INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:49:35.915924133Z INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
-2025-10-27T15:49:48.699762411Z 2025-10-27 15:49:48 - INFO - volaris - Checking cached unusual activity for SPY
-2025-10-27T15:49:49.208492858Z 2025-10-27 15:49:49 - INFO - volaris - No cached data, detecting fresh activity for SPY
-2025-10-27T15:49:49.21266146Z 2025-10-27 15:49:49 - INFO - volaris - Detecting unusual activity for SPY from SchwabFlowProvider
-2025-10-27T15:49:49.671293479Z 2025-10-27 15:49:49 - ERROR - volaris - Failed to fetch option chain from Schwab for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:49.67134252Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:49.67135105Z Traceback (most recent call last):
-2025-10-27T15:49:49.67135567Z   File "/opt/render/project/src/app/services/schwab.py", line 208, in refresh_access_token
-2025-10-27T15:49:49.671361121Z     response.raise_for_status()
-2025-10-27T15:49:49.671366561Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/httpx/_models.py", line 763, in raise_for_status
-2025-10-27T15:49:49.671371471Z     raise HTTPStatusError(message, request=request, response=self)
-2025-10-27T15:49:49.671376231Z httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:49.671379081Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:49.671381801Z 
-2025-10-27T15:49:49.671384621Z The above exception was the direct cause of the following exception:
-2025-10-27T15:49:49.671396761Z 
-2025-10-27T15:49:49.671398702Z Traceback (most recent call last):
-2025-10-27T15:49:49.671400462Z   File "/opt/render/project/src/app/services/flow/schwab_provider.py", line 68, in get_option_chain
-2025-10-27T15:49:49.671402482Z     chain_data = await self.schwab_client.get_option_chain(
-2025-10-27T15:49:49.671404182Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:49.671420842Z   File "/opt/render/project/src/app/services/schwab.py", line 440, in get_option_chain
-2025-10-27T15:49:49.671424742Z     headers = await self._get_headers()
-2025-10-27T15:49:49.671427682Z               ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:49.671430382Z   File "/opt/render/project/src/app/services/schwab.py", line 303, in _get_headers
-2025-10-27T15:49:49.671433232Z     access_token = await self._get_access_token()
-2025-10-27T15:49:49.671436083Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:49.671438743Z   File "/opt/render/project/src/app/services/schwab.py", line 267, in _get_access_token
-2025-10-27T15:49:49.671441503Z     tokens = await self.refresh_access_token()
-2025-10-27T15:49:49.671444373Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:49.671447313Z   File "/opt/render/project/src/app/services/schwab.py", line 217, in refresh_access_token
-2025-10-27T15:49:49.671449663Z     raise AuthenticationError(
-2025-10-27T15:49:49.671452943Z app.services.exceptions.AuthenticationError: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:49.671456063Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:49.671475284Z 2025-10-27 15:49:49 - WARNING - volaris - SchwabFlowProvider failed for SPY: Failed to fetch options for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:49.671482154Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:49.671524685Z 2025-10-27 15:49:49 - INFO - volaris - Detecting unusual activity for SPY from YFinanceFlowProvider
-2025-10-27T15:49:51.620265363Z 2025-10-27 15:49:51 - ERROR - volaris - Failed to fetch option chain for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:51.620298504Z Traceback (most recent call last):
-2025-10-27T15:49:51.620304564Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 976, in json
-2025-10-27T15:49:51.620309704Z     return complexjson.loads(self.text, **kwargs)
-2025-10-27T15:49:51.620314554Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620318994Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/__init__.py", line 346, in loads
-2025-10-27T15:49:51.620323124Z     return _default_decoder.decode(s)
-2025-10-27T15:49:51.620327104Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620331565Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 337, in decode
-2025-10-27T15:49:51.620335575Z     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-2025-10-27T15:49:51.620339605Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620343745Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 355, in raw_decode
-2025-10-27T15:49:51.620348855Z     raise JSONDecodeError("Expecting value", s, err.value) from None
-2025-10-27T15:49:51.620353285Z json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:51.620357215Z 
-2025-10-27T15:49:51.620361425Z During handling of the above exception, another exception occurred:
-2025-10-27T15:49:51.620373516Z 
-2025-10-27T15:49:51.620376276Z Traceback (most recent call last):
-2025-10-27T15:49:51.620378546Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in get_option_chain
-2025-10-27T15:49:51.620380696Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:49:51.620382896Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620385386Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-2025-10-27T15:49:51.620387626Z     result = self.fn(*self.args, **self.kwargs)
-2025-10-27T15:49:51.620389796Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620392516Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in <lambda>
-2025-10-27T15:49:51.620394646Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:49:51.620396826Z                                                            ^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620399146Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 287, in options
-2025-10-27T15:49:51.620401746Z     self._download_options()
-2025-10-27T15:49:51.620403997Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 48, in _download_options
-2025-10-27T15:49:51.620406277Z     r = self._data.get(url=url, proxy=self.proxy).json()
-2025-10-27T15:49:51.620408477Z         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:51.620410767Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 980, in json
-2025-10-27T15:49:51.620412937Z     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
-2025-10-27T15:49:51.620415117Z requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:51.620417847Z 2025-10-27 15:49:51 - WARNING - volaris - YFinanceFlowProvider failed for SPY: Failed to fetch options for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:52.621368626Z 2025-10-27 15:49:52 - INFO - volaris - Detecting unusual activity for SPY from SchwabFlowProvider
-2025-10-27T15:49:52.868090934Z 2025-10-27 15:49:52 - ERROR - volaris - Failed to fetch option chain from Schwab for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:52.868121195Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:52.868125355Z Traceback (most recent call last):
-2025-10-27T15:49:52.868128485Z   File "/opt/render/project/src/app/services/schwab.py", line 208, in refresh_access_token
-2025-10-27T15:49:52.868131025Z     response.raise_for_status()
-2025-10-27T15:49:52.868133425Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/httpx/_models.py", line 763, in raise_for_status
-2025-10-27T15:49:52.868136495Z     raise HTTPStatusError(message, request=request, response=self)
-2025-10-27T15:49:52.868139445Z httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:52.868141195Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:52.868143675Z 
-2025-10-27T15:49:52.868145555Z The above exception was the direct cause of the following exception:
-2025-10-27T15:49:52.868147165Z 
-2025-10-27T15:49:52.868148875Z Traceback (most recent call last):
-2025-10-27T15:49:52.868151415Z   File "/opt/render/project/src/app/services/flow/schwab_provider.py", line 68, in get_option_chain
-2025-10-27T15:49:52.868153946Z     chain_data = await self.schwab_client.get_option_chain(
-2025-10-27T15:49:52.868197447Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:52.868204237Z   File "/opt/render/project/src/app/services/schwab.py", line 440, in get_option_chain
-2025-10-27T15:49:52.868206687Z     headers = await self._get_headers()
-2025-10-27T15:49:52.868208747Z               ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:52.868210947Z   File "/opt/render/project/src/app/services/schwab.py", line 303, in _get_headers
-2025-10-27T15:49:52.868213097Z     access_token = await self._get_access_token()
-2025-10-27T15:49:52.868215167Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:52.868217207Z   File "/opt/render/project/src/app/services/schwab.py", line 267, in _get_access_token
-2025-10-27T15:49:52.868219207Z     tokens = await self.refresh_access_token()
-2025-10-27T15:49:52.868221277Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:52.868223287Z   File "/opt/render/project/src/app/services/schwab.py", line 217, in refresh_access_token
-2025-10-27T15:49:52.868225328Z     raise AuthenticationError(
-2025-10-27T15:49:52.868231318Z app.services.exceptions.AuthenticationError: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:52.868234338Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:52.868238268Z 2025-10-27 15:49:52 - WARNING - volaris - SchwabFlowProvider failed for SPY: Failed to fetch options for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:49:52.868240608Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:49:52.868242748Z 2025-10-27 15:49:52 - INFO - volaris - Detecting unusual activity for SPY from YFinanceFlowProvider
-2025-10-27T15:49:53.618128602Z 2025-10-27 15:49:53 - ERROR - volaris - Failed to fetch option chain for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:53.618152963Z Traceback (most recent call last):
-2025-10-27T15:49:53.618157043Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 976, in json
-2025-10-27T15:49:53.618160343Z     return complexjson.loads(self.text, **kwargs)
-2025-10-27T15:49:53.618191474Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618193264Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/__init__.py", line 346, in loads
-2025-10-27T15:49:53.618194944Z     return _default_decoder.decode(s)
-2025-10-27T15:49:53.618196554Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618198314Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 337, in decode
-2025-10-27T15:49:53.618200044Z     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-2025-10-27T15:49:53.618201654Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618203254Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 355, in raw_decode
-2025-10-27T15:49:53.618205625Z     raise JSONDecodeError("Expecting value", s, err.value) from None
-2025-10-27T15:49:53.618207334Z json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:53.618208865Z 
-2025-10-27T15:49:53.618210594Z During handling of the above exception, another exception occurred:
-2025-10-27T15:49:53.618212185Z 
-2025-10-27T15:49:53.618213865Z Traceback (most recent call last):
-2025-10-27T15:49:53.618215555Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in get_option_chain
-2025-10-27T15:49:53.618217235Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:49:53.618228475Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618230565Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-2025-10-27T15:49:53.618232245Z     result = self.fn(*self.args, **self.kwargs)
-2025-10-27T15:49:53.618234345Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618236615Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in <lambda>
-2025-10-27T15:49:53.618241706Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:49:53.618243426Z                                                            ^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618245035Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 287, in options
-2025-10-27T15:49:53.618247635Z     self._download_options()
-2025-10-27T15:49:53.618249336Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 48, in _download_options
-2025-10-27T15:49:53.618250996Z     r = self._data.get(url=url, proxy=self.proxy).json()
-2025-10-27T15:49:53.618252636Z         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.618254276Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 980, in json
-2025-10-27T15:49:53.618255936Z     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
-2025-10-27T15:49:53.618257626Z requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:53.618269196Z 2025-10-27 15:49:53 - WARNING - volaris - YFinanceFlowProvider failed for SPY: Failed to fetch options for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:49:53.705635997Z 2025-10-27 15:49:53 - ERROR - volaris - Unexpected error detecting flow for SPY: RetryError[<Future at 0x7de3feb41510 state=finished raised ValueError>]
-2025-10-27T15:49:53.705658627Z Traceback (most recent call last):
-2025-10-27T15:49:53.705662398Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
-2025-10-27T15:49:53.705664418Z     result = await fn(*args, **kwargs)
-2025-10-27T15:49:53.705666478Z              ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705668928Z   File "/opt/render/project/src/app/services/flow/provider_manager.py", line 94, in get_unusual_activity
-2025-10-27T15:49:53.705671318Z     raise ValueError(f"All providers failed to detect activity for {symbol}")
-2025-10-27T15:49:53.705673538Z ValueError: All providers failed to detect activity for SPY
-2025-10-27T15:49:53.705675118Z 
-2025-10-27T15:49:53.705676888Z The above exception was the direct cause of the following exception:
-2025-10-27T15:49:53.705678488Z 
-2025-10-27T15:49:53.705680188Z Traceback (most recent call last):
-2025-10-27T15:49:53.705682458Z   File "/opt/render/project/src/app/api/v1/flow.py", line 84, in get_unusual_flow
-2025-10-27T15:49:53.705684218Z     flow_records = await flow_service.detect_and_store_unusual_activity(
-2025-10-27T15:49:53.705685828Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705687518Z   File "/opt/render/project/src/app/services/flow_service.py", line 52, in detect_and_store_unusual_activity
-2025-10-27T15:49:53.705689178Z     unusual_trades = await self.provider_manager.get_unusual_activity(
-2025-10-27T15:49:53.705690808Z                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705692528Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
-2025-10-27T15:49:53.705694178Z     return await copy(fn, *args, **kwargs)
-2025-10-27T15:49:53.705708129Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705711199Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
-2025-10-27T15:49:53.705714169Z     do = await self.iter(retry_state=retry_state)
-2025-10-27T15:49:53.705716769Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705719649Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
-2025-10-27T15:49:53.705722109Z     result = await action(retry_state)
-2025-10-27T15:49:53.705724659Z              ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705727099Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/_utils.py", line 99, in inner
-2025-10-27T15:49:53.705730589Z     return call(*args, **kwargs)
-2025-10-27T15:49:53.705733049Z            ^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:49:53.705735989Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 419, in exc_check
-2025-10-27T15:49:53.705739089Z     raise retry_exc from fut.exception()
-2025-10-27T15:49:53.70574124Z tenacity.RetryError: RetryError[<Future at 0x7de3feb41510 state=finished raised ValueError>]
-2025-10-27T15:49:53.71542384Z INFO:     76.232.53.209:0 - "GET /api/v1/flow/SPY?min_score=0.7 HTTP/1.1" 500 Internal Server Error
-2025-10-27T15:50:01.604952613Z 2025-10-27 15:50:01 - INFO - volaris - Checking cached unusual activity for SPY
-2025-10-27T15:50:02.042652098Z 2025-10-27 15:50:02 - INFO - volaris - No cached data, detecting fresh activity for SPY
-2025-10-27T15:50:02.046287686Z 2025-10-27 15:50:02 - INFO - volaris - Detecting unusual activity for SPY from SchwabFlowProvider
-2025-10-27T15:50:02.412802186Z 2025-10-27 15:50:02 - ERROR - volaris - Failed to fetch option chain from Schwab for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:02.412819156Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:02.412825187Z Traceback (most recent call last):
-2025-10-27T15:50:02.412829957Z   File "/opt/render/project/src/app/services/schwab.py", line 208, in refresh_access_token
-2025-10-27T15:50:02.412838317Z     response.raise_for_status()
-2025-10-27T15:50:02.412843267Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/httpx/_models.py", line 763, in raise_for_status
-2025-10-27T15:50:02.412848407Z     raise HTTPStatusError(message, request=request, response=self)
-2025-10-27T15:50:02.412853717Z httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:02.412856628Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:02.412859228Z 
-2025-10-27T15:50:02.412862088Z The above exception was the direct cause of the following exception:
-2025-10-27T15:50:02.412864668Z 
-2025-10-27T15:50:02.412867368Z Traceback (most recent call last):
-2025-10-27T15:50:02.412870098Z   File "/opt/render/project/src/app/services/flow/schwab_provider.py", line 68, in get_option_chain
-2025-10-27T15:50:02.412874668Z     chain_data = await self.schwab_client.get_option_chain(
-2025-10-27T15:50:02.412877428Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:02.412880328Z   File "/opt/render/project/src/app/services/schwab.py", line 440, in get_option_chain
-2025-10-27T15:50:02.412882998Z     headers = await self._get_headers()
-2025-10-27T15:50:02.412885708Z               ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:02.412888418Z   File "/opt/render/project/src/app/services/schwab.py", line 303, in _get_headers
-2025-10-27T15:50:02.412899079Z     access_token = await self._get_access_token()
-2025-10-27T15:50:02.412901579Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:02.412903179Z   File "/opt/render/project/src/app/services/schwab.py", line 267, in _get_access_token
-2025-10-27T15:50:02.412904819Z     tokens = await self.refresh_access_token()
-2025-10-27T15:50:02.412906559Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:02.412908259Z   File "/opt/render/project/src/app/services/schwab.py", line 217, in refresh_access_token
-2025-10-27T15:50:02.412910169Z     raise AuthenticationError(
-2025-10-27T15:50:02.412912579Z app.services.exceptions.AuthenticationError: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:02.412914279Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:02.412916469Z 2025-10-27 15:50:02 - WARNING - volaris - SchwabFlowProvider failed for SPY: Failed to fetch options for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:02.412918109Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:02.412931159Z 2025-10-27 15:50:02 - INFO - volaris - Detecting unusual activity for SPY from YFinanceFlowProvider
-2025-10-27T15:50:03.19985206Z 2025-10-27 15:50:03 - ERROR - volaris - Failed to fetch option chain for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:03.199895041Z Traceback (most recent call last):
-2025-10-27T15:50:03.199898761Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 976, in json
-2025-10-27T15:50:03.199903651Z     return complexjson.loads(self.text, **kwargs)
-2025-10-27T15:50:03.199905771Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199907921Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/__init__.py", line 346, in loads
-2025-10-27T15:50:03.199910631Z     return _default_decoder.decode(s)
-2025-10-27T15:50:03.199912731Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199914771Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 337, in decode
-2025-10-27T15:50:03.199917182Z     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-2025-10-27T15:50:03.199919191Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199921282Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 355, in raw_decode
-2025-10-27T15:50:03.199924782Z     raise JSONDecodeError("Expecting value", s, err.value) from None
-2025-10-27T15:50:03.199927162Z json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:03.199929212Z 
-2025-10-27T15:50:03.199931472Z During handling of the above exception, another exception occurred:
-2025-10-27T15:50:03.199933462Z 
-2025-10-27T15:50:03.199935572Z Traceback (most recent call last):
-2025-10-27T15:50:03.199937662Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in get_option_chain
-2025-10-27T15:50:03.199939772Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:50:03.199941882Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199944152Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-2025-10-27T15:50:03.199946282Z     result = self.fn(*self.args, **self.kwargs)
-2025-10-27T15:50:03.199948362Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199967263Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in <lambda>
-2025-10-27T15:50:03.199970963Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:50:03.199974933Z                                                            ^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199978143Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 287, in options
-2025-10-27T15:50:03.199983393Z     self._download_options()
-2025-10-27T15:50:03.199986953Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 48, in _download_options
-2025-10-27T15:50:03.199989853Z     r = self._data.get(url=url, proxy=self.proxy).json()
-2025-10-27T15:50:03.199992673Z         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:03.199995493Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 980, in json
-2025-10-27T15:50:03.199998294Z     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
-2025-10-27T15:50:03.200001114Z requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:03.200020764Z 2025-10-27 15:50:03 - WARNING - volaris - YFinanceFlowProvider failed for SPY: Failed to fetch options for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:04.200588922Z 2025-10-27 15:50:04 - INFO - volaris - Detecting unusual activity for SPY from SchwabFlowProvider
-2025-10-27T15:50:04.492759982Z 2025-10-27 15:50:04 - ERROR - volaris - Failed to fetch option chain from Schwab for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:04.492788053Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:04.492793153Z Traceback (most recent call last):
-2025-10-27T15:50:04.492796913Z   File "/opt/render/project/src/app/services/schwab.py", line 208, in refresh_access_token
-2025-10-27T15:50:04.492800963Z     response.raise_for_status()
-2025-10-27T15:50:04.492805193Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/httpx/_models.py", line 763, in raise_for_status
-2025-10-27T15:50:04.492810044Z     raise HTTPStatusError(message, request=request, response=self)
-2025-10-27T15:50:04.492814104Z httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:04.492817144Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:04.492820074Z 
-2025-10-27T15:50:04.492823564Z The above exception was the direct cause of the following exception:
-2025-10-27T15:50:04.492826834Z 
-2025-10-27T15:50:04.492830034Z Traceback (most recent call last):
-2025-10-27T15:50:04.492833604Z   File "/opt/render/project/src/app/services/flow/schwab_provider.py", line 68, in get_option_chain
-2025-10-27T15:50:04.492837564Z     chain_data = await self.schwab_client.get_option_chain(
-2025-10-27T15:50:04.492840524Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:04.492843545Z   File "/opt/render/project/src/app/services/schwab.py", line 440, in get_option_chain
-2025-10-27T15:50:04.492847325Z     headers = await self._get_headers()
-2025-10-27T15:50:04.492850955Z               ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:04.492854025Z   File "/opt/render/project/src/app/services/schwab.py", line 303, in _get_headers
-2025-10-27T15:50:04.492856855Z     access_token = await self._get_access_token()
-2025-10-27T15:50:04.492859615Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:04.492862465Z   File "/opt/render/project/src/app/services/schwab.py", line 267, in _get_access_token
-2025-10-27T15:50:04.492879966Z     tokens = await self.refresh_access_token()
-2025-10-27T15:50:04.492883695Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:04.492886615Z   File "/opt/render/project/src/app/services/schwab.py", line 217, in refresh_access_token
-2025-10-27T15:50:04.492889706Z     raise AuthenticationError(
-2025-10-27T15:50:04.492893626Z app.services.exceptions.AuthenticationError: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:04.492896856Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:04.492901956Z 2025-10-27 15:50:04 - WARNING - volaris - SchwabFlowProvider failed for SPY: Failed to fetch options for SPY: Token refresh failed: Client error '400 Bad Request' for url 'https://api.schwabapi.com/v1/oauth/token'
-2025-10-27T15:50:04.492905286Z For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-2025-10-27T15:50:04.492923187Z 2025-10-27 15:50:04 - INFO - volaris - Detecting unusual activity for SPY from YFinanceFlowProvider
-2025-10-27T15:50:05.302184888Z 2025-10-27 15:50:05 - ERROR - volaris - Failed to fetch option chain for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:05.302220609Z Traceback (most recent call last):
-2025-10-27T15:50:05.302226379Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 976, in json
-2025-10-27T15:50:05.302231499Z     return complexjson.loads(self.text, **kwargs)
-2025-10-27T15:50:05.302235749Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302239729Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/__init__.py", line 346, in loads
-2025-10-27T15:50:05.302243789Z     return _default_decoder.decode(s)
-2025-10-27T15:50:05.302247769Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302252189Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 337, in decode
-2025-10-27T15:50:05.30225619Z     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-2025-10-27T15:50:05.30226018Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.3022642Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/json/decoder.py", line 355, in raw_decode
-2025-10-27T15:50:05.30226902Z     raise JSONDecodeError("Expecting value", s, err.value) from None
-2025-10-27T15:50:05.30227295Z json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:05.30227703Z 
-2025-10-27T15:50:05.30228108Z During handling of the above exception, another exception occurred:
-2025-10-27T15:50:05.302285081Z 
-2025-10-27T15:50:05.30228953Z Traceback (most recent call last):
-2025-10-27T15:50:05.302293321Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in get_option_chain
-2025-10-27T15:50:05.302298031Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:50:05.302302451Z                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302306621Z   File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-2025-10-27T15:50:05.302310931Z     result = self.fn(*self.args, **self.kwargs)
-2025-10-27T15:50:05.302315501Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302320701Z   File "/opt/render/project/src/app/services/flow/yfinance_provider.py", line 77, in <lambda>
-2025-10-27T15:50:05.302325251Z     expirations = await loop.run_in_executor(None, lambda: ticker.options)
-2025-10-27T15:50:05.302329582Z                                                            ^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302363163Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 287, in options
-2025-10-27T15:50:05.302367133Z     self._download_options()
-2025-10-27T15:50:05.302369653Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/yfinance/ticker.py", line 48, in _download_options
-2025-10-27T15:50:05.302371953Z     r = self._data.get(url=url, proxy=self.proxy).json()
-2025-10-27T15:50:05.302374203Z         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302377023Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/requests/models.py", line 980, in json
-2025-10-27T15:50:05.302379663Z     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
-2025-10-27T15:50:05.302382233Z requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:05.302385363Z 2025-10-27 15:50:05 - WARNING - volaris - YFinanceFlowProvider failed for SPY: Failed to fetch options for SPY: Expecting value: line 1 column 1 (char 0)
-2025-10-27T15:50:05.302847185Z 2025-10-27 15:50:05 - ERROR - volaris - Unexpected error detecting flow for SPY: RetryError[<Future at 0x7de3feba5750 state=finished raised ValueError>]
-2025-10-27T15:50:05.302853646Z Traceback (most recent call last):
-2025-10-27T15:50:05.302856626Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
-2025-10-27T15:50:05.302858696Z     result = await fn(*args, **kwargs)
-2025-10-27T15:50:05.302860516Z              ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302862396Z   File "/opt/render/project/src/app/services/flow/provider_manager.py", line 94, in get_unusual_activity
-2025-10-27T15:50:05.302864236Z     raise ValueError(f"All providers failed to detect activity for {symbol}")
-2025-10-27T15:50:05.302866176Z ValueError: All providers failed to detect activity for SPY
-2025-10-27T15:50:05.302867806Z 
-2025-10-27T15:50:05.302869556Z The above exception was the direct cause of the following exception:
-2025-10-27T15:50:05.302871116Z 
-2025-10-27T15:50:05.302872796Z Traceback (most recent call last):
-2025-10-27T15:50:05.302874576Z   File "/opt/render/project/src/app/api/v1/flow.py", line 84, in get_unusual_flow
-2025-10-27T15:50:05.302876196Z     flow_records = await flow_service.detect_and_store_unusual_activity(
-2025-10-27T15:50:05.302877876Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302879557Z   File "/opt/render/project/src/app/services/flow_service.py", line 52, in detect_and_store_unusual_activity
-2025-10-27T15:50:05.302881346Z     unusual_trades = await self.provider_manager.get_unusual_activity(
-2025-10-27T15:50:05.302883006Z                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302884706Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
-2025-10-27T15:50:05.302886346Z     return await copy(fn, *args, **kwargs)
-2025-10-27T15:50:05.302888077Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302889737Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
-2025-10-27T15:50:05.302891387Z     do = await self.iter(retry_state=retry_state)
-2025-10-27T15:50:05.302893127Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302894757Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
-2025-10-27T15:50:05.302896417Z     result = await action(retry_state)
-2025-10-27T15:50:05.302898047Z              ^^^^^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302908047Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/_utils.py", line 99, in inner
-2025-10-27T15:50:05.302909917Z     return call(*args, **kwargs)
-2025-10-27T15:50:05.302911557Z            ^^^^^^^^^^^^^^^^^^^^^
-2025-10-27T15:50:05.302913257Z   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 419, in exc_check
-2025-10-27T15:50:05.302915467Z     raise retry_exc from fut.exception()
-2025-10-27T15:50:05.302918238Z tenacity.RetryError: RetryError[<Future at 0x7de3feba5750 state=finished raised ValueError>]
-2025-10-27T15:50:05.310314866Z INFO:     76.232.53.209:0 - "GET /api/v1/flow/SPY?min_score=0.7 HTTP/1.1" 500 Internal Server Error
+     ==> Detected service running on port 10000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     76.232.53.209:0 - "GET /health HTTP/1.1" 200 OK
+2025-11-04 15:54:01 - INFO - volaris - Checking cached unusual activity for scan
+2025-11-04 15:54:01 - INFO - volaris - No cached data, detecting fresh activity for scan
+2025-11-04 15:54:01 - INFO - volaris - Detecting unusual activity for scan from SchwabFlowProvider
+2025-11-04 15:54:02 - INFO - volaris - Schwab refresh token cached
+2025-11-04 15:54:02 - ERROR - volaris - Failed to fetch option chain from Schwab for scan: Invalid request: 400
+Traceback (most recent call last):
+  File "/opt/render/project/src/app/services/base_client.py", line 129, in _request
+    response.raise_for_status()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/httpx/_models.py", line 763, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.schwabapi.com/marketdata/v1/chains?symbol=SCAN&contractType=ALL&strikeCount=50&includeQuotes=true'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/opt/render/project/src/app/services/flow/schwab_provider.py", line 68, in get_option_chain
+    chain_data = await self.schwab_client.get_option_chain(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/app/services/schwab.py", line 441, in get_option_chain
+    return await self.get(endpoint, headers=headers, params=params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/app/services/base_client.py", line 179, in get
+    return await self._request("GET", endpoint, headers=headers, params=params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/_utils.py", line 99, in inner
+    return call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 398, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/python/Python-3.11.9/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/app/services/base_client.py", line 166, in _request
+    raise InvalidRequestError(
+app.services.exceptions.InvalidRequestError: Invalid request: 400
+2025-11-04 15:54:02 - WARNING - volaris - SchwabFlowProvider failed for scan: Failed to fetch options for scan: Invalid request: 400
+2025-11-04 15:54:02 - INFO - volaris - Detecting unusual activity for scan from AlphaVantageFlowProvider
+2025-11-04 15:54:02 - INFO - volaris - Detecting unusual activity for scan from AlphaVantageFlowProvider
+2025-11-04 15:54:03 - INFO - volaris - Fetched 0 options for scan from Alpha Vantage
+2025-11-04 15:54:03 - INFO - volaris - Found 0 unusual trades for scan (min_score=0.75)
+2025-11-04 15:54:03 - INFO - volaris - No unusual activity detected for scan
+INFO:     76.232.53.209:0 - "GET /api/v1/flow/scan?min_score=0.75 HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/streams/price/evaluate HTTP/1.1" 200 OK
+INFO:     216.24.60.153:0 - "POST /api/v1/alerts/price/evaluate HTTP/1.1" 200 OK
