@@ -216,10 +216,11 @@ class UtilitiesCog(commands.Cog):
             name="🔥 Options Flow (Core Feature)",
             value=(
                 "**`/flow <ticker>`** - Find unusual options activity (smart money)\n"
-                "**`/flow-subscribe <ticker>`** - Get alerts every 10 min during market hours\n"
+                "**`/flow-subscribe <ticker> [score]`** - Get alerts every 10 min (default score: 0.75)\n"
+                "**`/flow-edit <ticker> <score>`** - Update alert threshold (0.0-1.0)\n"
                 "**`/flow-subscriptions`** - View your active alert subscriptions\n"
                 "**`/flow-unsubscribe <ticker>`** - Stop receiving alerts\n"
-                "_Shows: Block trades, volume spikes, high vol/OI ratios_"
+                "_Tip: Lower score (0.5-0.6) = more alerts, higher (0.8+) = only strongest signals_"
             ),
             inline=False,
         )
@@ -282,7 +283,7 @@ class UtilitiesCog(commands.Cog):
         )
 
         embed.set_footer(
-            text="Volaris V1 • 19 Commands • Automated flow alerts every 10 min during market hours"
+            text="Volaris V1 • 20 Commands • Automated flow alerts every 10 min during market hours"
         )
 
         await interaction.response.send_message(embed=embed, ephemeral=True)

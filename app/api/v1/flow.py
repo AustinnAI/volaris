@@ -426,6 +426,14 @@ class UnsubscribeRequest(BaseModel):
     symbol: str = Field(..., description="Ticker symbol")
 
 
+class UpdateSubscriptionRequest(BaseModel):
+    """Request model for updating subscription settings."""
+
+    user_id: str = Field(..., description="Discord user ID")
+    symbol: str = Field(..., description="Ticker symbol")
+    min_score: float = Field(..., ge=0.0, le=1.0, description="New min anomaly score")
+
+
 @router.post("/subscribe")
 async def subscribe_to_flow(
     request: SubscribeRequest,
@@ -548,6 +556,68 @@ async def unsubscribe_from_flow(
         app_logger.error(f"Failed to delete flow subscription: {e}", exc_info=True)
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete subscription")
+
+
+@router.put("/update")
+async def update_flow_subscription(
+    request: UpdateSubscriptionRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Update an existing flow subscription's settings.
+
+    Args:
+        request: Update details (user_id, symbol, min_score).
+
+    Returns:
+        Success message with updated settings.
+    """
+    try:
+        # Find ticker
+        stmt = select(Ticker).where(Ticker.symbol == request.symbol.upper())
+        result = await db.execute(stmt)
+        ticker = result.scalar_one_or_none()
+
+        if not ticker:
+            raise HTTPException(status_code=404, detail=f"Ticker {request.symbol} not found")
+
+        # Find subscription
+        stmt = select(FlowSubscription).where(
+            FlowSubscription.user_id == request.user_id,
+            FlowSubscription.ticker_id == ticker.id,
+        )
+        result = await db.execute(stmt)
+        subscription = result.scalar_one_or_none()
+
+        if not subscription:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No active subscription found for {request.symbol}",
+            )
+
+        # Update min_score
+        old_score = float(subscription.min_score)
+        subscription.min_score = Decimal(str(request.min_score))
+        await db.commit()
+
+        app_logger.info(
+            f"User {request.user_id} updated {request.symbol} flow subscription: "
+            f"min_score {old_score:.2f} → {request.min_score:.2f}"
+        )
+
+        return {
+            "message": f"Successfully updated {request.symbol} flow alert settings",
+            "symbol": request.symbol.upper(),
+            "old_min_score": old_score,
+            "new_min_score": request.min_score,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to update flow subscription: {e}", exc_info=True)
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update subscription")
 
 
 @router.get("/subscriptions/{user_id}", response_model=SubscriptionsListResponse)

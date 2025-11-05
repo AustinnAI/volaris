@@ -691,6 +691,72 @@ class MarketDataCog(commands.Cog):
         ]
 
     @app_commands.command(
+        name="flow-edit",
+        description="Update your flow alert subscription settings",
+    )
+    @app_commands.describe(
+        ticker="Ticker symbol (e.g., SPY, QQQ)",
+        min_score="Minimum anomaly score for alerts (0.0-1.0)",
+    )
+    async def flow_edit(
+        self, interaction: discord.Interaction, ticker: str, min_score: float
+    ) -> None:
+        """Update the min_score threshold for an existing flow subscription."""
+        await interaction.response.defer(ephemeral=True)
+
+        # Validate min_score
+        if not 0.0 <= min_score <= 1.0:
+            await interaction.followup.send(
+                "❌ Min score must be between 0.0 and 1.0", ephemeral=True
+            )
+            return
+
+        symbol = ticker.upper().strip()
+        user_id = str(interaction.user.id)
+
+        try:
+            # Use update endpoint
+            url = f"{self.bot.api_client.base_url}/api/v1/flow/update"
+            payload = {"user_id": user_id, "symbol": symbol, "min_score": min_score}
+
+            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
+                async with session.put(url, json=payload) as response:
+                    if response.status == 200:
+                        await interaction.followup.send(
+                            f"✅ Updated **{symbol}** flow alert settings\nNew min score: **{min_score:.2f}**",
+                            ephemeral=True,
+                        )
+                    elif response.status == 404:
+                        await interaction.followup.send(
+                            f"ℹ️ You don't have an active subscription to **{symbol}**\n"
+                            f"Use `/flow-subscribe {symbol}` to create one first.",
+                            ephemeral=True,
+                        )
+                    else:
+                        error_data = await response.json()
+                        await interaction.followup.send(
+                            f"❌ Failed to update subscription: {error_data.get('detail', 'Unknown error')}",
+                            ephemeral=True,
+                        )
+        except Exception as exc:
+            self.bot.logger.error("Error in /flow-edit", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {exc}", ephemeral=True)
+
+    @flow_edit.autocomplete("ticker")
+    async def flow_edit_ticker_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for /flow-edit ticker."""
+        _ = interaction
+        matches = self.bot.symbol_service.matches(current)
+        return [
+            app_commands.Choice(name=self.bot.symbol_service.get_display_name(sym), value=sym)
+            for sym in matches
+        ]
+
+    @app_commands.command(
         name="flow-subscriptions",
         description="List your active flow alert subscriptions",
     )

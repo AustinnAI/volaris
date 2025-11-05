@@ -13,15 +13,100 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.sentiment import aggregate_sentiment, analyze_sentiment
 from app.db.models import NewsArticle, NewsSentimentLabel
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
 from app.services.tickers import get_or_create_ticker
 from app.utils.logger import app_logger
+from app.utils.market_hours import is_market_hours
+
+
+async def get_latest_article_timestamp(
+    db: AsyncSession,
+    symbol: str,
+) -> datetime | None:
+    """
+    Get the timestamp of the most recent article for a ticker.
+
+    Args:
+        db: Database session
+        symbol: Ticker symbol
+
+    Returns:
+        DateTime of most recent article, or None if no articles exist.
+
+    Example:
+        >>> latest = await get_latest_article_timestamp(db, "AAPL")
+        >>> if latest:
+        ...     print(f"Latest article from {latest}")
+    """
+    ticker = await get_or_create_ticker(symbol.upper(), db)
+
+    stmt = select(func.max(NewsArticle.published_at)).where(NewsArticle.ticker_id == ticker.id)
+
+    result = await db.execute(stmt)
+    latest_timestamp = result.scalar_one_or_none()
+
+    return latest_timestamp
+
+
+def is_stale(
+    latest_timestamp: datetime | None,
+    now: datetime | None = None,
+) -> bool:
+    """
+    Check if news articles are stale based on market-aware thresholds.
+
+    Args:
+        latest_timestamp: Timestamp of most recent article (UTC)
+        now: Current time (UTC). Defaults to current UTC time.
+
+    Returns:
+        True if stale (exceeds threshold), False if fresh or no articles.
+
+    Logic:
+        - If no articles exist (latest_timestamp is None), returns False (not stale)
+        - During market hours: stale if age > NEWS_STALE_HOURS_MARKET
+        - Outside market hours: stale if age > NEWS_STALE_HOURS_OFF
+
+    Example:
+        >>> latest = datetime(2025, 11, 5, 10, 0, tzinfo=UTC)
+        >>> now = datetime(2025, 11, 5, 17, 0, tzinfo=UTC)  # 7 hours later
+        >>> is_stale(latest, now)  # True if market hours (threshold=6h)
+        True
+    """
+    if latest_timestamp is None:
+        return False  # No articles = not stale, will trigger auto-fetch elsewhere
+
+    if now is None:
+        now = datetime.now(UTC)
+
+    # Ensure UTC
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=UTC)
+    elif now.tzinfo != UTC:
+        now = now.astimezone(UTC)
+
+    if latest_timestamp.tzinfo is None:
+        latest_timestamp = latest_timestamp.replace(tzinfo=UTC)
+    elif latest_timestamp.tzinfo != UTC:
+        latest_timestamp = latest_timestamp.astimezone(UTC)
+
+    # Determine threshold based on market hours
+    if is_market_hours(now):
+        threshold_hours = settings.NEWS_STALE_HOURS_MARKET
+    else:
+        threshold_hours = settings.NEWS_STALE_HOURS_OFF
+
+    age_seconds = (now - latest_timestamp).total_seconds()
+    threshold_seconds = threshold_hours * 3600
+
+    return age_seconds > threshold_seconds
 
 
 async def fetch_news_from_finnhub(

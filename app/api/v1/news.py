@@ -10,7 +10,7 @@ Provides:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -20,13 +20,16 @@ from app.config import settings
 from app.db.database import get_db
 from app.services.index_service import get_index_constituents_symbols
 from app.services.news_service import (
+    get_latest_article_timestamp,
     get_recent_news,
     get_ticker_sentiment,
+    is_stale,
     prune_old_articles,
     refresh_news_for_symbol,
 )
 from app.utils.cache import cache
 from app.utils.logger import app_logger
+from app.utils.market_hours import is_market_hours
 
 router = APIRouter(prefix="/news", tags=["news"])
 
@@ -135,23 +138,40 @@ async def get_news(
     ```
     """
     try:
-        articles = await get_recent_news(db, symbol.upper(), limit=limit, days=days)
+        # Check staleness before fetching
+        latest_timestamp = await get_latest_article_timestamp(db, symbol.upper())
+        now = datetime.now(UTC)
+        stale = is_stale(latest_timestamp, now)
 
-        # Auto-refresh if no articles found (first-time fetch)
-        if not articles:
+        # Auto-refresh if empty or stale
+        should_refresh = latest_timestamp is None or stale
+
+        if should_refresh:
+            # Calculate age for logging
+            age_hours = None
+            if latest_timestamp:
+                age_hours = (now - latest_timestamp).total_seconds() / 3600
+
             app_logger.info(
-                "No cached articles found, auto-refreshing from Finnhub",
-                extra={"symbol": symbol.upper(), "days": days},
+                "news_refresh_triggered",
+                extra={
+                    "ticker": symbol.upper(),
+                    "reason": "empty" if latest_timestamp is None else "stale",
+                    "age_hours": age_hours,
+                    "during_market": is_market_hours(now),
+                },
             )
+
             try:
                 await refresh_news_for_symbol(db, symbol.upper(), days=days)
                 await db.commit()
-                articles = await get_recent_news(db, symbol.upper(), limit=limit, days=days)
             except Exception as refresh_error:
                 app_logger.warning(
-                    "Auto-refresh failed, returning empty results",
+                    "Auto-refresh failed, returning cached results",
                     extra={"symbol": symbol.upper(), "error": str(refresh_error)},
                 )
+
+        articles = await get_recent_news(db, symbol.upper(), limit=limit, days=days)
 
         return TickerNewsResponse(
             symbol=symbol.upper(),
@@ -207,23 +227,42 @@ async def get_sentiment(
         return SentimentResponse(**cached)
 
     try:
-        sentiment = await get_ticker_sentiment(db, symbol.upper(), days=days)
+        # Check staleness before fetching sentiment
+        latest_timestamp = await get_latest_article_timestamp(db, symbol.upper())
+        now = datetime.now(UTC)
+        stale = is_stale(latest_timestamp, now)
 
-        # Auto-refresh if no articles found (first-time fetch)
-        if sentiment["article_count"] == 0:
+        # Auto-refresh if empty or stale
+        should_refresh = latest_timestamp is None or stale
+
+        if should_refresh:
+            # Calculate age for logging
+            age_hours = None
+            if latest_timestamp:
+                age_hours = (now - latest_timestamp).total_seconds() / 3600
+
             app_logger.info(
-                "No cached articles for sentiment, auto-refreshing from Finnhub",
-                extra={"symbol": symbol.upper(), "days": days},
+                "news_refresh_triggered",
+                extra={
+                    "ticker": symbol.upper(),
+                    "reason": "empty" if latest_timestamp is None else "stale",
+                    "age_hours": age_hours,
+                    "during_market": is_market_hours(now),
+                },
             )
+
             try:
                 await refresh_news_for_symbol(db, symbol.upper(), days=days)
                 await db.commit()
-                sentiment = await get_ticker_sentiment(db, symbol.upper(), days=days)
+                # Invalidate sentiment cache after refresh
+                await cache.delete(cache_key)
             except Exception as refresh_error:
                 app_logger.warning(
-                    "Auto-refresh failed for sentiment",
+                    "Auto-refresh failed for sentiment, returning cached results",
                     extra={"symbol": symbol.upper(), "error": str(refresh_error)},
                 )
+
+        sentiment = await get_ticker_sentiment(db, symbol.upper(), days=days)
 
         response = SentimentResponse(
             symbol=symbol.upper(),

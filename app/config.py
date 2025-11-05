@@ -129,6 +129,13 @@ class Settings(BaseSettings):
     NEWS_REFRESH_LOOKBACK_DAYS: int = Field(
         default=7, description="Default lookback window for news refresh (days)"
     )
+    NEWS_STALE_HOURS_MARKET: int = Field(
+        default=6, description="Hours threshold for stale news during market hours"
+    )
+    NEWS_STALE_HOURS_OFF: int = Field(
+        default=12, description="Hours threshold for stale news outside market hours"
+    )
+    MARKET_TZ: str = Field(default="America/New_York", description="Market timezone (NYSE/NASDAQ)")
     VOLARIS_API_TOKEN: str | None = Field(
         default=None,
         description="Bearer token used by internal automation (GitHub Actions, Discord admins)",
