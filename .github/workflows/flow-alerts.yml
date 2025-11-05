@@ -102,6 +102,21 @@ jobs:
               TRADE_NUM=$((TRADE_NUM + 1))
             done
 
+            # Analyze bias (calls vs puts) and build summary
+            CALL_COUNT=$(echo "$UNUSUAL_TRADES" | jq '[.[] | select(.option_type == "call")] | length')
+            PUT_COUNT=$(echo "$UNUSUAL_TRADES" | jq '[.[] | select(.option_type == "put")] | length')
+
+            if [ "$CALL_COUNT" -gt "$PUT_COUNT" ]; then
+              BIAS="📈 Bullish (${CALL_COUNT} calls vs ${PUT_COUNT} puts)"
+            elif [ "$PUT_COUNT" -gt "$CALL_COUNT" ]; then
+              BIAS="📉 Bearish (${PUT_COUNT} puts vs ${CALL_COUNT} calls)"
+            else
+              BIAS="⚖️ Mixed (${CALL_COUNT} calls, ${PUT_COUNT} puts)"
+            fi
+
+            # Get top 3 contracts with most premium
+            TOP_CONTRACTS=$(echo "$UNUSUAL_TRADES" | jq -r 'sort_by(-.premium) | limit(3; .[]) | "• \(.strike) \(if .option_type == "call" then "C" else "P" end) exp \(.expiration[5:10]) - Vol: \(.volume) OI: \(.open_interest) Premium: $\((.premium / 1000 | floor))k"' | head -3)
+
             # Get unique channel IDs from subscribers
             CHANNELS=$(echo "$SUBSCRIBERS" | jq -r '.[].channel_id' | sort -u)
 
@@ -109,12 +124,23 @@ jobs:
             echo "$CHANNELS" | while read -r CHANNEL_ID; do
               echo "  → Sending alert to channel $CHANNEL_ID"
 
-              # Build Discord webhook payload
-              # Note: In production, you'd build proper JSON with embeds
-              # For now, sending simple content message
+              # Build enhanced Discord webhook payload with embed
               WEBHOOK_PAYLOAD=$(jq -n \
-                --arg content "🔥 **$SYMBOL Unusual Options Flow Detected**\n\n**Detected $DETECTED_COUNT unusual contracts** (top score: $TOP_SCORE)\n\nCheck \`/flow $SYMBOL\` for details.\n\n_Data source: $PROVIDER_" \
-                '{content: $content}')
+                --arg symbol "$SYMBOL" \
+                --arg count "$DETECTED_COUNT" \
+                --arg score "$TOP_SCORE" \
+                --arg bias "$BIAS" \
+                --arg contracts "$TOP_CONTRACTS" \
+                --arg provider "$PROVIDER" \
+                '{
+                  embeds: [{
+                    title: ("🔥 " + $symbol + " Unusual Options Flow"),
+                    description: ("**" + $count + " unusual contracts detected** (top score: " + $score + ")\n\n**Bias:** " + $bias + "\n\n**Top Contracts by Premium:**\n" + $contracts + "\n\n_Run `/flow " + $symbol + "` for full details_"),
+                    color: 15158332,
+                    footer: {text: ("Source: " + $provider)},
+                    timestamp: (now | strftime("%Y-%m-%dT%H:%M:%SZ"))
+                  }]
+                }')
 
               # Send to Discord webhook (if configured)
               if [ -n "$DISCORD_WEBHOOK_URL" ]; then
