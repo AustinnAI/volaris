@@ -45,6 +45,77 @@
 
 **Documentation:** See [docs/PHASE_2.md](docs/PHASE_2.md)
 
+### 🔹 Phase 2 Enhancement – AI-Generated News Summaries
+**Status:** 📋 Not Started
+
+**Goal:** Layer AI-generated summaries on top of existing VADER sentiment engine to provide actionable, structured market intelligence.
+
+**Deliverables:**
+- [ ] LLM client service with provider abstraction (OpenAI, Anthropic, Google)
+- [ ] Grounded prompt engineering for single/multi-ticker summaries
+- [ ] Redis caching with 20-min TTL and URL-based invalidation
+- [ ] `/api/v1/news/{ticker}/ai-summary` endpoint
+- [ ] `POST /api/v1/news/ai-summary` multi-ticker endpoint
+- [ ] Discord `/ai-summary` command with embed formatting
+- [ ] Deterministic fallback on LLM failure (uses VADER + headlines)
+- [ ] Feature flag (`LLM_ENABLED`) for gradual rollout
+- [ ] Structured output schema with citation indices
+- [ ] Error handling with exponential backoff and circuit breaker
+
+**Key Features:**
+- Executive summary (2-3 sentences)
+- Key drivers with article citations
+- Sentiment snapshot (net score, dispersion, trend)
+- Risk flags and follow-up questions
+- Discord-optimized markdown rendering
+- Graceful degradation to deterministic fallback
+
+**Architecture:**
+- `app/core/ai/llm_client.py` - Provider-agnostic interface with retries
+- `app/core/ai/prompts.py` - Grounded prompt builders with article context
+- `app/core/ai/schema.py` - Pydantic models for structured outputs
+- `app/core/ai/formatters.py` - Discord markdown & fallback rendering
+- Redis cache key: `ai:sum:{model}:{version}:{ticker}:{urls_hash}`
+
+**Constraints:**
+- No new schedulers (request-time only, aligned with Phase 2 patterns)
+- Memory: <10MB additional (async httpx client, no pandas)
+- Latency: <2s p95 on cache hits, <5s on cold starts
+- Cost: ~$0.002 per summary with gpt-4o-mini (5 articles × 500 tokens)
+
+**Configuration:**
+```bash
+LLM_ENABLED=true
+LLM_PROVIDER=openai  # openai | anthropic | google
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sk-...
+LLM_TIMEOUT_SECONDS=12
+LLM_TEMPERATURE=0.2
+LLM_MAX_TOKENS=800
+LLM_SUMMARY_TTL_MINUTES=20
+SUMMARY_TOP_K=5
+PROMPT_VERSION=v1
+```
+
+**Success Metrics:**
+- Cache hit rate ≥ 60% during market hours
+- Summary generation <2s p95 (cache hit), <5s (cache miss)
+- Fallback rate <5% (excluding feature-flag disables)
+- User engagement: ≥30% of `/ai-summary` users return within 24h
+
+**Testing:**
+- Unit tests: Prompt determinism, schema validation, cache keys
+- Integration tests: Mock LLM responses, fallback triggering
+- Performance tests: Cold vs warm latency, memory profiling
+
+**Future Enhancements (V2):**
+- FinBERT sentiment (replace or ensemble with VADER)
+- Persistent summary storage for historical analysis
+- Provider arbitration (OpenAI → Anthropic fallback)
+- Self-hosted Llama/Mistral on larger infra
+
+**Documentation:** See [docs/PHASE_2_ENHANCEMENT.md](docs/PHASE_2_ENHANCEMENT.md)
+
 ### 🔹 Phase 3 – Options Flow Monitor
 **Status:** ✅ Phase 3.0 Complete | ✅ Phase 3.1 Complete | ✅ Phase 3.2 Complete (Automated Alerts)
 
