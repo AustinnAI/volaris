@@ -146,6 +146,12 @@
 - [ ] Optimize Docker builds and memory profile
 - [ ] Optional migration of scheduler to Cloud Run (2 GiB free) if needed
 
+**Bot Uptime Strategy:**
+- **Current:** Running bot locally during testing phase
+- **This week:** Add health endpoint to bot service + UptimeRobot monitors for both API and bot
+- **Later:** Consider migrating bot to Fly.io for guaranteed uptime (persistent WebSocket)
+- **Note:** Automated flow alerts work via GitHub Actions + webhooks regardless of bot status
+
 **Memory Optimization:**
 - Target: < 512 MB RAM for Render free tier
 - Strategy: On-demand data refresh per command (no continuous scheduler)

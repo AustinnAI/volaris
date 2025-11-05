@@ -326,7 +326,9 @@ async def run_bot() -> None:
 
     app = web.Application()
     app.router.add_get("/health", health_check)
+    app.router.add_head("/health", health_check)
     app.router.add_get("/", health_check)
+    app.router.add_head("/", health_check)
 
     port = int(os.environ.get("PORT", 10000))
     runner = web.AppRunner(app)
