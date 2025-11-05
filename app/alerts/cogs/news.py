@@ -248,6 +248,91 @@ class NewsCog(commands.Cog):
         embed.set_footer(text=f"Requested by {interaction.user.display_name}")
         await interaction.followup.send(embed=embed)
 
+    @app_commands.command(
+        name="ai-summary",
+        description="Get AI-powered market intelligence summary (Phase 2 Enhancement)",
+    )
+    @app_commands.describe(
+        ticker="Ticker symbol (e.g., SPY, QQQ, AAPL)",
+        force_refresh="Skip cache and generate fresh summary",
+    )
+    async def ai_summary(
+        self, interaction: discord.Interaction, ticker: str, force_refresh: bool = False
+    ) -> None:
+        """
+        Generate AI-powered market intelligence summary with key drivers and insights.
+
+        Uses OpenAI gpt-4o-mini to analyze recent news articles and sentiment,
+        producing structured insights with citations.
+        """
+        await interaction.response.defer()
+
+        try:
+            # Call AI summary endpoint
+            url = f"{self.bot.api_client.base_url}/api/v1/news/{ticker}/ai-summary"
+            params = {"force_refresh": force_refresh}
+
+            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 404:
+                        await interaction.followup.send(
+                            f"❌ Ticker **{ticker.upper()}** not found or no news articles available."
+                        )
+                        return
+                    elif response.status != 200:
+                        error_detail = await response.text()
+                        await interaction.followup.send(
+                            f"❌ Failed to generate AI summary: {error_detail[:100]}"
+                        )
+                        return
+
+                    data = await response.json()
+
+        except aiohttp.ClientError as exc:
+            await interaction.followup.send(f"❌ Unable to fetch AI summary: {exc}")
+            return
+
+        # Extract response fields
+        markdown = data.get("markdown", "")
+        fallback_used = data.get("fallback_used", False)
+        cache_hit = data.get("cache_hit", False)
+
+        if not markdown:
+            await interaction.followup.send(
+                f"❌ No summary available for **{ticker.upper()}**. Try refreshing news first with `/refresh-news {ticker}`"
+            )
+            return
+
+        # Determine embed color based on sentiment
+        structured = data.get("structured", {})
+        sentiment_snapshot = structured.get("sentiment_snapshot", {})
+        net_score = sentiment_snapshot.get("net_score", 0.0)
+
+        if net_score > 0.05:
+            color = discord.Color.green()
+        elif net_score < -0.05:
+            color = discord.Color.red()
+        else:
+            color = discord.Color.greyple()
+
+        # Create embed
+        embed = discord.Embed(
+            description=markdown,
+            color=color,
+            timestamp=discord.utils.utcnow(),
+        )
+
+        # Add footer with indicators
+        footer_parts = [f"Requested by {interaction.user.display_name}"]
+        if cache_hit:
+            footer_parts.append("📦 Cached")
+        if fallback_used:
+            footer_parts.append("⚙️ Fallback Mode (LLM unavailable)")
+
+        embed.set_footer(text=" • ".join(footer_parts))
+
+        await interaction.followup.send(embed=embed)
+
 
 async def setup(bot: VolarisBot) -> None:
     """Load the News cog."""
