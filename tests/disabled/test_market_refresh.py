@@ -60,9 +60,13 @@ async def test_refresh_market_data_batch(monkeypatch):
         assert symbols == ["AAPL", "MSFT"]
         return 5
 
+    def fake_auth(request):
+        return None  # Skip auth for tests
+
     monkeypatch.setattr(market_data, "fetch_realtime_prices", fake_prices)
     monkeypatch.setattr(market_data, "fetch_option_chains", fake_options)
     monkeypatch.setattr(market_data, "compute_iv_metrics", fake_iv)
+    monkeypatch.setattr("app.api.security.require_bearer_token", fake_auth)
 
     payload = MarketRefreshBatchRequest(
         symbols=["aapl", "msft"],
@@ -86,8 +90,12 @@ async def test_refresh_watchlist_endpoint(monkeypatch):
         assert symbols == ["SPY", "QQQ"]
         return {"symbols": symbols, "results": {"price": 2}}
 
+    def fake_auth(request):
+        return None  # Skip auth for tests
+
     monkeypatch.setattr(market_data.WatchlistService, "get_symbols", fake_get_symbols)
     monkeypatch.setattr(market_data, "_refresh_symbols", fake_refresh)
+    monkeypatch.setattr("app.api.security.require_bearer_token", fake_auth)
 
     db = AsyncMock()
     request = Request(scope={"type": "http", "headers": []})

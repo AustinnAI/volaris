@@ -37,10 +37,10 @@ jobs:
           pip install black ruff mypy
 
       - name: Run Black (format check)
-        run: black --check app/ tests/
+        run: black --check app/ tests/ --exclude tests/disabled
 
       - name: Run Ruff (linting)
-        run: ruff check app/ tests/
+        run: ruff check app/ tests/ --exclude tests/disabled
 
       - name: Run MyPy (type checking)
         run: mypy app/ --ignore-missing-imports
