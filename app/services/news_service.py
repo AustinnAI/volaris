@@ -189,18 +189,20 @@ async def get_recent_news(
     symbol: str,
     limit: int = 10,
     days: int = 7,
+    diversify: bool = True,
 ) -> list[NewsArticle]:
     """
-    Get recent news articles for a ticker.
+    Get recent news articles for a ticker with optional source diversity.
 
     Args:
         db: Database session
         symbol: Ticker symbol
         limit: Maximum number of articles to return
         days: Number of days to look back
+        diversify: If True, ensure source diversity by limiting same-source runs (default: True)
 
     Returns:
-        List of NewsArticle objects (most recent first)
+        List of NewsArticle objects (most recent first, diversified by source if enabled)
 
     Example:
         >>> articles = await get_recent_news(db, "AAPL", limit=5, days=7)
@@ -211,6 +213,9 @@ async def get_recent_news(
 
     cutoff_date = datetime.now(UTC) - timedelta(days=days)
 
+    # Fetch more articles than needed if diversifying
+    fetch_limit = limit * 3 if diversify else limit
+
     stmt = (
         select(NewsArticle)
         .where(
@@ -218,11 +223,41 @@ async def get_recent_news(
             NewsArticle.published_at >= cutoff_date,
         )
         .order_by(NewsArticle.published_at.desc())
-        .limit(limit)
+        .limit(fetch_limit)
     )
 
     result = await db.execute(stmt)
-    articles = list(result.scalars().all())
+    all_articles = list(result.scalars().all())
+
+    # Apply source diversity filter if enabled
+    if diversify and len(all_articles) > limit:
+        diversified = []
+        source_count = {}
+        # Allow max 2 consecutive articles from same source
+        max_consecutive = 2
+
+        for article in all_articles:
+            source = article.source or "Unknown"
+
+            # Check if we can add this source
+            can_add = True
+
+            # Don't allow more than max_consecutive from same source in a row
+            if len(diversified) >= max_consecutive:
+                recent_sources = [a.source for a in diversified[-max_consecutive:]]
+                if all(s == source for s in recent_sources):
+                    can_add = False
+
+            if can_add:
+                diversified.append(article)
+                source_count[source] = source_count.get(source, 0) + 1
+
+            if len(diversified) >= limit:
+                break
+
+        articles = diversified
+    else:
+        articles = all_articles[:limit]
 
     app_logger.debug(
         "Retrieved recent news",
@@ -231,6 +266,7 @@ async def get_recent_news(
             "article_count": len(articles),
             "days": days,
             "limit": limit,
+            "diversify": diversify,
         },
     )
 

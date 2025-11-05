@@ -227,10 +227,10 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="📰 News & Sentiment",
             value=(
-                "**`/sentiment <ticker>`** - Bullish/bearish score (-1 to +1)\n"
-                "**`/sentiment-summary <tickers>`** - Compare multiple (e.g., SPY,QQQ,AAPL)\n"
-                "**`/news <ticker>`** - Recent headlines\n"
-                "_Use before trades to gauge market sentiment_"
+                "**`/news <ticker>`** - Recent headlines with sentiment (auto-fetches if needed)\n"
+                "**`/news-sentiment <ticker>`** - Aggregated bullish/bearish score\n"
+                "**`/refresh-news <ticker>`** - Manually refresh articles from Finnhub\n"
+                "_Sources: Yahoo Finance, CNBC, Seeking Alpha, Reuters (via Finnhub)_"
             ),
             inline=False,
         )
@@ -272,16 +272,17 @@ class UtilitiesCog(commands.Cog):
             name="🚀 Recommended Workflow",
             value=(
                 "1. Subscribe: `/flow-subscribe SPY`\n"
-                "2. Check sentiment: `/sentiment SPY`\n"
-                "3. Confirm flow: `/flow SPY` (manual check)\n"
-                "4. Set target: `/alerts add SPY above 600`\n"
-                "5. Get automated alerts in #trading every 10 min"
+                "2. Check sentiment: `/news-sentiment SPY`\n"
+                "3. Read headlines: `/news SPY`\n"
+                "4. Confirm flow: `/flow SPY` (manual check)\n"
+                "5. Set target: `/alerts add SPY above 600`\n"
+                "6. Get automated flow alerts in #trading every 10 min"
             ),
             inline=False,
         )
 
         embed.set_footer(
-            text="Volaris V1 • 15 Commands • Automated flow alerts every 10 min during market hours"
+            text="Volaris V1 • 19 Commands • Automated flow alerts every 10 min during market hours"
         )
 
         await interaction.response.send_message(embed=embed, ephemeral=True)

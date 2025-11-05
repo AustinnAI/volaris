@@ -41,7 +41,9 @@
       "Bash(done)",
       "Bash(venv/bin/alembic revision --autogenerate -m \"add_option_flow_table\")",
       "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table\")",
-      "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table_v2\")"
+      "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table_v2\")",
+      "Bash(for file in app/alerts/cogs/market_data.py app/alerts/cogs/news.py app/alerts/cogs/utilities.py app/alerts/cogs/watchlist.py)",
+      "Bash(do echo \"=== $file ===\")"
     ],
     "deny": [],
     "ask": []

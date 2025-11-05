@@ -137,6 +137,22 @@ async def get_news(
     try:
         articles = await get_recent_news(db, symbol.upper(), limit=limit, days=days)
 
+        # Auto-refresh if no articles found (first-time fetch)
+        if not articles:
+            app_logger.info(
+                "No cached articles found, auto-refreshing from Finnhub",
+                extra={"symbol": symbol.upper(), "days": days},
+            )
+            try:
+                await refresh_news_for_symbol(db, symbol.upper(), days=days)
+                await db.commit()
+                articles = await get_recent_news(db, symbol.upper(), limit=limit, days=days)
+            except Exception as refresh_error:
+                app_logger.warning(
+                    "Auto-refresh failed, returning empty results",
+                    extra={"symbol": symbol.upper(), "error": str(refresh_error)},
+                )
+
         return TickerNewsResponse(
             symbol=symbol.upper(),
             article_count=len(articles),
@@ -192,6 +208,22 @@ async def get_sentiment(
 
     try:
         sentiment = await get_ticker_sentiment(db, symbol.upper(), days=days)
+
+        # Auto-refresh if no articles found (first-time fetch)
+        if sentiment["article_count"] == 0:
+            app_logger.info(
+                "No cached articles for sentiment, auto-refreshing from Finnhub",
+                extra={"symbol": symbol.upper(), "days": days},
+            )
+            try:
+                await refresh_news_for_symbol(db, symbol.upper(), days=days)
+                await db.commit()
+                sentiment = await get_ticker_sentiment(db, symbol.upper(), days=days)
+            except Exception as refresh_error:
+                app_logger.warning(
+                    "Auto-refresh failed for sentiment",
+                    extra={"symbol": symbol.upper(), "error": str(refresh_error)},
+                )
 
         response = SentimentResponse(
             symbol=symbol.upper(),
