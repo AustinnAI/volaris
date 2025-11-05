@@ -17,7 +17,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.core.ai import AISummaryAPIResponse, render_discord_markdown
 from app.db.database import get_db
+from app.services.ai_summary_service import generate_ai_summary
 from app.services.index_service import get_index_constituents_symbols
 from app.services.news_service import (
     get_latest_article_timestamp,
@@ -517,3 +519,61 @@ async def prune_news(
             extra={"error": str(e)},
         )
         raise HTTPException(status_code=500, detail=f"Failed to prune news: {str(e)}")
+
+
+# -------------------------------------------------------------------------
+# AI Summary Endpoints (Phase 2 Enhancement)
+# -------------------------------------------------------------------------
+
+
+@router.get("/{symbol}/ai-summary", response_model=AISummaryAPIResponse)
+async def get_ai_summary_single(
+    symbol: str,
+    force_refresh: bool = Query(default=False, description="Skip cache and regenerate"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate AI-powered market intelligence summary for a ticker.
+
+    Uses LLM (OpenAI gpt-4o-mini by default) to analyze recent news articles
+    and sentiment, producing structured insights with citations.
+
+    Features:
+    - Executive summary (2-3 sentences)
+    - Key drivers with article citations
+    - Sentiment snapshot (VADER metrics)
+    - Risk flags and follow-up recommendations
+    - Discord-optimized markdown output
+    - 20-minute Redis cache (configurable)
+    - Deterministic fallback if LLM unavailable
+
+    **Example:**
+    ```bash
+    curl -X GET "http://localhost:8000/api/v1/news/SPY/ai-summary"
+    ```
+
+    **Response includes:**
+    - `structured`: Full SummaryResponse schema
+    - `markdown`: Discord-ready formatted text
+    - `fallback_used`: True if LLM failed/disabled
+    - `cache_hit`: True if result from cache
+    """
+    try:
+        summary, fallback_used, cache_hit = await generate_ai_summary(db, symbol, force_refresh)
+
+        markdown = render_discord_markdown(summary, fallback_used)
+
+        return AISummaryAPIResponse(
+            structured=summary,
+            markdown=markdown,
+            fallback_used=fallback_used,
+            cache_hit=cache_hit,
+        )
+
+    except Exception as e:
+        app_logger.error(
+            f"Failed to generate AI summary for {symbol}",
+            extra={"error": str(e)},
+            exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate AI summary: {str(e)}")
