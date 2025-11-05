@@ -28,11 +28,14 @@ jobs:
         id: scan
         run: |
           MIN_SCORE="${{ github.event.inputs.min_score || '0.75' }}"
+          # Only alert on flows detected in last 12 minutes (prevents duplicates)
+          # Using 12 instead of 10 to account for workflow execution delays
+          SINCE_MINUTES="12"
 
-          echo "Scanning subscribed tickers for unusual flow (min_score=$MIN_SCORE)"
+          echo "Scanning subscribed tickers for unusual flow (min_score=$MIN_SCORE, since_minutes=$SINCE_MINUTES)"
 
           RESPONSE=$(curl -s -X GET \
-            "$VOLARIS_API_URL/api/v1/flow/scan?min_score=$MIN_SCORE" \
+            "$VOLARIS_API_URL/api/v1/flow/scan?min_score=$MIN_SCORE&since_minutes=$SINCE_MINUTES" \
             -H "Authorization: Bearer $VOLARIS_API_TOKEN" \
             -H "Content-Type: application/json")
 

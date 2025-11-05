@@ -89,6 +89,7 @@ class FlowService:
         hours: int = 24,
         min_score: float = 0.7,
         limit: int = 50,
+        since: datetime | None = None,
     ) -> list[OptionFlow]:
         """
         Query recent unusual activity from database.
@@ -96,9 +97,10 @@ class FlowService:
         Args:
             db: Database session.
             symbol: Ticker symbol (e.g., SPY, AAPL).
-            hours: Lookback period in hours.
+            hours: Lookback period in hours (ignored if 'since' is provided).
             min_score: Minimum anomaly score filter.
             limit: Maximum results to return.
+            since: Only return records detected after this timestamp (for deduplication).
 
         Returns:
             List of OptionFlow records sorted by anomaly_score descending.
@@ -112,7 +114,8 @@ class FlowService:
             return []
 
         # Query flow records
-        cutoff = datetime.now() - timedelta(hours=hours)
+        # Use 'since' parameter if provided, otherwise use hours lookback
+        cutoff = since if since else datetime.now() - timedelta(hours=hours)
         stmt = (
             select(OptionFlow)
             .where(

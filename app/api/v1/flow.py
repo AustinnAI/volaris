@@ -4,7 +4,7 @@ Options Flow API Endpoints (Phase 3).
 Provides endpoints for detecting and querying unusual options activity.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -101,6 +101,12 @@ class BatchScanResponse(BaseModel):
 @router.get("/scan", response_model=BatchScanResponse)
 async def batch_scan_subscribed_tickers(
     min_score: float = Query(default=0.75, ge=0.0, le=1.0),
+    since_minutes: int | None = Query(
+        default=None,
+        ge=1,
+        le=1440,
+        description="Only return flows detected in last N minutes (for deduplication)",
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> BatchScanResponse:
     """
@@ -111,6 +117,7 @@ async def batch_scan_subscribed_tickers(
 
     Args:
         min_score: Global minimum anomaly score (can be overridden per subscription).
+        since_minutes: Only return flow records detected in the last N minutes (prevents duplicate alerts).
 
     Returns:
         BatchScanResponse with detected unusual activity and subscriber lists.
@@ -145,6 +152,11 @@ async def batch_scan_subscribed_tickers(
         results = []
         detected_tickers = 0
 
+        # Calculate 'since' timestamp if since_minutes provided
+        since_timestamp = None
+        if since_minutes is not None:
+            since_timestamp = datetime.now() - timedelta(minutes=since_minutes)
+
         for symbol, data in ticker_subs.items():
             try:
                 # Use lowest min_score from all subscribers for this ticker
@@ -153,20 +165,28 @@ async def batch_scan_subscribed_tickers(
                     default=min_score,
                 )
 
-                # Detect unusual activity (with 1hr cache)
-                flow_records = await flow_service.get_recent_unusual_activity(
-                    db, symbol, hours=1, min_score=ticker_min_score
-                )
-
-                # If no cached data, fetch fresh
-                if not flow_records:
-                    flow_records, provider_name = (
-                        await flow_service.detect_and_store_unusual_activity(
-                            db, symbol, min_score=ticker_min_score
-                        )
+                # Detect unusual activity
+                # If since_minutes provided, only get records detected after that time
+                # Otherwise, use 1hr cache
+                if since_timestamp:
+                    flow_records = await flow_service.get_recent_unusual_activity(
+                        db, symbol, min_score=ticker_min_score, since=since_timestamp
                     )
+                    provider_name = "database" if flow_records else "none"
                 else:
-                    provider_name = "cached"
+                    flow_records = await flow_service.get_recent_unusual_activity(
+                        db, symbol, hours=1, min_score=ticker_min_score
+                    )
+
+                    # If no cached data, fetch fresh
+                    if not flow_records:
+                        flow_records, provider_name = (
+                            await flow_service.detect_and_store_unusual_activity(
+                                db, symbol, min_score=ticker_min_score
+                            )
+                        )
+                    else:
+                        provider_name = "cached"
 
                 # Convert to response format
                 unusual_trades = []
