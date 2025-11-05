@@ -4,8 +4,7 @@ Basic tests for AI summarization core module (Phase 2 Enhancement).
 Tests schema validation, prompt building, cache key generation, and formatters.
 """
 
-import hashlib
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
