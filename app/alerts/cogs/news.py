@@ -249,14 +249,14 @@ class NewsCog(commands.Cog):
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(
-        name="ai-summary",
-        description="Get AI-powered market intelligence summary (Phase 2 Enhancement)",
+        name="summary",
+        description="Get AI-powered market intelligence summary",
     )
     @app_commands.describe(
         ticker="Ticker symbol (e.g., SPY, QQQ, AAPL)",
         force_refresh="Skip cache and generate fresh summary",
     )
-    async def ai_summary(
+    async def summary(
         self, interaction: discord.Interaction, ticker: str, force_refresh: bool = False
     ) -> None:
         """
@@ -268,11 +268,13 @@ class NewsCog(commands.Cog):
         await interaction.response.defer()
 
         try:
-            # Call AI summary endpoint
+            # Call AI summary endpoint (increase timeout for LLM operations)
             url = f"{self.bot.api_client.base_url}/api/v1/news/{ticker}/ai-summary"
             params = {"force_refresh": force_refresh}
 
-            async with aiohttp.ClientSession(timeout=self.bot.api_client.timeout) as session:
+            # Use 60s timeout for AI summary (can take 10-15s on first call)
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(url, params=params) as response:
                     if response.status == 404:
                         await interaction.followup.send(
@@ -288,6 +290,11 @@ class NewsCog(commands.Cog):
 
                     data = await response.json()
 
+        except TimeoutError:
+            await interaction.followup.send(
+                "❌ Request timed out. AI summary generation can take 10-15s on first call. Try again - it should be cached now."
+            )
+            return
         except aiohttp.ClientError as exc:
             await interaction.followup.send(f"❌ Unable to fetch AI summary: {exc}")
             return
