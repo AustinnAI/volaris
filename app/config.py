@@ -136,6 +136,27 @@ class Settings(BaseSettings):
         default=12, description="Hours threshold for stale news outside market hours"
     )
     MARKET_TZ: str = Field(default="America/New_York", description="Market timezone (NYSE/NASDAQ)")
+
+    # AI Summarization (Phase 2 Enhancement)
+    LLM_ENABLED: bool = Field(default=False, description="Enable LLM-powered news summaries")
+    LLM_PROVIDER: str = Field(
+        default="openai", description="LLM provider: openai | anthropic | google"
+    )
+    LLM_MODEL: str = Field(default="gpt-4o-mini", description="LLM model to use")
+    LLM_API_KEY: str | None = Field(default=None, description="LLM provider API key")
+    LLM_TIMEOUT_SECONDS: int = Field(default=12, description="LLM API timeout in seconds")
+    LLM_TEMPERATURE: float = Field(default=0.2, description="LLM temperature for summarization")
+    LLM_MAX_TOKENS: int = Field(default=800, description="Max tokens for LLM response")
+    LLM_SUMMARY_TTL_MINUTES: int = Field(
+        default=20, description="Redis cache TTL for AI summaries (minutes)"
+    )
+    SUMMARY_TOP_K: int = Field(
+        default=5, ge=1, le=10, description="Number of top articles to include in summary"
+    )
+    PROMPT_VERSION: str = Field(
+        default="v1", description="Prompt template version for cache invalidation"
+    )
+
     VOLARIS_API_TOKEN: str | None = Field(
         default=None,
         description="Bearer token used by internal automation (GitHub Actions, Discord admins)",
