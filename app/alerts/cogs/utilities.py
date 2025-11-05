@@ -208,27 +208,29 @@ class UtilitiesCog(commands.Cog):
         """Send a comprehensive command reference embed."""
         embed = discord.Embed(
             title="📚 Volaris Bot Commands",
-            description="Real-time market intelligence for SPY/QQQ and large-cap stocks",
+            description="Track unusual options activity and sentiment for SPY/QQQ/large-caps",
             color=discord.Color.blue(),
         )
 
         embed.add_field(
-            name="📰 News & Sentiment",
+            name="🔥 Options Flow (Core Feature)",
             value=(
-                "**`/news <ticker>`** - Recent news headlines\n"
-                "**`/sentiment <ticker>`** - Sentiment analysis with scores\n"
-                "**`/sentiment-summary <tickers>`** - Compare sentiment across multiple tickers"
+                "**`/flow <ticker>`** - Find unusual options activity (smart money)\n"
+                "**`/flow-subscribe <ticker>`** - Get alerts every 10 min during market hours\n"
+                "**`/flow-subscriptions`** - View your active alert subscriptions\n"
+                "**`/flow-unsubscribe <ticker>`** - Stop receiving alerts\n"
+                "_Shows: Block trades, volume spikes, high vol/OI ratios_"
             ),
             inline=False,
         )
 
         embed.add_field(
-            name="📊 Options Flow",
+            name="📰 News & Sentiment",
             value=(
-                "**`/flow <ticker>`** - Detect unusual options activity\n"
-                "**`/flow-subscribe <ticker>`** - Get automated flow alerts\n"
-                "**`/flow-unsubscribe <ticker>`** - Stop flow alerts\n"
-                "**`/flow-subscriptions`** - View your active subscriptions"
+                "**`/sentiment <ticker>`** - Bullish/bearish score (-1 to +1)\n"
+                "**`/sentiment-summary <tickers>`** - Compare multiple (e.g., SPY,QQQ,AAPL)\n"
+                "**`/news <ticker>`** - Recent headlines\n"
+                "_Use before trades to gauge market sentiment_"
             ),
             inline=False,
         )
@@ -237,9 +239,9 @@ class UtilitiesCog(commands.Cog):
             name="📈 Market Data",
             value=(
                 "**`/price <ticker>`** - Current price + % change\n"
-                "**`/iv <ticker>`** - IV, IV rank, IV percentile\n"
-                "**`/range <ticker>`** - 52-week high/low position\n"
-                "**`/volume <ticker>`** - Volume vs 30-day average"
+                "**`/iv <ticker>`** - IV rank/percentile (options pricing)\n"
+                "**`/volume <ticker>`** - Volume vs 30-day avg\n"
+                "**`/range <ticker>`** - 52-week high/low position"
             ),
             inline=False,
         )
@@ -247,41 +249,40 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="🔔 Price Alerts",
             value=(
-                "**`/alerts add <ticker> <price>`** - Create price alert\n"
-                "**`/alerts list`** - View active alerts\n"
-                "**`/alerts remove <id>`** - Remove alert"
+                "**`/alerts add <ticker> <direction> <price>`** - Get notified at price\n"
+                "**`/alerts list`** - View all alerts\n"
+                "**`/alerts remove <id>`** - Delete alert\n"
+                "_Example: `/alerts add SPY above 600`_"
             ),
             inline=False,
         )
 
         embed.add_field(
-            name="📋 Watchlist",
+            name="📋 Watchlist & Utils",
             value=(
                 "**`/watchlist get`** - View server watchlist\n"
-                "**`/watchlist set`** - Update watchlist symbols"
+                "**`/watchlist set <symbols>`** - Update watchlist\n"
+                "**`/check`** - Bot health status\n"
+                "**`/help`** - Show this message"
             ),
             inline=False,
         )
 
         embed.add_field(
-            name="✅ Utilities",
-            value=("**`/check`** - System health check\n" "**`/help`** - Show this help message"),
-            inline=False,
-        )
-
-        embed.add_field(
-            name="💡 Quick Examples",
+            name="🚀 Recommended Workflow",
             value=(
-                "• `/flow SPY min_score:0.80` - Find high-conviction flow\n"
-                "• `/flow-subscribe QQQ` - Auto-alerts for QQQ unusual activity\n"
-                "• `/sentiment-summary SPY,QQQ,AAPL` - Compare 3 tickers\n"
-                "• `/price AAPL` - Quick price check\n"
-                "• `/alerts add SPY above 600` - Alert when SPY hits $600"
+                "1. Subscribe: `/flow-subscribe SPY`\n"
+                "2. Check sentiment: `/sentiment SPY`\n"
+                "3. Confirm flow: `/flow SPY` (manual check)\n"
+                "4. Set target: `/alerts add SPY above 600`\n"
+                "5. Get automated alerts in #trading every 10 min"
             ),
             inline=False,
         )
 
-        embed.set_footer(text="Volaris V1 MVP • 15 Commands • News + Flow Focus")
+        embed.set_footer(
+            text="Volaris V1 • 15 Commands • Automated flow alerts every 10 min during market hours"
+        )
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 

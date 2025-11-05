@@ -46,13 +46,14 @@
 **Documentation:** See [docs/PHASE_2.md](docs/PHASE_2.md)
 
 ### 🔹 Phase 3 – Options Flow Monitor
-**Status:** ✅ Phase 3.0 Complete | ✅ Phase 3.1 Complete | 📋 Phase 3.2 Not Started
+**Status:** ✅ Phase 3.0 Complete | ✅ Phase 3.1 Complete | ✅ Phase 3.2 Complete (Automated Alerts)
 
 **Provider Strategy:**
 - **Phase 3.0 (MVP):** ✅ Schwab (primary), Alpha Vantage (fallback), yfinance (local dev)
 - **Phase 3.1:** ✅ Alpha Vantage integration complete
-- **Phase 3.2 (Next):** Evaluate Unusual Whales free tier, upgrade if superior
-- **V2 (Future):** Add instant Discord alerts, flow leaderboard, anomaly trends
+- **Phase 3.2:** ✅ Automated Discord alerts via GitHub Actions (every 10 min during market hours)
+- **Phase 3.3 (Future):** Evaluate Unusual Whales free tier, upgrade if superior
+- **V2 (Future):** Flow leaderboard, anomaly trends, real-time websocket alerts
 
 **Phase 3.0 MVP - Custom Flow Detection** ✅ Complete
 - [x] Create `FlowProvider` interface pattern (ABC)
@@ -74,11 +75,20 @@
 - [x] Add to fallback hierarchy: Schwab → Alpha Vantage → yfinance
 - [x] Rate limiting: 25 req/day (free tier)
 
-**Phase 3.2 - Premium Upgrade Path (Unusual Whales)**
+**Phase 3.2 - Automated Flow Alerts** ✅ Complete
+- [x] Create `flow_subscriptions` database table for user preferences
+- [x] Add `/flow-subscribe`, `/flow-unsubscribe`, `/flow-subscriptions` Discord commands
+- [x] Add `/api/v1/flow/subscribe`, `/unsubscribe`, `/subscriptions/{user_id}` API endpoints
+- [x] Add `/api/v1/flow/scan` batch scan endpoint for all subscribed tickers
+- [x] Create GitHub Actions workflow (`flow-alerts.yml`) - runs every 10 min during market hours
+- [x] Configure Discord webhook for automated alerts
+- [x] Fix route order issue (/scan must come before /{symbol})
+- [x] Support per-user min_score thresholds and channel targeting
+
+**Phase 3.3 - Premium Upgrade Path (Unusual Whales)** 📋 Not Started
 - [ ] Test Unusual Whales free tier (Shamu plan) for SPY/QQQ
 - [ ] Compare custom anomaly logic vs Whales pre-built flags
 - [ ] If Whales superior: implement `UnusualWhalesProvider` and upgrade to paid
-- [ ] Add Discord webhook for instant unusual activity alerts (if paid plan)
 - [ ] Keep yfinance as fallback if Whales API down
 
 **Key Features:**
