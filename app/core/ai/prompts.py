@@ -36,14 +36,14 @@ def build_single_ticker_prompt(
     sources_json = []
 
     for idx, article in enumerate(articles, start=1):
-        articles_text += f"\n[{idx}] {article.title}\n"
+        articles_text += f"\n[{idx}] {article.headline}\n"
         articles_text += f"    Source: {article.source}\n"
         articles_text += f"    Published: {article.published_at.strftime('%Y-%m-%d %H:%M UTC')}\n"
 
         sources_json.append(
             {
                 "idx": idx,
-                "title": article.title,
+                "title": article.headline,
                 "url": article.url,
                 "published_at": article.published_at.isoformat(),
             }

@@ -122,16 +122,16 @@ def create_fallback_summary(
     if not articles:
         executive_summary = f"{ticker}: No recent news articles available for analysis."
     else:
-        top_headlines = [art.title for art in articles[:2]]
+        top_headlines = [art.headline for art in articles[:2]]
         executive_summary = f"Based on {len(articles)} recent article{'s' if len(articles) != 1 else ''}: {'; '.join(top_headlines[:2])}."
 
     # Create key drivers from top headlines
     key_drivers = []
     for idx, article in enumerate(articles[:3], start=1):
         # Extract first 8 words as theme
-        theme_words = article.title.split()[:8]
+        theme_words = article.headline.split()[:8]
         theme = " ".join(theme_words)
-        if len(article.title.split()) > 8:
+        if len(article.headline.split()) > 8:
             theme += "..."
 
         key_drivers.append(KeyDriver(theme=theme, supporting_articles=[idx]))
@@ -166,7 +166,7 @@ def create_fallback_summary(
         sources.append(
             Source(
                 idx=idx,
-                title=article.title,
+                title=article.headline,
                 url=article.url,
                 published_at=article.published_at.isoformat(),
             )
