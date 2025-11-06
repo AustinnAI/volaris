@@ -228,6 +228,7 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="📰 News & Sentiment",
             value=(
+                "**`/summary <ticker>`** - AI-powered market intelligence (key drivers, risks, sentiment)\n"
                 "**`/news <ticker>`** - Recent headlines with sentiment (auto-fetches if needed)\n"
                 "**`/news-sentiment <ticker>`** - Aggregated bullish/bearish score\n"
                 "**`/refresh-news <ticker>`** - Manually refresh articles from Finnhub\n"
