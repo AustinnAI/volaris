@@ -29,10 +29,22 @@ class Settings(BaseSettings):
 
     # API Configuration
     API_V1_PREFIX: str = Field(default="/api/v1", description="API version 1 prefix")
-    CORS_ORIGINS: list[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8000"],
-        description="Allowed CORS origins",
+    CORS_ORIGINS: str | list[str] = Field(
+        default="http://localhost:3000,http://localhost:8000",
+        description="Allowed CORS origins (comma-separated string)",
     )
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from comma-separated string or JSON list."""
+        if isinstance(v, str):
+            # Try comma-separated first
+            if "," in v:
+                return [origin.strip() for origin in v.split(",")]
+            # Single origin
+            return [v.strip()]
+        return v
 
     # Database - PostgreSQL (Neon/Supabase)
     DATABASE_URL: str = Field(

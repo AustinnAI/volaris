@@ -269,7 +269,7 @@ class NewsCog(commands.Cog):
 
         try:
             # Call AI summary endpoint (increase timeout for LLM operations)
-            url = f"{self.bot.api_client.base_url}/api/v1/news/{ticker}/ai-summary"
+            url = f"{self.bot.api_client.base_url}/api/v1/news/{ticker}/summary"
             params = {"force_refresh": force_refresh}
 
             # Use 60s timeout for AI summary (can take 10-15s on first call)

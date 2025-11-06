@@ -43,7 +43,11 @@
       "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table\")",
       "Bash(venv/bin/alembic revision --autogenerate -m \"add_flow_subscriptions_table_v2\")",
       "Bash(for file in app/alerts/cogs/market_data.py app/alerts/cogs/news.py app/alerts/cogs/utilities.py app/alerts/cogs/watchlist.py)",
-      "Bash(do echo \"=== $file ===\")"
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(ENVIRONMENT=testing DATABASE_URL=postgresql://test:test@localhost:5432/test UPSTASH_REDIS_REST_URL=http://localhost UPSTASH_REDIS_REST_TOKEN=test venv/bin/pytest tests/ -v --tb=short)",
+      "Bash(venv/bin/pytest tests/ -v --tb=short)",
+      "Bash(git restore:*)",
+      "Bash(venv/bin/pytest tests/test_ai_core.py -v)"
     ],
     "deny": [],
     "ask": []

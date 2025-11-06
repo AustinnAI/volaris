@@ -526,8 +526,8 @@ async def prune_news(
 # -------------------------------------------------------------------------
 
 
-@router.get("/{symbol}/ai-summary", response_model=AISummaryAPIResponse)
-async def get_ai_summary_single(
+@router.get("/{symbol}/summary", response_model=AISummaryAPIResponse)
+async def get_summary(
     symbol: str,
     force_refresh: bool = Query(default=False, description="Skip cache and regenerate"),
     db: AsyncSession = Depends(get_db),
@@ -549,7 +549,7 @@ async def get_ai_summary_single(
 
     **Example:**
     ```bash
-    curl -X GET "http://localhost:8000/api/v1/news/SPY/ai-summary"
+    curl -X GET "http://localhost:8000/api/v1/news/SPY/summary"
     ```
 
     **Response includes:**
