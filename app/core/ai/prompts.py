@@ -40,6 +40,14 @@ def build_single_ticker_prompt(
         articles_text += f"    Source: {article.source}\n"
         articles_text += f"    Published: {article.published_at.strftime('%Y-%m-%d %H:%M UTC')}\n"
 
+        # Include article summary for richer context (truncate to ~150 words to control tokens)
+        if article.summary:
+            # Truncate to ~600 chars (roughly 150 words) to balance cost vs quality
+            summary_text = article.summary[:600].strip()
+            if len(article.summary) > 600:
+                summary_text += "..."
+            articles_text += f"    Summary: {summary_text}\n"
+
         sources_json.append(
             {
                 "idx": idx,
