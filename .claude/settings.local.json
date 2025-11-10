@@ -47,7 +47,10 @@
       "Bash(ENVIRONMENT=testing DATABASE_URL=postgresql://test:test@localhost:5432/test UPSTASH_REDIS_REST_URL=http://localhost UPSTASH_REDIS_REST_TOKEN=test venv/bin/pytest tests/ -v --tb=short)",
       "Bash(venv/bin/pytest tests/ -v --tb=short)",
       "Bash(git restore:*)",
-      "Bash(venv/bin/pytest tests/test_ai_core.py -v)"
+      "Bash(venv/bin/pytest tests/test_ai_core.py -v)",
+      "Bash(find:*)",
+      "Bash(time curl:*)",
+      "Bash(pgrep:*)"
     ],
     "deny": [],
     "ask": []

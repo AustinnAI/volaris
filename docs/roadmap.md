@@ -46,36 +46,47 @@
 **Documentation:** See [docs/PHASE_2.md](docs/PHASE_2.md)
 
 ### 🔹 Phase 2 Enhancement – AI-Generated News Summaries
-**Status:** 📋 Not Started
+**Status:** 🟢 In Progress (Core Complete, Multi-ticker Pending)
 
 **Goal:** Layer AI-generated summaries on top of existing VADER sentiment engine to provide actionable, structured market intelligence.
 
 **Deliverables:**
-- [ ] LLM client service with provider abstraction (OpenAI, Anthropic, Google)
-- [ ] Grounded prompt engineering for single/multi-ticker summaries
-- [ ] Redis caching with 20-min TTL and URL-based invalidation
-- [ ] `/api/v1/news/{ticker}/ai-summary` endpoint
-- [ ] `POST /api/v1/news/ai-summary` multi-ticker endpoint
-- [ ] Discord `/ai-summary` command with embed formatting
-- [ ] Deterministic fallback on LLM failure (uses VADER + headlines)
-- [ ] Feature flag (`LLM_ENABLED`) for gradual rollout
-- [ ] Structured output schema with citation indices
-- [ ] Error handling with exponential backoff and circuit breaker
+- [x] LLM client service with provider abstraction (OpenAI implemented)
+- [x] Grounded prompt engineering for single-ticker summaries
+- [x] Redis caching with 20-min TTL and URL-based invalidation
+- [x] `/api/v1/news/{ticker}/summary` endpoint
+- [ ] `POST /api/v1/news/summary` multi-ticker endpoint
+- [x] Discord `/summary` command with embed formatting
+- [x] Deterministic fallback on LLM failure (uses VADER + headlines)
+- [x] Feature flag (`LLM_ENABLED`) for gradual rollout
+- [x] Structured output schema with citation indices
+- [x] Error handling with exponential backoff (circuit breaker pattern not implemented)
 
-**Key Features:**
-- Executive summary (2-3 sentences)
-- Key drivers with article citations
-- Sentiment snapshot (net score, dispersion, trend)
-- Risk flags and follow-up questions
-- Discord-optimized markdown rendering
-- Graceful degradation to deterministic fallback
+**Completed Features:**
+- ✅ Executive summary (2-3 sentences)
+- ✅ Key drivers with article citations
+- ✅ Sentiment snapshot (net score, dispersion, trend)
+- ✅ Risk flags and follow-up questions
+- ✅ Discord-optimized markdown rendering
+- ✅ Graceful degradation to deterministic fallback
+- ✅ Single-ticker AI summaries via API and Discord
+- ✅ OpenAI gpt-4o-mini integration with JSON mode
+- ✅ Retry logic with exponential backoff (3 attempts: 1s, 2s, 4s)
 
-**Architecture:**
-- `app/core/ai/llm_client.py` - Provider-agnostic interface with retries
-- `app/core/ai/prompts.py` - Grounded prompt builders with article context
-- `app/core/ai/schema.py` - Pydantic models for structured outputs
-- `app/core/ai/formatters.py` - Discord markdown & fallback rendering
-- Redis cache key: `ai:sum:{model}:{version}:{ticker}:{urls_hash}`
+**Pending:**
+- Multi-ticker batch summaries
+- Anthropic & Google LLM provider support
+- Circuit breaker pattern (currently using retry-only)
+
+**Implemented Architecture:**
+- ✅ [app/core/ai/llm_client.py](../app/core/ai/llm_client.py) - OpenAI client with retry logic
+- ✅ [app/core/ai/prompts.py](../app/core/ai/prompts.py) - Grounded prompt builders with article context
+- ✅ [app/core/ai/schema.py](../app/core/ai/schema.py) - Pydantic models for structured outputs
+- ✅ [app/core/ai/formatters.py](../app/core/ai/formatters.py) - Discord markdown & fallback rendering
+- ✅ [app/services/ai_summary_service.py](../app/services/ai_summary_service.py) - Orchestration layer
+- ✅ [app/api/v1/news.py](../app/api/v1/news.py) - `/api/v1/news/{symbol}/summary` endpoint
+- ✅ [app/alerts/cogs/news.py](../app/alerts/cogs/news.py) - `/summary` Discord command
+- ✅ Redis cache key: `ai:sum:{model}:{version}:{ticker}:{urls_hash}`
 
 **Constraints:**
 - No new schedulers (request-time only, aligned with Phase 2 patterns)
@@ -104,9 +115,11 @@ PROMPT_VERSION=v1
 - User engagement: ≥30% of `/ai-summary` users return within 24h
 
 **Testing:**
-- Unit tests: Prompt determinism, schema validation, cache keys
-- Integration tests: Mock LLM responses, fallback triggering
-- Performance tests: Cold vs warm latency, memory profiling
+- ✅ Unit tests: Prompt determinism, schema validation, cache keys ([tests/test_ai_core.py](../tests/test_ai_core.py))
+- ✅ Schema validation tests for SummaryResponse
+- ✅ Fallback summary generation tests
+- 🟡 Integration tests: Mock LLM responses (basic coverage)
+- 📋 Performance tests: Cold vs warm latency, memory profiling (pending)
 
 **Future Enhancements (V2):**
 - FinBERT sentiment (replace or ensemble with VADER)

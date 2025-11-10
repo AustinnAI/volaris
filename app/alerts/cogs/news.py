@@ -7,6 +7,7 @@ analysis and aggregated sentiment metrics.
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 import aiohttp
@@ -270,12 +271,17 @@ class NewsCog(commands.Cog):
         try:
             # Call AI summary endpoint (increase timeout for LLM operations)
             url = f"{self.bot.api_client.base_url}/api/v1/news/{ticker}/summary"
-            params = {"force_refresh": force_refresh}
+            # Convert bool to string for aiohttp query params
+            params = {"force_refresh": str(force_refresh).lower()}
+
+            # Log the request for debugging
+            print(f"[DEBUG] Calling summary API: {url}")
 
             # Use 60s timeout for AI summary (can take 10-15s on first call)
             timeout = aiohttp.ClientTimeout(total=60)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(url, params=params) as response:
+                    print(f"[DEBUG] Response status: {response.status}")
                     if response.status == 404:
                         await interaction.followup.send(
                             f"❌ Ticker **{ticker.upper()}** not found or no news articles available."
@@ -290,13 +296,18 @@ class NewsCog(commands.Cog):
 
                     data = await response.json()
 
-        except TimeoutError:
+        except (asyncio.TimeoutError, TimeoutError, aiohttp.ServerTimeoutError):
             await interaction.followup.send(
                 "❌ Request timed out. AI summary generation can take 10-15s on first call. Try again - it should be cached now."
             )
             return
         except aiohttp.ClientError as exc:
             await interaction.followup.send(f"❌ Unable to fetch AI summary: {exc}")
+            return
+        except Exception as exc:
+            await interaction.followup.send(
+                f"❌ Unexpected error: {str(exc)[:100]}. Check that the API is running."
+            )
             return
 
         # Extract response fields
