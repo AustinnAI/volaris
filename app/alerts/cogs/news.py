@@ -66,11 +66,13 @@ class NewsCog(commands.Cog):
             from app.db.session import get_db
 
             async for db in get_db():
-                narrative, _ = await generate_news_narrative(db, symbol)
+                narrative, fallback_used = await generate_news_narrative(db, symbol)
+                if fallback_used and narrative is None:
+                    self.bot.logger.debug(f"AI narrative disabled or unavailable for {symbol}")
                 break
         except Exception as e:
             # Silently fail - narrative is optional enhancement
-            pass
+            self.bot.logger.warning(f"Failed to generate AI narrative for {symbol}: {e}")
 
         # Create embed with news articles
         description = f"Recent news from the last {days} day(s)"
@@ -432,8 +434,10 @@ class NewsCog(commands.Cog):
                             if narrative:
                                 ttl = settings.LLM_TOP_NARRATIVE_TTL_MINUTES * 60
                                 await cache.set(cache_key, json.dumps({"narrative": narrative}), ttl)
-            except Exception:
-                pass
+                        else:
+                            self.bot.logger.debug("LLM client unavailable for /top command")
+            except Exception as e:
+                self.bot.logger.warning(f"Failed to generate market pulse narrative: {e}")
 
             # Build embed
             description = "S&P 500 sentiment movers (last 7 days)"

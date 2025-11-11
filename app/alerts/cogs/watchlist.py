@@ -159,8 +159,10 @@ class WatchlistCog(
                             if insights:
                                 ttl = settings.LLM_WATCHLIST_INSIGHTS_TTL_MINUTES * 60
                                 await cache.set(cache_key, json.dumps({"insights": insights}), ttl)
-            except Exception:
-                pass
+                        else:
+                            self.bot.logger.debug("LLM client unavailable for /watchlist view")
+            except Exception as e:
+                self.bot.logger.warning(f"Failed to generate watchlist insights: {e}")
 
             # Build embed
             description = f"Tracking {len(watchlist_data)} symbols"
