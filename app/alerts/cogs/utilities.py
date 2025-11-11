@@ -229,7 +229,8 @@ class UtilitiesCog(commands.Cog):
             name="📰 News & Sentiment",
             value=(
                 "**`/summary <ticker>`** - AI-powered market intelligence (key drivers, risks, sentiment)\n"
-                "**`/news <ticker>`** - Recent headlines with sentiment (auto-fetches if needed)\n"
+                "**`/news <ticker> [days]`** - Recent headlines with AI narrative and sentiment\n"
+                "**`/top [limit]`** - S&P 500 sentiment movers with market pulse narrative\n"
                 "**`/news-sentiment <ticker>`** - Aggregated bullish/bearish score\n"
                 "**`/refresh-news <ticker>`** - Manually refresh articles from Finnhub\n"
                 "_Sources: Yahoo Finance, CNBC, Seeking Alpha, Reuters (via Finnhub)_"
@@ -262,8 +263,9 @@ class UtilitiesCog(commands.Cog):
         embed.add_field(
             name="📋 Watchlist & Utils",
             value=(
-                "**`/watchlist get`** - View server watchlist\n"
-                "**`/watchlist set <symbols>`** - Update watchlist\n"
+                "**`/watchlist view`** - View watchlist with AI portfolio insights\n"
+                "**`/watchlist get`** - View server watchlist (admin)\n"
+                "**`/watchlist set <symbols>`** - Update watchlist (admin)\n"
                 "**`/check`** - Bot health status\n"
                 "**`/help`** - Show this message"
             ),
@@ -284,7 +286,7 @@ class UtilitiesCog(commands.Cog):
         )
 
         embed.set_footer(
-            text="Volaris V1 • 20 Commands • Automated flow alerts every 10 min during market hours"
+            text="Volaris V1 • 22 Commands • AI-powered insights with gpt-4.1-nano"
         )
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
