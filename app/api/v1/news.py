@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.ai import AISummaryAPIResponse, render_discord_markdown
+from app.core.ai import AISummaryAPIResponse, BatchSummaryRequest, BatchSummaryResponse, render_discord_markdown
 from app.db.database import get_db
 from app.services.ai_summary_service import generate_ai_summary
 from app.services.index_service import get_index_constituents_symbols
@@ -577,3 +577,74 @@ async def get_summary(
             exc_info=True,
         )
         raise HTTPException(status_code=500, detail=f"Failed to generate AI summary: {str(e)}")
+
+
+@router.post("/summary", response_model=BatchSummaryResponse)
+async def batch_summary(
+    request: BatchSummaryRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate AI summaries for multiple tickers in batch.
+
+    Useful for portfolio-wide analysis. Processes up to 20 tickers concurrently.
+
+    **Request body:**
+    ```json
+    {
+      "symbols": ["AAPL", "MSFT", "TSLA"],
+      "force_refresh": false
+    }
+    ```
+
+    **Features:**
+    - Concurrent processing for performance
+    - Individual error handling (failed tickers don't block others)
+    - Respects cache for each ticker
+    - Max 20 tickers per request
+
+    **Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/v1/news/summary" \\
+      -H "Content-Type: application/json" \\
+      -d '{"symbols": ["SPY", "QQQ", "AAPL"]}'
+    ```
+    """
+    import asyncio
+    from app.core.ai.schema import BatchSummaryItem
+
+    symbols = [s.strip().upper() for s in request.symbols]
+
+    async def process_ticker(symbol: str) -> BatchSummaryItem | None:
+        """Process single ticker summary."""
+        try:
+            summary, fallback_used, cache_hit = await generate_ai_summary(
+                db, symbol, request.force_refresh
+            )
+            markdown = render_discord_markdown(summary, fallback_used)
+
+            return BatchSummaryItem(
+                symbol=symbol,
+                structured=summary,
+                markdown=markdown,
+                fallback_used=fallback_used,
+                cache_hit=cache_hit,
+            )
+        except Exception as e:
+            app_logger.warning(
+                f"Failed to generate summary for {symbol} in batch",
+                extra={"error": str(e)},
+            )
+            return None
+
+    # Process all tickers concurrently
+    results = await asyncio.gather(*[process_ticker(s) for s in symbols])
+
+    # Filter out failures
+    successful_summaries = [r for r in results if r is not None]
+
+    return BatchSummaryResponse(
+        total=len(symbols),
+        successful=len(successful_summaries),
+        summaries=successful_summaries,
+    )

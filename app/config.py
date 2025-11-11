@@ -176,6 +176,21 @@ class Settings(BaseSettings):
     LLM_NEWS_NARRATIVE_TTL_MINUTES: int = Field(
         default=15, description="Redis cache TTL for news narratives (minutes)"
     )
+    LLM_TOP_NARRATIVE_ENABLED: bool = Field(
+        default=False, description="Enable AI narrative for /top command"
+    )
+    LLM_TOP_NARRATIVE_TTL_MINUTES: int = Field(
+        default=10, description="Redis cache TTL for top movers narratives (minutes)"
+    )
+    TOP_MOVERS_LIMIT: int = Field(
+        default=5, ge=3, le=10, description="Number of top movers to show (gainers + losers)"
+    )
+    LLM_WATCHLIST_INSIGHTS_ENABLED: bool = Field(
+        default=False, description="Enable AI portfolio insights for /watchlist view command"
+    )
+    LLM_WATCHLIST_INSIGHTS_TTL_MINUTES: int = Field(
+        default=30, description="Redis cache TTL for watchlist insights (minutes)"
+    )
 
     VOLARIS_API_TOKEN: str | None = Field(
         default=None,

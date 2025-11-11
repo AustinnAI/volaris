@@ -368,6 +368,105 @@ class NewsCog(commands.Cog):
 
         await interaction.followup.send(embed=embed)
 
+    @app_commands.command(
+        name="top",
+        description="Show top sentiment movers from S&P 500",
+    )
+    @app_commands.describe(
+        limit="Number of gainers/losers to show (3-10)",
+    )
+    async def top(
+        self, interaction: discord.Interaction, limit: int = 5
+    ) -> None:
+        """Display top sentiment movers from S&P 500 with optional AI narrative."""
+        await interaction.response.defer()
+
+        limit = min(max(limit, 3), 10)
+
+        try:
+            # Call sentiment summary endpoint with S&P 500 tickers
+            url = f"{self.bot.config.API_BASE_URL}/api/v1/news/sentiment/summary?days=7"
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    response.raise_for_status()
+                    result = await response.json()
+
+            tickers = result.get("tickers", [])
+            if not tickers:
+                await interaction.followup.send("❌ No sentiment data available.")
+                return
+
+            # Split into gainers (top) and losers (bottom)
+            gainers = tickers[:limit]
+            losers = tickers[-limit:][::-1]
+
+            # Try to get AI narrative
+            narrative = None
+            try:
+                from app.config import settings
+                from app.core.ai.llm_client import get_llm_client
+                from app.core.ai.prompts import build_top_movers_cache_key, build_top_movers_prompt
+                from app.utils.cache import cache
+                import json
+
+                if settings.LLM_TOP_NARRATIVE_ENABLED and settings.LLM_ENABLED:
+                    all_symbols = [t["symbol"] for t in tickers]
+                    cache_key = build_top_movers_cache_key(all_symbols)
+
+                    cached = await cache.get(cache_key)
+                    if cached:
+                        narrative = json.loads(cached).get("narrative")
+
+                    if not narrative:
+                        llm_client = get_llm_client()
+                        if llm_client:
+                            prompt = build_top_movers_prompt(gainers, losers)
+                            response = await llm_client.summarize(
+                                prompt=prompt,
+                                model=settings.LLM_MODEL,
+                                max_tokens=250,
+                                temperature=settings.LLM_TEMPERATURE,
+                            )
+                            narrative = response.get("narrative")
+                            if narrative:
+                                ttl = settings.LLM_TOP_NARRATIVE_TTL_MINUTES * 60
+                                await cache.set(cache_key, json.dumps({"narrative": narrative}), ttl)
+            except Exception:
+                pass
+
+            # Build embed
+            description = "S&P 500 sentiment movers (last 7 days)"
+            if narrative:
+                description = f"💡 **Market Pulse:** {narrative}\n\n{description}"
+
+            embed = discord.Embed(
+                title="📈 Top Sentiment Movers",
+                description=description,
+                color=discord.Color.blue(),
+                timestamp=discord.utils.utcnow(),
+            )
+
+            gainers_text = "\n".join([
+                f"**{i+1}. {t['symbol']}** • {t['weighted_score']:.2f} • {t['article_count']} articles"
+                for i, t in enumerate(gainers)
+            ])
+            embed.add_field(name="🟢 Gainers", value=gainers_text, inline=False)
+
+            losers_text = "\n".join([
+                f"**{i+1}. {t['symbol']}** • {t['weighted_score']:.2f} • {t['article_count']} articles"
+                for i, t in enumerate(losers)
+            ])
+            embed.add_field(name="🔴 Losers", value=losers_text, inline=False)
+
+            embed.set_footer(text=f"Requested by {interaction.user.display_name}")
+            await interaction.followup.send(embed=embed)
+
+        except aiohttp.ClientError as exc:
+            await interaction.followup.send(f"❌ API error: {exc}")
+        except Exception as exc:
+            await interaction.followup.send(f"❌ Error: {str(exc)[:100]}")
+
 
 async def setup(bot: VolarisBot) -> None:
     """Load the News cog."""

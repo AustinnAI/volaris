@@ -236,3 +236,119 @@ def build_narrative_cache_key(ticker: str, article_urls: list[str]) -> str:
     model = settings.LLM_MODEL
 
     return f"ai:narrative:{provider}:{model}:{ticker.upper()}:{urls_hash}"
+
+
+def build_top_movers_prompt(
+    gainers: list[dict],
+    losers: list[dict],
+) -> str:
+    """
+    Build prompt for top movers market narrative (Phase 2.2).
+
+    Args:
+        gainers: List of top gainers with {symbol, weighted_score, article_count}.
+        losers: List of top losers with {symbol, weighted_score, article_count}.
+
+    Returns:
+        Prompt for generating 3-4 sentence market narrative.
+    """
+    gainers_text = "\n".join(
+        [f"- {g['symbol']}: {g['weighted_score']:.2f} sentiment ({g['article_count']} articles)"
+         for g in gainers[:5]]
+    )
+    losers_text = "\n".join(
+        [f"- {l['symbol']}: {l['weighted_score']:.2f} sentiment ({l['article_count']} articles)"
+         for l in losers[:5]]
+    )
+
+    prompt = f"""You are analyzing market sentiment across the S&P 500.
+
+**Top Gainers (by sentiment):**
+{gainers_text}
+
+**Top Losers (by sentiment):**
+{losers_text}
+
+**Task:** Write a "Market Pulse" narrative (3-4 sentences max) explaining what's driving the market today. Connect themes across sectors and explain the rotation/sentiment shift.
+
+**Output:** Respond with ONLY a JSON object:
+{{
+  "narrative": "Your 3-4 sentence market pulse here"
+}}
+
+**Instructions:**
+- Explain broader market themes (sector rotation, risk-on/off, etc.)
+- Connect top movers to macro trends
+- Be concise and actionable
+- No speculation beyond sentiment data provided
+"""
+    return prompt
+
+
+def build_top_movers_cache_key(ticker_symbols: list[str]) -> str:
+    """
+    Build Redis cache key for top movers narrative.
+
+    Args:
+        ticker_symbols: List of tickers in the analysis.
+
+    Returns:
+        Cache key string.
+    """
+    import hashlib
+
+    symbols_string = "|".join(sorted(ticker_symbols))
+    symbols_hash = hashlib.md5(symbols_string.encode()).hexdigest()[:12]
+
+    provider = settings.LLM_PROVIDER
+    model = settings.LLM_MODEL
+
+    return f"ai:top:{provider}:{model}:{symbols_hash}"
+
+
+def build_watchlist_insights_prompt(watchlist_data: list[dict]) -> str:
+    """
+    Build prompt for watchlist portfolio insights (Phase 2.2).
+
+    Args:
+        watchlist_data: List of {symbol, weighted_score, article_count, label}.
+
+    Returns:
+        Prompt for portfolio-level insights.
+    """
+    holdings_text = "\n".join([
+        f"- {h['symbol']}: {h['weighted_score']:.2f} ({h['label']}) • {h['article_count']} articles"
+        for h in watchlist_data
+    ])
+
+    prompt = f"""Analyze this portfolio watchlist.
+
+**Holdings:**
+{holdings_text}
+
+**Task:** Provide "Portfolio Insights" (3-4 sentences) covering:
+1. Overall sentiment and risk assessment
+2. Sector concentration or correlation warnings
+3. Notable themes across holdings
+
+**Output:** JSON only:
+{{
+  "insights": "Your 3-4 sentence analysis"
+}}
+
+**Instructions:**
+- Focus on portfolio-level risks/opportunities
+- Identify concentration issues
+- Be actionable and concise
+"""
+    return prompt
+
+
+def build_watchlist_cache_key(ticker_symbols: list[str]) -> str:
+    """Build Redis cache key for watchlist insights."""
+    import hashlib
+
+    symbols_string = "|".join(sorted(ticker_symbols))
+    symbols_hash = hashlib.md5(symbols_string.encode()).hexdigest()[:12]
+
+    return f"ai:watchlist:{settings.LLM_PROVIDER}:{settings.LLM_MODEL}:{symbols_hash}"

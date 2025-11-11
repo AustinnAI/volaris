@@ -84,3 +84,28 @@ class AISummaryAPIResponse(BaseModel):
         default=False, description="True if deterministic fallback was used instead of LLM"
     )
     cache_hit: bool = Field(default=False, description="True if result came from Redis cache")
+
+
+class BatchSummaryRequest(BaseModel):
+    """Request model for batch summary generation."""
+
+    symbols: list[str] = Field(..., min_length=1, max_length=20, description="List of ticker symbols (max 20)")
+    force_refresh: bool = Field(default=False, description="Skip cache and regenerate all summaries")
+
+
+class BatchSummaryItem(BaseModel):
+    """Single ticker summary in batch response."""
+
+    symbol: str = Field(..., description="Ticker symbol")
+    structured: SummaryResponse = Field(..., description="Structured summary")
+    markdown: str = Field(..., description="Discord markdown")
+    fallback_used: bool = Field(default=False, description="LLM fallback used")
+    cache_hit: bool = Field(default=False, description="From cache")
+
+
+class BatchSummaryResponse(BaseModel):
+    """Response model for batch summary endpoint."""
+
+    total: int = Field(..., description="Total tickers requested")
+    successful: int = Field(..., description="Successfully generated summaries")
+    summaries: list[BatchSummaryItem] = Field(..., description="List of summaries")
