@@ -46,86 +46,126 @@
 **Documentation:** See [docs/PHASE_2.md](docs/PHASE_2.md)
 
 ### 🔹 Phase 2 Enhancement – AI-Generated News Summaries
-**Status:** 🟢 In Progress (Core Complete, Multi-ticker Pending)
+**Status:** 🟢 In Progress (Phase 2.1 Complete, Phase 2.2 Planned)
 
-**Goal:** Layer AI-generated summaries on top of existing VADER sentiment engine to provide actionable, structured market intelligence.
+**Goal:** Layer AI-generated summaries on top of existing VADER sentiment engine to provide actionable, structured market intelligence across multiple Discord commands.
+
+---
+
+#### **Phase 2.1: Core Summary Feature** ✅ Complete
 
 **Deliverables:**
-- [x] LLM client service with provider abstraction (OpenAI implemented)
-- [x] Grounded prompt engineering for single-ticker summaries
-- [x] Redis caching with 20-min TTL and URL-based invalidation
+- [x] LLM client service with provider abstraction (OpenAI `gpt-4.1-nano`)
+- [x] Grounded prompt engineering with article summaries (600 char truncation)
+- [x] Redis caching (20-min TTL, URL-based cache invalidation)
 - [x] `/api/v1/news/{ticker}/summary` endpoint
-- [ ] `POST /api/v1/news/summary` multi-ticker endpoint
 - [x] Discord `/summary` command with embed formatting
-- [x] Deterministic fallback on LLM failure (uses VADER + headlines)
+- [x] Deterministic fallback on LLM failure (VADER + headlines)
 - [x] Feature flag (`LLM_ENABLED`) for gradual rollout
 - [x] Structured output schema with citation indices
-- [x] Error handling with exponential backoff (circuit breaker pattern not implemented)
+- [x] Error handling with exponential backoff and detailed error logging
 
-**Completed Features:**
-- ✅ Executive summary (2-3 sentences)
-- ✅ Key drivers with article citations
-- ✅ Sentiment snapshot (net score, dispersion, trend)
-- ✅ Risk flags and follow-up questions
-- ✅ Discord-optimized markdown rendering
-- ✅ Graceful degradation to deterministic fallback
-- ✅ Single-ticker AI summaries via API and Discord
-- ✅ OpenAI gpt-4o-mini integration with JSON mode
-- ✅ Retry logic with exponential backoff (3 attempts: 1s, 2s, 4s)
+**Output Schema:**
+- Executive summary (2-3 sentences explaining market narrative)
+- Key drivers with article citations
+- Sentiment snapshot (net score, dispersion, trend)
+- Risk flags and follow-up questions
+- Discord-optimized markdown rendering
 
-**Pending:**
-- Multi-ticker batch summaries
-- Anthropic & Google LLM provider support
-- Circuit breaker pattern (currently using retry-only)
+**Architecture:**
+- [app/core/ai/llm_client.py](../app/core/ai/llm_client.py) - OpenAI client with retry logic (3 attempts: 1s, 2s, 4s)
+- [app/core/ai/prompts.py](../app/core/ai/prompts.py) - Grounded prompts with article context
+- [app/core/ai/schema.py](../app/core/ai/schema.py) - Pydantic models for structured outputs
+- [app/core/ai/formatters.py](../app/core/ai/formatters.py) - Discord markdown & fallback rendering
+- [app/services/ai_summary_service.py](../app/services/ai_summary_service.py) - Orchestration layer
+- [app/api/v1/news.py](../app/api/v1/news.py) - API endpoint
+- [app/alerts/cogs/news.py](../app/alerts/cogs/news.py) - Discord command
 
-**Implemented Architecture:**
-- ✅ [app/core/ai/llm_client.py](../app/core/ai/llm_client.py) - OpenAI client with retry logic
-- ✅ [app/core/ai/prompts.py](../app/core/ai/prompts.py) - Grounded prompt builders with article context
-- ✅ [app/core/ai/schema.py](../app/core/ai/schema.py) - Pydantic models for structured outputs
-- ✅ [app/core/ai/formatters.py](../app/core/ai/formatters.py) - Discord markdown & fallback rendering
-- ✅ [app/services/ai_summary_service.py](../app/services/ai_summary_service.py) - Orchestration layer
-- ✅ [app/api/v1/news.py](../app/api/v1/news.py) - `/api/v1/news/{symbol}/summary` endpoint
-- ✅ [app/alerts/cogs/news.py](../app/alerts/cogs/news.py) - `/summary` Discord command
-- ✅ Redis cache key: `ai:sum:{model}:{version}:{ticker}:{urls_hash}`
+**Testing:**
+- ✅ Unit tests: Prompt determinism, schema validation, cache keys
+- ✅ Fallback summary generation tests
+- 🟡 Integration tests: Mock LLM responses (basic coverage)
 
-**Constraints:**
-- No new schedulers (request-time only, aligned with Phase 2 patterns)
-- Memory: <10MB additional (async httpx client, no pandas)
-- Latency: <2s p95 on cache hits, <5s on cold starts
-- Cost: ~$0.002 per summary with gpt-4o-mini (5 articles × 500 tokens)
+---
 
-**Configuration:**
+#### **Phase 2.2: Extended LLM Integration** 📋 Planned
+
+**Deliverables:**
+1. **`/news {ticker}` Enhancement**
+   - Add AI "Story of the Day" narrative (2-3 sentences)
+   - Feature flag: `LLM_NEWS_NARRATIVE_ENABLED`
+   - Cache TTL: 15 minutes
+   - Cost: ~300 tokens/call @ 15 calls/day = ~$0.01/month
+
+2. **`/top` Enhancement**
+   - Add market-wide narrative connecting top movers
+   - Feature flag: `LLM_TOP_NARRATIVE_ENABLED`
+   - Accepts: top 5 gainers/losers, indices, sector trends
+   - Cache TTL: 10 minutes
+   - Cost: ~600 tokens/call @ 3 calls/day = ~$0.01/month
+
+3. **`/watchlist` Enhancement**
+   - Add portfolio-level insights and risk assessment
+   - Feature flag: `LLM_WATCHLIST_INSIGHTS_ENABLED`
+   - Accepts: holdings, P&L, recent changes, market context
+   - Cache TTL: 30 minutes per user
+   - Cost: ~400 tokens/call @ 5 calls/day = ~$0.01/month
+
+4. **Multi-ticker Batch Summaries**
+   - `POST /api/v1/news/summary` endpoint
+   - Batch processing for portfolio-wide sentiment
+
+**Total Estimated Cost:** ~$0.05/month with `gpt-4.1-nano`
+
+---
+
+#### **Configuration**
+
 ```bash
+# Core LLM Settings
 LLM_ENABLED=true
-LLM_PROVIDER=openai  # openai | anthropic | google
-LLM_MODEL=gpt-4o-mini
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4.1-nano  # $0.20/1M input, $0.80/1M output
 LLM_API_KEY=sk-...
-LLM_TIMEOUT_SECONDS=12
+LLM_TIMEOUT_SECONDS=25
 LLM_TEMPERATURE=0.2
 LLM_MAX_TOKENS=800
 LLM_SUMMARY_TTL_MINUTES=20
 SUMMARY_TOP_K=5
 PROMPT_VERSION=v1
+
+# Phase 2.2 Feature Flags
+LLM_NEWS_NARRATIVE_ENABLED=false
+LLM_TOP_NARRATIVE_ENABLED=false
+LLM_WATCHLIST_INSIGHTS_ENABLED=false
 ```
 
-**Success Metrics:**
+---
+
+#### **Performance Constraints**
+
+- **Memory:** <10MB additional (async httpx, no pandas)
+- **Latency:** <2s p95 (cache hit), <5s (cache miss)
+- **Cost:** ~$0.001 per summary with gpt-4.1-nano
+
+---
+
+#### **Success Metrics**
+
 - Cache hit rate ≥ 60% during market hours
 - Summary generation <2s p95 (cache hit), <5s (cache miss)
 - Fallback rate <5% (excluding feature-flag disables)
-- User engagement: ≥30% of `/ai-summary` users return within 24h
 
-**Testing:**
-- ✅ Unit tests: Prompt determinism, schema validation, cache keys ([tests/test_ai_core.py](../tests/test_ai_core.py))
-- ✅ Schema validation tests for SummaryResponse
-- ✅ Fallback summary generation tests
-- 🟡 Integration tests: Mock LLM responses (basic coverage)
-- 📋 Performance tests: Cold vs warm latency, memory profiling (pending)
+---
 
-**Future Enhancements (V2):**
-- FinBERT sentiment (replace or ensemble with VADER)
-- Persistent summary storage for historical analysis
-- Provider arbitration (OpenAI → Anthropic fallback)
-- Self-hosted Llama/Mistral on larger infra
+#### **Future V2 Enhancements**
+
+- [ ] FinBERT sentiment (ensemble with VADER)
+- [ ] Multi-provider support (Anthropic, Google)
+- [ ] Circuit breaker pattern (currently retry-only)
+- [ ] Persistent summary storage for historical analysis
+- [ ] Provider arbitration (OpenAI → Anthropic fallback)
+- [ ] Self-hosted Llama/Mistral on larger infra
 
 **Documentation:** See [docs/PHASE_2_ENHANCEMENT.md](docs/PHASE_2_ENHANCEMENT.md)
 

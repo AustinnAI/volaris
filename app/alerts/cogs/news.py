@@ -59,10 +59,27 @@ class NewsCog(commands.Cog):
             )
             return
 
+        # Try to get AI narrative (Phase 2.2)
+        narrative = None
+        try:
+            from app.services.news_service import generate_news_narrative
+            from app.db.session import get_db
+
+            async for db in get_db():
+                narrative, _ = await generate_news_narrative(db, symbol)
+                break
+        except Exception as e:
+            # Silently fail - narrative is optional enhancement
+            pass
+
         # Create embed with news articles
+        description = f"Recent news from the last {days} day(s)"
+        if narrative:
+            description = f"💡 **AI Insight:** {narrative}\n\n{description}"
+
         embed = discord.Embed(
             title=f"📰 {symbol} News ({count} article{'' if count == 1 else 's'})",
-            description=f"Recent news from the last {days} day(s)",
+            description=description,
             color=discord.Color.blue(),
             timestamp=discord.utils.utcnow(),
         )

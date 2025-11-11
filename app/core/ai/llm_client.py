@@ -148,15 +148,17 @@ class BaseLLMClient(ABC):
                     await asyncio.sleep(self.retry_delays[attempt])
                 else:
                     # Client error (4xx) - don't retry
+                    error_body = e.response.text if hasattr(e.response, 'text') else str(e)
                     app_logger.error(
                         "LLM client error",
                         extra={
                             "provider": self.__class__.__name__,
                             "status": e.response.status_code,
                             "error": str(e),
+                            "response_body": error_body[:500],  # First 500 chars
                         },
                     )
-                    raise LLMError(f"LLM client error: {e.response.status_code}")
+                    raise LLMError(f"LLM client error ({e.response.status_code}): {error_body[:200]}")
 
             except Exception as e:
                 app_logger.error(

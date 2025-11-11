@@ -169,6 +169,14 @@ class Settings(BaseSettings):
         default="v1", description="Prompt template version for cache invalidation"
     )
 
+    # Phase 2.2: Extended LLM Integration
+    LLM_NEWS_NARRATIVE_ENABLED: bool = Field(
+        default=False, description="Enable AI narrative for /news command"
+    )
+    LLM_NEWS_NARRATIVE_TTL_MINUTES: int = Field(
+        default=15, description="Redis cache TTL for news narratives (minutes)"
+    )
+
     VOLARIS_API_TOKEN: str | None = Field(
         default=None,
         description="Bearer token used by internal automation (GitHub Actions, Discord admins)",

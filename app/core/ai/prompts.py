@@ -145,6 +145,53 @@ Generate a structured market intelligence summary in **valid JSON format** follo
     return prompt
 
 
+def build_news_narrative_prompt(
+    ticker: str,
+    articles: list[NewsArticle],
+    sentiment_data: dict,
+) -> str:
+    """
+    Build prompt for news narrative (Phase 2.2).
+
+    Args:
+        ticker: Ticker symbol.
+        articles: Recent articles (top 10).
+        sentiment_data: VADER sentiment metrics.
+
+    Returns:
+        Prompt for generating 2-3 sentence "Story of the Day" narrative.
+    """
+    # Format recent headlines (top 5 only for brevity)
+    headlines_text = ""
+    for idx, article in enumerate(articles[:5], start=1):
+        headlines_text += f"{idx}. {article.headline}\n"
+
+    compound = sentiment_data.get("compound", 0.0)
+    trend = sentiment_data.get("trend", "stable")
+
+    prompt = f"""You are analyzing news for **{ticker}**.
+
+**Recent Headlines:**
+{headlines_text}
+
+**Sentiment:** {compound:.2f} (compound score), Trend: {trend}
+
+**Task:** Write a concise "Story of the Day" narrative (2-3 sentences max) explaining what's driving {ticker} today. Focus on the main theme connecting the headlines and market implications.
+
+**Output:** Respond with ONLY a JSON object:
+{{
+  "narrative": "Your 2-3 sentence story here"
+}}
+
+**Instructions:**
+- Be concise and actionable
+- Connect themes across headlines
+- Ground claims in provided headlines
+- No speculation beyond article content
+"""
+    return prompt
+
+
 def build_cache_key(ticker: str, article_urls: list[str]) -> str:
     """
     Build Redis cache key for AI summary.
@@ -167,3 +214,25 @@ def build_cache_key(ticker: str, article_urls: list[str]) -> str:
     version = settings.PROMPT_VERSION
 
     return f"ai:sum:{provider}:{model}:{version}:{ticker.upper()}:{urls_hash}"
+
+
+def build_narrative_cache_key(ticker: str, article_urls: list[str]) -> str:
+    """
+    Build Redis cache key for news narrative (Phase 2.2).
+
+    Args:
+        ticker: Ticker symbol.
+        article_urls: List of article URLs.
+
+    Returns:
+        Cache key string.
+    """
+    import hashlib
+
+    urls_string = "|".join(sorted(article_urls))
+    urls_hash = hashlib.md5(urls_string.encode()).hexdigest()[:12]
+
+    provider = settings.LLM_PROVIDER
+    model = settings.LLM_MODEL
+
+    return f"ai:narrative:{provider}:{model}:{ticker.upper()}:{urls_hash}"

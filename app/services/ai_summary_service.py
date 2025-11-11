@@ -140,7 +140,7 @@ async def generate_ai_summary(
 
     except LLMError as e:
         app_logger.error(
-            f"LLM error for {ticker}, using fallback",
+            f"LLM error for {ticker}, using fallback: {str(e)[:200]}",
             extra={"error": str(e), "error_type": type(e).__name__},
         )
         fallback_summary = create_fallback_summary(

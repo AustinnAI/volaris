@@ -499,3 +499,77 @@ async def refresh_news_for_symbol(
     )
 
     return len(new_articles)
+
+
+async def generate_news_narrative(
+    db: AsyncSession, ticker: str
+) -> tuple[str | None, bool]:
+    """
+    Generate AI narrative for news command (Phase 2.2).
+
+    Args:
+        db: Database session.
+        ticker: Ticker symbol.
+
+    Returns:
+        Tuple of (narrative_text, fallback_used).
+        Returns (None, True) if feature disabled or LLM unavailable.
+    """
+    from app.core.ai.llm_client import LLMError, get_llm_client
+    from app.core.ai.prompts import build_narrative_cache_key, build_news_narrative_prompt
+    from app.utils.cache import cache
+    import json
+
+    # Check if feature enabled
+    if not settings.LLM_NEWS_NARRATIVE_ENABLED or not settings.LLM_ENABLED:
+        return None, True
+
+    # Get articles and sentiment
+    articles = await get_recent_news(db, ticker, limit=10, days=7)
+    if not articles or len(articles) < 2:
+        return None, True  # Not enough data
+
+    sentiment_data = await get_ticker_sentiment(db, ticker)
+
+    # Build cache key
+    article_urls = [art.url for art in articles]
+    cache_key = build_narrative_cache_key(ticker, article_urls)
+
+    # Check cache
+    cached = await cache.get(cache_key)
+    if cached:
+        try:
+            data = json.loads(cached)
+            return data.get("narrative"), False
+        except (json.JSONDecodeError, KeyError):
+            pass  # Continue to regenerate
+
+    # Get LLM client
+    llm_client = get_llm_client()
+    if not llm_client:
+        return None, True
+
+    try:
+        # Build prompt and call LLM
+        prompt = build_news_narrative_prompt(ticker, articles, sentiment_data)
+        response = await llm_client.summarize(
+            prompt=prompt,
+            model=settings.LLM_MODEL,
+            max_tokens=200,  # Narrative is short
+            temperature=settings.LLM_TEMPERATURE,
+        )
+
+        narrative = response.get("narrative")
+        if not narrative:
+            return None, True
+
+        # Cache the result
+        ttl_seconds = settings.LLM_NEWS_NARRATIVE_TTL_MINUTES * 60
+        await cache.set(cache_key, json.dumps({"narrative": narrative}), ttl_seconds)
+
+        app_logger.info(f"Generated news narrative for {ticker}")
+        return narrative, False
+
+    except LLMError as e:
+        app_logger.warning(f"LLM error generating narrative for {ticker}: {str(e)[:100]}")
+        return None, True
