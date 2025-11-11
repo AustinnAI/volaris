@@ -436,10 +436,10 @@ async def batch_refresh_news(
         else:
             symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
 
-        if len(symbol_list) > 500:
+        if len(symbol_list) > 1500:
             raise HTTPException(
                 status_code=400,
-                detail="Too many symbols (max 500)",
+                detail="Too many symbols (max 1500)",
             )
 
         app_logger.info(
@@ -570,6 +570,36 @@ async def get_summary(
     - `cache_hit`: True if result from cache
     """
     try:
+        # Auto-refresh news if stale or missing (same logic as /news and /sentiment endpoints)
+        latest_timestamp = await get_latest_article_timestamp(db, symbol.upper())
+        now = datetime.now(UTC)
+        stale = is_stale(latest_timestamp, now)
+
+        should_refresh = latest_timestamp is None or stale
+        if should_refresh:
+            age_hours = None
+            if latest_timestamp:
+                age_hours = (now - latest_timestamp).total_seconds() / 3600
+
+            app_logger.info(
+                "news_refresh_triggered_for_summary",
+                extra={
+                    "ticker": symbol.upper(),
+                    "reason": "empty" if latest_timestamp is None else "stale",
+                    "age_hours": age_hours,
+                    "during_market": is_market_hours(now),
+                },
+            )
+
+            try:
+                await refresh_news_for_symbol(db, symbol.upper(), days=7)
+                await db.commit()
+            except Exception as refresh_error:
+                app_logger.warning(
+                    "Auto-refresh failed for summary, continuing with cached data",
+                    extra={"symbol": symbol.upper(), "error": str(refresh_error)},
+                )
+
         summary, fallback_used, cache_hit = await generate_ai_summary(db, symbol, force_refresh)
 
         markdown = render_discord_markdown(summary, fallback_used)
