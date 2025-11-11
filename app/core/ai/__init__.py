@@ -7,12 +7,21 @@ Provides LLM-powered news summaries with Redis caching and deterministic fallbac
 from app.core.ai.formatters import create_fallback_summary, render_discord_markdown
 from app.core.ai.llm_client import LLMError, get_llm_client
 from app.core.ai.prompts import build_cache_key, build_single_ticker_prompt
-from app.core.ai.schema import AISummaryAPIResponse, SummaryResponse
+from app.core.ai.schema import (
+    AISummaryAPIResponse,
+    BatchSummaryItem,
+    BatchSummaryRequest,
+    BatchSummaryResponse,
+    SummaryResponse,
+)
 
 __all__ = [
     # Schema
     "SummaryResponse",
     "AISummaryAPIResponse",
+    "BatchSummaryRequest",
+    "BatchSummaryResponse",
+    "BatchSummaryItem",
     # Client
     "get_llm_client",
     "LLMError",
