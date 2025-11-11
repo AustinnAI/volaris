@@ -26,6 +26,7 @@ from app.services.data_ingestion import (
     compute_iv_metrics,
     fetch_option_chains,
     fetch_realtime_prices,
+    sync_eod_prices,
 )
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import FinnhubClient
@@ -546,6 +547,80 @@ async def refresh_watchlist_data(
     require_bearer_token(request)
     symbols = await WatchlistService.get_symbols(db)
     return await _refresh_symbols(db, symbols, ["price", "options", "iv"])
+
+
+@router.post("/refresh/volume", status_code=202)
+async def refresh_volume_data(
+    request: Request,
+    symbols: str = Query(default="liquid", description="Symbol set: 'liquid', 'nasdaq100', 'sp500', or comma-separated"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Refresh daily volume data for liquid stocks.
+
+    This endpoint fetches and stores daily price bars (OHLCV) for the specified symbols,
+    which is used by the volume-based liquidity filter.
+
+    Args:
+        symbols: 'liquid' (NASDAQ-100 + S&P 500), 'nasdaq100', 'sp500', or comma-separated tickers
+
+    Returns:
+        Summary of bars added/updated
+
+    Example:
+        ```bash
+        # Refresh volume data for all liquid stocks
+        curl -X POST "http://localhost:8000/api/v1/market/refresh/volume?symbols=liquid" \
+          -H "Authorization: Bearer $TOKEN"
+        ```
+    """
+    require_bearer_token(request)
+
+    # Parse symbols parameter
+    symbols_lower = symbols.lower()
+    if symbols_lower == "liquid":
+        from app.services.liquidity_filter import get_liquid_tickers
+        symbol_set = await get_liquid_tickers(db, strategy="index", include_sp500=True)
+        symbol_list = sorted(symbol_set)
+    elif symbols_lower == "nasdaq100":
+        from app.services.index_service import NASDAQ100_SYMBOL
+        symbol_list = sorted(await get_index_constituents_symbols(db, NASDAQ100_SYMBOL))
+    elif symbols_lower == "sp500":
+        symbol_list = sorted(await get_index_constituents_symbols(db, SP500_SYMBOL))
+    else:
+        symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+
+    if not symbol_list:
+        raise HTTPException(
+            status_code=400,
+            detail="No symbols found for specified set"
+        )
+
+    app_logger.info(
+        "Starting volume data refresh",
+        extra={"symbol_count": len(symbol_list), "symbol_set": symbols_lower}
+    )
+
+    # Use sync_eod_prices to fetch daily bars with volume
+    try:
+        bars_added = await sync_eod_prices(db, symbol_list)
+
+        return {
+            "status": "completed",
+            "symbol_count": len(symbol_list),
+            "bars_added": bars_added,
+            "symbol_set": symbols_lower,
+            "message": f"Refreshed volume data for {len(symbol_list)} symbols, added {bars_added} bars"
+        }
+    except Exception as e:
+        app_logger.error(
+            "Volume data refresh failed",
+            extra={"error": str(e), "symbol_count": len(symbol_list)}
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to refresh volume data: {str(e)}"
+        )
 
 
 @router.get("/delta/{symbol}/{strike}/{option_type}/{dte}")
