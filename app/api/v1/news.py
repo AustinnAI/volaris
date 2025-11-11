@@ -293,10 +293,11 @@ async def get_sentiment(
 async def get_sentiment_summary(
     symbols: str = Query(
         default="SPY,QQQ,IWM,DIA,AAPL,MSFT,TSLA,NVDA,GOOGL,AMZN",
-        description="Comma-separated ticker symbols, 'sp500', 'nasdaq100', or 'liquid'",
+        description="Comma-separated ticker symbols, 'sp500', 'nasdaq100', 'liquid', or 'liquid_vol'",
     ),
     days: int = Query(default=7, ge=1, le=30, description="Days to analyze"),
     min_articles: int = Query(default=0, ge=0, le=50, description="Minimum article count filter (0=disabled)"),
+    liquidity_strategy: str = Query(default="index", description="Liquidity filter: 'index', 'volume', or 'hybrid'"),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -305,7 +306,13 @@ async def get_sentiment_summary(
     **Special values:**
     - `sp500`: All S&P 500 constituents (~503 tickers)
     - `nasdaq100`: NASDAQ-100 constituents (~100 liquid tech/growth stocks)
-    - `liquid`: Combined NASDAQ-100 + S&P 500 for maximum coverage
+    - `liquid`: Combined NASDAQ-100 + S&P 500 (index-based, fast)
+    - `liquid_vol`: Volume-filtered liquid stocks (hybrid: index + volume threshold)
+
+    **Liquidity Filtering:**
+    - `index`: Use index membership only (NASDAQ-100 + S&P 500)
+    - `volume`: Use 30-day avg volume >= 5M shares/day
+    - `hybrid`: Combine index + volume filtering (most restrictive, highest quality)
 
     **Filtering:**
     - Use `min_articles` to filter tickers with low news coverage
@@ -313,17 +320,23 @@ async def get_sentiment_summary(
 
     **Example:**
     ```bash
-    # Get NASDAQ-100 sentiment with minimum 5 articles
-    curl "http://localhost:8000/api/v1/news/sentiment/summary?symbols=nasdaq100&days=7&min_articles=5"
+    # Get liquid stocks with hybrid filtering (index + volume)
+    curl "http://localhost:8000/api/v1/news/sentiment/summary?symbols=liquid_vol&days=7&min_articles=5"
 
-    # Get liquid stocks with news coverage
-    curl "http://localhost:8000/api/v1/news/sentiment/summary?symbols=liquid&days=7&min_articles=5"
+    # Get NASDAQ-100 with volume filtering
+    curl "http://localhost:8000/api/v1/news/sentiment/summary?symbols=nasdaq100&days=7&min_articles=5&liquidity_strategy=hybrid"
     ```
     """
     try:
-        # Handle special index parameters
+        # Handle special index parameters with optional volume filtering
         symbols_lower = symbols.lower()
-        if symbols_lower == "sp500":
+
+        # liquid_vol = automatic hybrid filtering
+        if symbols_lower == "liquid_vol":
+            from app.services.liquidity_filter import get_liquid_tickers
+            symbol_set = await get_liquid_tickers(db, strategy="hybrid", include_sp500=True)
+            symbol_list = sorted(symbol_set)
+        elif symbols_lower == "sp500":
             symbol_list = sorted(await get_index_constituents_symbols(db, "^GSPC"))
         elif symbols_lower == "nasdaq100":
             symbol_list = sorted(await get_index_constituents_symbols(db, "^NDX"))
@@ -333,6 +346,17 @@ async def get_sentiment_summary(
             symbol_list = sorted(symbol_set)
         else:
             symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+
+        # Apply additional liquidity filtering if requested (volume or hybrid)
+        if liquidity_strategy.lower() in ["volume", "hybrid"] and symbols_lower not in ["liquid_vol"]:
+            from app.services.liquidity_filter import get_liquid_tickers
+            liquid_set = await get_liquid_tickers(db, strategy=liquidity_strategy, include_sp500=True)
+            # Filter symbol_list to only include liquid tickers
+            symbol_list = [s for s in symbol_list if s in liquid_set]
+            app_logger.info(
+                f"Applied {liquidity_strategy} liquidity filter",
+                extra={"original_count": len(symbol_list), "filtered_count": len(symbol_list)}
+            )
 
         if len(symbol_list) > 1500:
             raise HTTPException(
