@@ -293,7 +293,7 @@ async def get_sentiment(
 async def get_sentiment_summary(
     symbols: str = Query(
         default="SPY,QQQ,IWM,DIA,AAPL,MSFT,TSLA,NVDA,GOOGL,AMZN",
-        description="Comma-separated ticker symbols",
+        description="Comma-separated ticker symbols or 'sp500' for S&P 500",
     ),
     days: int = Query(default=7, ge=1, le=30, description="Days to analyze"),
     db: AsyncSession = Depends(get_db),
@@ -301,18 +301,29 @@ async def get_sentiment_summary(
     """
     Get sentiment summary for multiple tickers, ranked by sentiment score.
 
+    **Special values:**
+    - `sp500`: Use all S&P 500 constituents
+
     **Example:**
     ```bash
+    # Get S&P 500 sentiment summary
+    curl -X GET "http://localhost:8000/api/v1/news/sentiment/summary?symbols=sp500&days=7"
+
+    # Get specific tickers
     curl -X GET "http://localhost:8000/api/v1/news/sentiment/summary?symbols=AAPL,MSFT,TSLA&days=7"
     ```
     """
     try:
-        symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        # Handle special 'sp500' parameter
+        if symbols.lower() == "sp500":
+            symbol_list = sorted(await get_index_constituents_symbols(db, "^GSPC"))
+        else:
+            symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
 
-        if len(symbol_list) > 50:
+        if len(symbol_list) > 500:
             raise HTTPException(
                 status_code=400,
-                detail="Too many symbols (max 50). Use batch endpoint for larger lists.",
+                detail="Too many symbols (max 500).",
             )
 
         results = []
