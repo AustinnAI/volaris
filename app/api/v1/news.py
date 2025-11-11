@@ -293,30 +293,44 @@ async def get_sentiment(
 async def get_sentiment_summary(
     symbols: str = Query(
         default="SPY,QQQ,IWM,DIA,AAPL,MSFT,TSLA,NVDA,GOOGL,AMZN",
-        description="Comma-separated ticker symbols or 'sp500' for S&P 500",
+        description="Comma-separated ticker symbols, 'sp500', 'nasdaq100', or 'liquid'",
     ),
     days: int = Query(default=7, ge=1, le=30, description="Days to analyze"),
+    min_articles: int = Query(default=0, ge=0, le=50, description="Minimum article count filter (0=disabled)"),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get sentiment summary for multiple tickers, ranked by sentiment score.
 
     **Special values:**
-    - `sp500`: Use all S&P 500 constituents
+    - `sp500`: All S&P 500 constituents (~503 tickers)
+    - `nasdaq100`: NASDAQ-100 constituents (~100 liquid tech/growth stocks)
+    - `liquid`: Combined NASDAQ-100 + S&P 500 for maximum coverage
+
+    **Filtering:**
+    - Use `min_articles` to filter tickers with low news coverage
+    - Recommended: `min_articles=5` for tradeable stocks with sufficient news
 
     **Example:**
     ```bash
-    # Get S&P 500 sentiment summary
-    curl -X GET "http://localhost:8000/api/v1/news/sentiment/summary?symbols=sp500&days=7"
+    # Get NASDAQ-100 sentiment with minimum 5 articles
+    curl "http://localhost:8000/api/v1/news/sentiment/summary?symbols=nasdaq100&days=7&min_articles=5"
 
-    # Get specific tickers
-    curl -X GET "http://localhost:8000/api/v1/news/sentiment/summary?symbols=AAPL,MSFT,TSLA&days=7"
+    # Get liquid stocks with news coverage
+    curl "http://localhost:8000/api/v1/news/sentiment/summary?symbols=liquid&days=7&min_articles=5"
     ```
     """
     try:
-        # Handle special 'sp500' parameter
-        if symbols.lower() == "sp500":
+        # Handle special index parameters
+        symbols_lower = symbols.lower()
+        if symbols_lower == "sp500":
             symbol_list = sorted(await get_index_constituents_symbols(db, "^GSPC"))
+        elif symbols_lower == "nasdaq100":
+            symbol_list = sorted(await get_index_constituents_symbols(db, "^NDX"))
+        elif symbols_lower == "liquid":
+            from app.services.index_service import get_priority_tickers
+            symbol_set = await get_priority_tickers(db, include_sp500=True)
+            symbol_list = sorted(symbol_set)
         else:
             symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
 
@@ -347,6 +361,10 @@ async def get_sentiment_summary(
                     extra={"symbol": symbol, "error": str(e)},
                 )
                 continue
+
+        # Apply minimum article filter if specified
+        if min_articles > 0:
+            results = [r for r in results if r.article_count >= min_articles]
 
         # Sort by weighted_score descending (most bullish first)
         results.sort(key=lambda x: x.weighted_score, reverse=True)
@@ -408,8 +426,8 @@ async def refresh_news(
 @router.post("/refresh/batch", response_model=BatchRefreshResponse)
 async def batch_refresh_news(
     symbols: str = Query(
-        default="sp500",
-        description="Comma-separated symbols or 'sp500' for S&P 500",
+        default="liquid",
+        description="Comma-separated symbols, 'sp500', 'nasdaq100', or 'liquid'",
     ),
     days: int = Query(default=7, ge=1, le=30, description="Days to fetch"),
     db: AsyncSession = Depends(get_db),
@@ -418,21 +436,30 @@ async def batch_refresh_news(
     Batch refresh news for multiple tickers (GitHub Actions use).
 
     **Special values:**
-    - `sp500`: Refresh all S&P 500 constituents
+    - `liquid`: Refresh NASDAQ-100 + S&P 500 (recommended, ~600 liquid stocks)
+    - `nasdaq100`: Refresh NASDAQ-100 only (~100 stocks)
+    - `sp500`: Refresh S&P 500 only (~503 stocks)
 
     **Example:**
     ```bash
-    # Refresh S&P 500 (GitHub Actions)
-    curl -X POST "http://localhost:8000/api/v1/news/refresh/batch?symbols=sp500&days=7"
+    # Refresh liquid stocks (default for GitHub Actions)
+    curl -X POST "http://localhost:8000/api/v1/news/refresh/batch?symbols=liquid&days=7"
 
-    # Refresh specific tickers
-    curl -X POST "http://localhost:8000/api/v1/news/refresh/batch?symbols=AAPL,MSFT,TSLA&days=7"
+    # Refresh NASDAQ-100 only
+    curl -X POST "http://localhost:8000/api/v1/news/refresh/batch?symbols=nasdaq100&days=7"
     ```
     """
     try:
-        # Parse symbols
-        if symbols.lower() == "sp500":
+        # Parse symbols with index support
+        symbols_lower = symbols.lower()
+        if symbols_lower == "sp500":
             symbol_list = sorted(await get_index_constituents_symbols(db, "^GSPC"))
+        elif symbols_lower == "nasdaq100":
+            symbol_list = sorted(await get_index_constituents_symbols(db, "^NDX"))
+        elif symbols_lower == "liquid":
+            from app.services.index_service import get_priority_tickers
+            symbol_set = await get_priority_tickers(db, include_sp500=True)
+            symbol_list = sorted(symbol_set)
         else:
             symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
 

@@ -42,16 +42,32 @@ async def lifespan(app: FastAPI):
     await init_db()
     async with async_session_maker() as session:
         try:
-            symbols = await ensure_sp500_constituents(session)
-            await session.commit()
+            # Ensure S&P 500 constituents
+            sp500_symbols = await ensure_sp500_constituents(session)
             app_logger.info(
                 "S&P 500 constituents ensured",
-                extra={"count": len(symbols)},
+                extra={"count": len(sp500_symbols)},
             )
+
+            # Ensure NASDAQ-100 constituents
+            from app.services.index_service import NASDAQ100_SYMBOL, refresh_index_constituents
+            try:
+                nasdaq100_symbols = await refresh_index_constituents(session, NASDAQ100_SYMBOL)
+                app_logger.info(
+                    "NASDAQ-100 constituents ensured",
+                    extra={"count": len(nasdaq100_symbols)},
+                )
+            except Exception as ndx_exc:  # pylint: disable=broad-except
+                app_logger.warning(
+                    "Failed to ensure NASDAQ-100 constituents, continuing without",
+                    extra={"error": str(ndx_exc)},
+                )
+
+            await session.commit()
         except Exception as exc:  # pylint: disable=broad-except
             await session.rollback()
             app_logger.error(
-                "Failed to ensure S&P 500 constituents",
+                "Failed to ensure index constituents",
                 extra={"error": str(exc)},
             )
     try:

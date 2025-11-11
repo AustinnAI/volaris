@@ -11,11 +11,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import IndexConstituent, Ticker
 from app.services.exceptions import DataNotFoundError
 from app.services.finnhub import finnhub_client
+from app.services.nasdaq100_scraper import (
+    fetch_nasdaq100_symbols_wikipedia,
+    load_nasdaq100_from_csv,
+)
 from app.services.sp500_scraper import fetch_sp500_symbols_wikipedia
 from app.services.tickers import get_or_create_ticker
 from app.utils.logger import app_logger
 
 SP500_SYMBOL = "^GSPC"
+NASDAQ100_SYMBOL = "^NDX"
+
+# Priority indices for trading - ordered by liquidity preference
+PRIORITY_INDICES = [NASDAQ100_SYMBOL, SP500_SYMBOL]
 
 
 async def refresh_index_constituents(
@@ -33,13 +41,18 @@ async def refresh_index_constituents(
             symbols = response.get("constituents") or []
         except Exception as exc:  # pylint: disable=broad-except
             app_logger.warning(
-                "Finnhub constituents unavailable, using CSV fallback",
+                "Finnhub constituents unavailable, using fallback",
                 extra={"index": index_symbol, "error": str(exc)},
             )
 
+    # Wikipedia fallback (index-specific)
     if not symbols:
-        symbols = await fetch_sp500_symbols_wikipedia()
+        if index_symbol == NASDAQ100_SYMBOL:
+            symbols = await fetch_nasdaq100_symbols_wikipedia()
+        else:  # S&P 500 or other
+            symbols = await fetch_sp500_symbols_wikipedia()
 
+    # CSV fallback (index-specific)
     if not symbols:
         return await _load_local_constituents(db, index_symbol)
 
@@ -83,20 +96,44 @@ async def refresh_index_constituents(
 
 async def _load_local_constituents(db: AsyncSession, index_symbol: str) -> list[str]:
     """Fallback: hydrate constituents from bundled CSV."""
-    csv_path = Path(__file__).parent.parent / "SP500.csv"
-    if not csv_path.exists():
+    # Determine CSV filename based on index
+    if index_symbol == NASDAQ100_SYMBOL:
+        csv_filename = "NASDAQ100.csv"
+        index_name = "NASDAQ-100"
+    else:
+        csv_filename = "SP500.csv"
+        index_name = "S&P 500"
+
+    csv_path = Path(__file__).parent.parent / csv_filename
+
+    # For NASDAQ-100, try the scraper's CSV loader first
+    if index_symbol == NASDAQ100_SYMBOL:
+        symbols_list = load_nasdaq100_from_csv()
+        if symbols_list:
+            symbols = set(symbols_list)
+        elif not csv_path.exists():
+            raise DataNotFoundError(
+                f"No {index_name} source available (Finnhub/Wikipedia failed and {csv_filename} missing)",
+                provider="Finnhub",
+            )
+        else:
+            symbols = set()
+    elif not csv_path.exists():
         raise DataNotFoundError(
-            "No S&P 500 source available (Finnhub disabled and SP500.csv missing)",
+            f"No {index_name} source available (Finnhub/Wikipedia failed and {csv_filename} missing)",
             provider="Finnhub",
         )
+    else:
+        symbols = set()
 
-    symbols: set[str] = set()
-    with csv_path.open("r") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            symbol = (row.get("Symbol") or "").strip()
-            if symbol:
-                symbols.add(symbol.upper())
+    # Load from CSV if not already loaded
+    if not symbols and csv_path.exists():
+        with csv_path.open("r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                symbol = (row.get("Symbol") or row.get("Ticker") or "").strip()
+                if symbol:
+                    symbols.add(symbol.upper())
 
     for symbol in symbols:
         ticker = await get_or_create_ticker(symbol, db)
@@ -144,3 +181,34 @@ async def ensure_sp500_constituents(
         return sorted(existing)
     app_logger.info("S&P 500 constituents missing; hydrating from Wikipedia fallback")
     return await refresh_index_constituents(db, index_symbol)
+
+
+async def get_priority_tickers(
+    db: AsyncSession,
+    include_sp500: bool = True,
+) -> set[str]:
+    """
+    Get liquid, tradeable tickers prioritized by index membership.
+
+    Returns NASDAQ-100 tickers first (most liquid tech/growth),
+    then S&P 500 if include_sp500=True.
+
+    Args:
+        db: Database session
+        include_sp500: Include S&P 500 tickers (default: True)
+
+    Returns:
+        Set of ticker symbols, prioritized by liquidity
+    """
+    tickers = set()
+
+    # Always include NASDAQ-100 (highest priority)
+    ndx_tickers = await get_index_constituents_symbols(db, NASDAQ100_SYMBOL)
+    tickers.update(ndx_tickers)
+
+    # Optionally include S&P 500 (broader coverage)
+    if include_sp500:
+        sp500_tickers = await get_index_constituents_symbols(db, SP500_SYMBOL)
+        tickers.update(sp500_tickers)
+
+    return tickers

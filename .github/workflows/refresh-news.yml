@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       symbols:
-        description: "Symbols to refresh (comma-separated) or 'sp500' for all"
+        description: "Symbols to refresh: liquid (default), nasdaq100, sp500, or comma-separated tickers"
         required: false
-        default: "sp500"
+        default: "liquid"
       days:
         description: "Lookback days for news fetch"
         required: false
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Refresh News via API
         run: |
-          SYMBOLS="${{ github.event.inputs.symbols || 'sp500' }}"
+          SYMBOLS="${{ github.event.inputs.symbols || 'liquid' }}"
           DAYS="${{ github.event.inputs.days || '7' }}"
 
           echo "Refreshing news for symbols: $SYMBOLS (lookback: $DAYS days)"

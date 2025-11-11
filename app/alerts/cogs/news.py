@@ -372,22 +372,36 @@ class NewsCog(commands.Cog):
 
     @app_commands.command(
         name="top",
-        description="Show top sentiment movers from S&P 500",
+        description="Show top sentiment movers from liquid stocks",
     )
     @app_commands.describe(
         limit="Number of gainers/losers to show (3-10)",
+        index="Index to analyze: liquid (default), nasdaq100, or sp500",
     )
     async def top(
-        self, interaction: discord.Interaction, limit: int = 5
+        self,
+        interaction: discord.Interaction,
+        limit: int = 5,
+        index: str = "liquid",
     ) -> None:
-        """Display top sentiment movers from S&P 500 with optional AI narrative."""
+        """Display top sentiment movers from liquid stocks with optional AI narrative."""
         await interaction.response.defer()
 
         limit = min(max(limit, 3), 10)
 
+        # Validate index parameter
+        valid_indices = ["liquid", "nasdaq100", "sp500"]
+        index_lower = index.lower()
+        if index_lower not in valid_indices:
+            await interaction.followup.send(
+                f"❌ Invalid index. Use: {', '.join(valid_indices)}"
+            )
+            return
+
         try:
-            # Call sentiment summary endpoint with S&P 500 tickers
-            url = f"{self.bot.api_client.base_url}/api/v1/news/sentiment/summary?symbols=sp500&days=7"
+            # Call sentiment summary endpoint with min_articles filter
+            # Default: liquid stocks (NASDAQ-100 + S&P 500) with at least 5 articles
+            url = f"{self.bot.api_client.base_url}/api/v1/news/sentiment/summary?symbols={index_lower}&days=7&min_articles=5"
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
@@ -396,7 +410,7 @@ class NewsCog(commands.Cog):
 
             tickers = result.get("tickers", [])
             if not tickers:
-                await interaction.followup.send("❌ No sentiment data available.")
+                await interaction.followup.send("❌ No newsworthy tickers found with minimum 5 articles.")
                 return
 
             # Split into gainers (top) and losers (bottom)
@@ -463,7 +477,14 @@ class NewsCog(commands.Cog):
             ])
             embed.add_field(name="🔴 Losers", value=losers_text, inline=False)
 
-            embed.set_footer(text=f"Requested by {interaction.user.display_name}")
+            # Map index names to display names
+            index_labels = {
+                "liquid": "NASDAQ-100 + S&P 500",
+                "nasdaq100": "NASDAQ-100",
+                "sp500": "S&P 500"
+            }
+            footer = f"{index_labels.get(index_lower, index_lower)} • Min 5 articles • {interaction.user.display_name}"
+            embed.set_footer(text=footer)
             await interaction.followup.send(embed=embed)
 
         except aiohttp.ClientError as exc:
