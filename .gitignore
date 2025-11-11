@@ -101,6 +101,5 @@ volaris-api-logs.txt
 archive/
 cleanup_sp500_prod.py
 
-# Index data CSVs (keep examples, ignore actual data files)
-NASDAQ100.csv
-# Note: NASDAQ100.csv.example is tracked
+# Index data CSVs (track both example and actual NASDAQ-100 data)
+# Note: Both NASDAQ100.csv and NASDAQ100.csv.example are tracked
