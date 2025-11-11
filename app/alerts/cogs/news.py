@@ -387,7 +387,7 @@ class NewsCog(commands.Cog):
 
         try:
             # Call sentiment summary endpoint with S&P 500 tickers
-            url = f"{self.bot.config.API_BASE_URL}/api/v1/news/sentiment/summary?days=7"
+            url = f"{self.bot.api_client.base_url}/api/v1/news/sentiment/summary?days=7"
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:

@@ -116,7 +116,7 @@ class WatchlistCog(
 
             # Get sentiment data for all watchlist symbols
             symbols_param = ",".join(symbols)
-            url = f"{self.bot.config.API_BASE_URL}/api/v1/news/sentiment/summary?symbols={symbols_param}&days=7"
+            url = f"{self.bot.api_client.base_url}/api/v1/news/sentiment/summary?symbols={symbols_param}&days=7"
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
