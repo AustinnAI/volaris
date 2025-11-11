@@ -320,10 +320,10 @@ async def get_sentiment_summary(
         else:
             symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
 
-        if len(symbol_list) > 600:
+        if len(symbol_list) > 1500:
             raise HTTPException(
                 status_code=400,
-                detail="Too many symbols (max 600).",
+                detail="Too many symbols (max 1500).",
             )
 
         results = []
