@@ -23,6 +23,15 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      - name: Wake up Render instance
+        run: |
+          echo "Waking up Render instance (free tier cold start)..."
+          # Ping health endpoint to wake up the server
+          curl -s --max-time 120 "$VOLARIS_API_URL/health" || echo "Initial ping timed out, continuing..."
+
+          echo "Waiting 10 seconds for server to fully initialize..."
+          sleep 10
+
       - name: Refresh Volume Data via API
         run: |
           SYMBOLS="${{ github.event.inputs.symbols || 'liquid' }}"
