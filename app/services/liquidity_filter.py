@@ -17,9 +17,9 @@ from app.db.models import IndexConstituent, PriceBar, Ticker, Timeframe
 from app.services.index_service import NASDAQ100_SYMBOL, SP500_SYMBOL
 from app.utils.logger import app_logger
 
-# Liquidity thresholds
-MIN_AVG_VOLUME = 5_000_000  # 5M shares/day for high liquidity
-MIN_AVG_DOLLAR_VOLUME = 100_000_000  # $100M/day for options liquidity
+# Liquidity thresholds for large-cap stocks only
+MIN_AVG_VOLUME = 10_000_000  # 10M shares/day minimum share volume
+MIN_AVG_DOLLAR_VOLUME = 500_000_000  # $500M/day minimum dollar volume (large-caps only)
 
 
 async def get_liquid_tickers(
@@ -100,39 +100,44 @@ async def _get_liquid_by_index(
 async def _get_liquid_by_volume(
     db: AsyncSession,
     min_volume: int = MIN_AVG_VOLUME,
+    min_dollar_volume: float = MIN_AVG_DOLLAR_VOLUME,
     lookback_days: int = 30,
 ) -> set[str]:
     """
-    Get liquid tickers based on average daily volume threshold.
+    Get liquid tickers based on volume and dollar volume thresholds.
 
-    Calculates average volume over the last N trading days using daily price bars.
-    Only returns tickers with sufficient volume for liquid trading.
+    Calculates average volume and dollar volume (price × volume) over the last N
+    trading days. Only returns large-cap stocks with sufficient liquidity.
 
     Args:
         db: Database session
-        min_volume: Minimum average daily volume (default: 5M shares)
+        min_volume: Minimum average daily volume (default: 10M shares)
+        min_dollar_volume: Minimum average dollar volume (default: $100M/day)
         lookback_days: Number of days to calculate average (default: 30)
 
     Returns:
-        Set of ticker symbols meeting volume threshold
+        Set of ticker symbols meeting volume thresholds
     """
     # Calculate cutoff date for lookback period
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=lookback_days)
 
-    # Query average daily volume per ticker
-    # Use daily (1D) timeframe for volume calculations
+    # Query average daily volume AND dollar volume per ticker
+    # Dollar volume = avg(close * volume) ensures large-cap stocks
     stmt = (
         select(
             Ticker.symbol,
             func.avg(PriceBar.volume).label("avg_volume"),
+            func.avg(PriceBar.close * PriceBar.volume).label("avg_dollar_volume"),
             func.count(PriceBar.id).label("bar_count"),
         )
         .join(PriceBar, Ticker.id == PriceBar.ticker_id)
         .where(PriceBar.timeframe == Timeframe.DAILY)
         .where(PriceBar.timestamp >= cutoff_date)
         .where(PriceBar.volume.isnot(None))
+        .where(PriceBar.close.isnot(None))
         .group_by(Ticker.id, Ticker.symbol)
         .having(func.avg(PriceBar.volume) >= min_volume)
+        .having(func.avg(PriceBar.close * PriceBar.volume) >= min_dollar_volume)
         .having(func.count(PriceBar.id) >= 10)  # At least 10 trading days of data
     )
 
@@ -142,7 +147,11 @@ async def _get_liquid_by_volume(
     if not rows:
         app_logger.warning(
             "No volume data found in database, falling back to index-based filtering",
-            extra={"lookback_days": lookback_days, "min_volume": min_volume},
+            extra={
+                "lookback_days": lookback_days,
+                "min_volume": min_volume,
+                "min_dollar_volume": min_dollar_volume,
+            },
         )
         return await _get_liquid_by_index(db, include_sp500=True)
 
@@ -153,6 +162,7 @@ async def _get_liquid_by_volume(
         extra={
             "liquid_count": len(liquid_symbols),
             "min_volume": min_volume,
+            "min_dollar_volume": min_dollar_volume,
             "lookback_days": lookback_days,
         },
     )
