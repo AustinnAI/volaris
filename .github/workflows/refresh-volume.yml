@@ -49,7 +49,7 @@ jobs:
 
           echo "Refreshing volume data for batch: ${{ matrix.batch }} (symbols=$SYMBOLS)"
 
-          RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 120 -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 300 -X POST \
             "$VOLARIS_API_URL/api/v1/market/refresh/volume?symbols=$SYMBOLS" \
             -H "Authorization: Bearer $VOLARIS_API_TOKEN" \
             -H "Content-Type: application/json")
