@@ -207,8 +207,21 @@ async def sync_eod_prices(
     session: AsyncSession,
     symbols: Sequence[str] | None = None,
     provider: object | None = None,
+    max_concurrent: int = 10,
 ) -> int:
-    """Sync end-of-day prices using Tiingo."""
+    """
+    Sync end-of-day prices with concurrent processing.
+
+    Args:
+        session: Database session
+        symbols: Symbols to sync (None = all)
+        provider: Data provider (None = use default)
+        max_concurrent: Maximum concurrent API requests (default: 10)
+
+    Returns:
+        Number of price bars added
+    """
+    import asyncio
 
     tickers = await _resolve_tickers(session, symbols)
     if not tickers:
@@ -221,48 +234,66 @@ async def sync_eod_prices(
 
     provider_enum = _provider_enum_from_object(provider)
     added = 0
+    semaphore = asyncio.Semaphore(max_concurrent)
 
-    for ticker in tickers:
-        try:
-            # Try provider-specific methods in order of preference
-            if hasattr(provider, "get_price_history"):
-                # Schwab: get_price_history(symbol, period_type, period, frequency_type, frequency)
-                response = await provider.get_price_history(
-                    symbol=ticker.symbol,
-                    period_type="month",
-                    period=1,
-                    frequency_type="daily",
-                    frequency=1,
+    async def process_ticker(ticker):
+        """Process single ticker with semaphore for rate limiting."""
+        nonlocal added
+        async with semaphore:
+            try:
+                # Try provider-specific methods in order of preference
+                if hasattr(provider, "get_price_history"):
+                    # Schwab: get_price_history(symbol, period_type, period, frequency_type, frequency)
+                    response = await provider.get_price_history(
+                        symbol=ticker.symbol,
+                        period_type="month",
+                        period=1,
+                        frequency_type="daily",
+                        frequency=1,
+                    )
+                elif hasattr(provider, "get_eod_prices"):
+                    # Tiingo: get_eod_prices(symbol, start_date, end_date)
+                    response = await provider.get_eod_prices(ticker.symbol)
+                elif hasattr(provider, "get_bars"):
+                    # Alpaca: get_bars(symbol, timeframe="1Day", limit=5)
+                    response = await provider.get_bars(ticker.symbol, timeframe="1Day", limit=5)
+                elif hasattr(provider, "get_eod"):
+                    # Generic: get_eod(symbol, limit=5)
+                    response = await provider.get_eod(ticker.symbol, limit=5)
+                elif hasattr(provider, "get_latest_bar"):
+                    # Alpaca fallback: get_latest_bar(symbol)
+                    response = [await provider.get_latest_bar(ticker.symbol)]
+                elif hasattr(provider, "get_latest"):
+                    # Generic fallback: get_latest(symbol)
+                    response = [await provider.get_latest(ticker.symbol)]
+                else:
+                    raise AttributeError(f"EOD provider {provider_enum.value} missing required method")
+
+                for candle in normalize_price_points(response):
+                    if await _upsert_price_bar(session, ticker, Timeframe.DAILY, candle, provider_enum):
+                        added += 1
+            except Exception as exc:  # pylint: disable=broad-except
+                app_logger.error(
+                    f"EOD price sync failed: {type(exc).__name__}: {exc}",
+                    extra={"symbol": ticker.symbol, "error": str(exc), "provider": provider_enum.value},
+                    exc_info=False,  # Reduce log verbosity for batch operations
                 )
-            elif hasattr(provider, "get_eod_prices"):
-                # Tiingo: get_eod_prices(symbol, start_date, end_date)
-                response = await provider.get_eod_prices(ticker.symbol)
-            elif hasattr(provider, "get_bars"):
-                # Alpaca: get_bars(symbol, timeframe="1Day", limit=5)
-                response = await provider.get_bars(ticker.symbol, timeframe="1Day", limit=5)
-            elif hasattr(provider, "get_eod"):
-                # Generic: get_eod(symbol, limit=5)
-                response = await provider.get_eod(ticker.symbol, limit=5)
-            elif hasattr(provider, "get_latest_bar"):
-                # Alpaca fallback: get_latest_bar(symbol)
-                response = [await provider.get_latest_bar(ticker.symbol)]
-            elif hasattr(provider, "get_latest"):
-                # Generic fallback: get_latest(symbol)
-                response = [await provider.get_latest(ticker.symbol)]
-            else:
-                raise AttributeError(f"EOD provider {provider_enum.value} missing required method")
 
-            for candle in normalize_price_points(response):
-                if await _upsert_price_bar(session, ticker, Timeframe.DAILY, candle, provider_enum):
-                    added += 1
-        except Exception as exc:  # pylint: disable=broad-except
-            app_logger.error(
-                f"EOD price sync failed: {type(exc).__name__}: {exc}",
-                extra={"symbol": ticker.symbol, "error": str(exc), "provider": provider_enum.value},
-                exc_info=True,
-            )
+    # Process all tickers concurrently with semaphore limiting
+    app_logger.info(
+        f"Starting concurrent EOD sync for {len(tickers)} symbols (max_concurrent={max_concurrent})",
+        extra={"symbol_count": len(tickers), "provider": provider_enum.value}
+    )
+
+    await asyncio.gather(*[process_ticker(ticker) for ticker in tickers], return_exceptions=True)
 
     await session.commit()
+
+    app_logger.info(
+        f"EOD sync completed: {added} bars added for {len(tickers)} symbols",
+        extra={"bars_added": added, "symbol_count": len(tickers)}
+    )
+
     return added
 
 
