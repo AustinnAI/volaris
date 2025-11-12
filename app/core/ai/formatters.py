@@ -118,21 +118,32 @@ def create_fallback_summary(
         Source,
     )
 
-    # Build executive summary from headlines
+    # Build executive summary from headlines (more readable format)
     if not articles:
-        executive_summary = f"{ticker}: No recent news articles available for analysis."
+        executive_summary = f"No recent news articles found for {ticker}. Market intelligence is limited without recent news coverage."
+    elif len(articles) == 1:
+        executive_summary = f"{ticker} has limited recent news coverage with 1 article: \"{articles[0].headline}\""
     else:
-        top_headlines = [art.headline for art in articles[:2]]
-        executive_summary = f"Based on {len(articles)} recent article{'s' if len(articles) != 1 else ''}: {'; '.join(top_headlines[:2])}."
+        # Create conversational summary with top headlines
+        top_headline = articles[0].headline
+        article_count = len(articles)
 
-    # Create key drivers from top headlines
+        # Truncate first headline if too long
+        if len(top_headline) > 120:
+            top_headline = top_headline[:117] + "..."
+
+        executive_summary = (
+            f"{ticker} has {article_count} recent articles. "
+            f"Most recent: \"{top_headline}\""
+        )
+
+    # Create key drivers from top headlines (use full titles, truncate if needed)
     key_drivers = []
     for idx, article in enumerate(articles[:3], start=1):
-        # Extract first 8 words as theme
-        theme_words = article.headline.split()[:8]
-        theme = " ".join(theme_words)
-        if len(article.headline.split()) > 8:
-            theme += "..."
+        # Use full headline, truncate only if very long
+        theme = article.headline
+        if len(theme) > 100:
+            theme = theme[:97] + "..."
 
         key_drivers.append(KeyDriver(theme=theme, supporting_articles=[idx]))
 

@@ -20,32 +20,63 @@ jobs:
   refresh-volume:
     name: Refresh Daily Volume Data
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Process in 3 batches: NASDAQ-100, S&P 500 first half, S&P 500 second half
+        batch: ["nasdaq100", "sp500_batch1", "sp500_batch2"]
+      fail-fast: false  # Continue other batches even if one fails
 
     steps:
-      - name: Refresh Volume Data via API
+      - name: Refresh Volume Data Batch
         run: |
-          SYMBOLS="${{ github.event.inputs.symbols || 'liquid' }}"
+          # Map batch names to API symbols parameter
+          case "${{ matrix.batch }}" in
+            "nasdaq100")
+              SYMBOLS="nasdaq100"
+              ;;
+            "sp500_batch1")
+              # Will process first ~250 S&P 500 stocks
+              SYMBOLS="sp500"
+              ;;
+            "sp500_batch2")
+              # Future: implement pagination in API for S&P 500 second half
+              # For now, sp500 call processes all stocks (will be slow)
+              echo "Skipping sp500_batch2 - full S&P 500 already processed in batch1"
+              exit 0
+              ;;
+          esac
 
-          echo "Refreshing volume data for: $SYMBOLS"
+          echo "Refreshing volume data for batch: ${{ matrix.batch }} (symbols=$SYMBOLS)"
 
-          RESPONSE=$(curl -s -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 120 -X POST \
             "$VOLARIS_API_URL/api/v1/market/refresh/volume?symbols=$SYMBOLS" \
             -H "Authorization: Bearer $VOLARIS_API_TOKEN" \
             -H "Content-Type: application/json")
 
-          echo "Response: $RESPONSE"
+          # Split response and status code
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          # Check HTTP status first
+          if [ "$HTTP_CODE" != "202" ] && [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ HTTP request failed with status $HTTP_CODE"
+            exit 1
+          fi
 
           # Extract counts using jq
-          STATUS=$(echo "$RESPONSE" | jq -r '.status // "unknown"')
-          SYMBOL_COUNT=$(echo "$RESPONSE" | jq -r '.symbol_count // 0')
-          BARS_ADDED=$(echo "$RESPONSE" | jq -r '.bars_added // 0')
+          STATUS=$(echo "$BODY" | jq -r '.status // "unknown"')
+          SYMBOL_COUNT=$(echo "$BODY" | jq -r '.symbol_count // 0')
+          BARS_ADDED=$(echo "$BODY" | jq -r '.bars_added // 0')
 
-          echo "✓ Volume refresh completed: $BARS_ADDED bars for $SYMBOL_COUNT symbols (status: $STATUS)"
+          echo "✓ Volume refresh completed for ${{ matrix.batch }}: $BARS_ADDED bars for $SYMBOL_COUNT symbols (status: $STATUS)"
 
           # Fail workflow if status is not completed
           if [ "$STATUS" != "completed" ]; then
-            echo "❌ Volume refresh failed or incomplete"
+            echo "❌ Volume refresh failed or incomplete for ${{ matrix.batch }}"
             exit 1
           fi
 
