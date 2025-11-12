@@ -224,21 +224,42 @@ async def sync_eod_prices(
 
     for ticker in tickers:
         try:
-            if hasattr(provider, "get_eod_prices"):
+            # Try provider-specific methods in order of preference
+            if hasattr(provider, "get_price_history"):
+                # Schwab: get_price_history(symbol, period_type, period, frequency_type, frequency)
+                response = await provider.get_price_history(
+                    symbol=ticker.symbol,
+                    period_type="month",
+                    period=1,
+                    frequency_type="daily",
+                    frequency=1,
+                )
+            elif hasattr(provider, "get_eod_prices"):
+                # Tiingo: get_eod_prices(symbol, start_date, end_date)
                 response = await provider.get_eod_prices(ticker.symbol)
+            elif hasattr(provider, "get_bars"):
+                # Alpaca: get_bars(symbol, timeframe="1Day", limit=5)
+                response = await provider.get_bars(ticker.symbol, timeframe="1Day", limit=5)
             elif hasattr(provider, "get_eod"):
+                # Generic: get_eod(symbol, limit=5)
                 response = await provider.get_eod(ticker.symbol, limit=5)
+            elif hasattr(provider, "get_latest_bar"):
+                # Alpaca fallback: get_latest_bar(symbol)
+                response = [await provider.get_latest_bar(ticker.symbol)]
             elif hasattr(provider, "get_latest"):
+                # Generic fallback: get_latest(symbol)
                 response = [await provider.get_latest(ticker.symbol)]
             else:
-                raise AttributeError("EOD provider missing required method")
+                raise AttributeError(f"EOD provider {provider_enum.value} missing required method")
+
             for candle in normalize_price_points(response):
                 if await _upsert_price_bar(session, ticker, Timeframe.DAILY, candle, provider_enum):
                     added += 1
         except Exception as exc:  # pylint: disable=broad-except
             app_logger.error(
-                "EOD price sync failed",
-                extra={"symbol": ticker.symbol, "error": str(exc)},
+                f"EOD price sync failed: {type(exc).__name__}: {exc}",
+                extra={"symbol": ticker.symbol, "error": str(exc), "provider": provider_enum.value},
+                exc_info=True,
             )
 
     await session.commit()

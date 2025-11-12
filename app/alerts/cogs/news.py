@@ -399,9 +399,10 @@ class NewsCog(commands.Cog):
             return
 
         try:
-            # Call sentiment summary endpoint with min_articles filter
-            # Default: liquid stocks (NASDAQ-100 + S&P 500) with at least 5 articles
-            url = f"{self.bot.api_client.base_url}/api/v1/news/sentiment/summary?symbols={index_lower}&days=7&min_articles=5"
+            # Call sentiment summary endpoint with min_articles filter and hybrid liquidity strategy
+            # Default: liquid stocks (NASDAQ-100 + S&P 500) with volume >= 5M/day and at least 5 articles
+            # Use hybrid filtering (index + volume) for better quality results
+            url = f"{self.bot.api_client.base_url}/api/v1/news/sentiment/summary?symbols={index_lower}&days=7&min_articles=5&liquidity_strategy=hybrid"
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:

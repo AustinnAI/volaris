@@ -39,8 +39,8 @@ class ProviderManager:
 
     Provider hierarchy:
     - Real-time (1m/5m): Schwab (primary) → Alpaca (fallback)
-    - EOD: Tiingo (primary) → Alpaca (fallback)
-    - Historical: Tiingo (primary) → Alpaca (fallback)
+    - EOD: Schwab (primary) → Alpaca → Tiingo (fallback)
+    - Historical: Schwab (primary) → Tiingo → Alpaca (fallback)
     - Fundamentals/News: Finnhub
     - Options: Schwab only
     """
@@ -54,11 +54,13 @@ class ProviderManager:
         }
 
         # Provider hierarchy by data type (V1 - removed Databento/Polygon/Marketstack)
+        # Note: Schwab is primary for all data types (requires valid OAuth token)
+        # Alpaca/Tiingo serve as fallbacks when Schwab unavailable
         self.hierarchy = {
             DataType.REALTIME_MINUTE: ["schwab", "alpaca"],
             DataType.MINUTE_DELAYED: ["alpaca", "schwab"],
-            DataType.EOD: ["tiingo", "alpaca"],
-            DataType.HISTORICAL: ["tiingo", "alpaca"],
+            DataType.EOD: ["schwab", "alpaca", "tiingo"],
+            DataType.HISTORICAL: ["schwab", "tiingo", "alpaca"],
             DataType.FUNDAMENTALS: ["finnhub"],
             DataType.NEWS: ["finnhub"],
             DataType.QUOTE: ["schwab", "alpaca", "tiingo"],

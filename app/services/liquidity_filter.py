@@ -128,7 +128,7 @@ async def _get_liquid_by_volume(
             func.count(PriceBar.id).label("bar_count"),
         )
         .join(PriceBar, Ticker.id == PriceBar.ticker_id)
-        .where(PriceBar.timeframe == Timeframe.ONE_DAY)
+        .where(PriceBar.timeframe == Timeframe.DAILY)
         .where(PriceBar.timestamp >= cutoff_date)
         .where(PriceBar.volume.isnot(None))
         .group_by(Ticker.id, Ticker.symbol)
