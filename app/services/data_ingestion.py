@@ -233,12 +233,11 @@ async def sync_eod_prices(
         return 0
 
     provider_enum = _provider_enum_from_object(provider)
-    added = 0
     semaphore = asyncio.Semaphore(max_concurrent)
 
     async def process_ticker(ticker):
         """Process single ticker with semaphore for rate limiting."""
-        nonlocal added
+        ticker_added = 0
         async with semaphore:
             try:
                 # Try provider-specific methods in order of preference
@@ -271,13 +270,14 @@ async def sync_eod_prices(
 
                 for candle in normalize_price_points(response):
                     if await _upsert_price_bar(session, ticker, Timeframe.DAILY, candle, provider_enum):
-                        added += 1
+                        ticker_added += 1
             except Exception as exc:  # pylint: disable=broad-except
                 app_logger.error(
                     f"EOD price sync failed: {type(exc).__name__}: {exc}",
                     extra={"symbol": ticker.symbol, "error": str(exc), "provider": provider_enum.value},
                     exc_info=False,  # Reduce log verbosity for batch operations
                 )
+        return ticker_added
 
     # Process all tickers concurrently with semaphore limiting
     app_logger.info(
@@ -285,7 +285,10 @@ async def sync_eod_prices(
         extra={"symbol_count": len(tickers), "provider": provider_enum.value}
     )
 
-    await asyncio.gather(*[process_ticker(ticker) for ticker in tickers], return_exceptions=True)
+    results = await asyncio.gather(*[process_ticker(ticker) for ticker in tickers], return_exceptions=True)
+
+    # Sum up bars added from all tickers (filter out exceptions)
+    added = sum(r for r in results if isinstance(r, int))
 
     await session.commit()
 
