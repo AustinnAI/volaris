@@ -185,7 +185,7 @@ def build_news_narrative_prompt(
 
 **Sentiment:** {compound:.2f} (compound score), Trend: {trend}
 
-**Task:** Write a concise "Story of the Day" narrative (2-3 sentences max) explaining what's driving {ticker} today. Focus on the main theme connecting the articles and market implications.
+**Task:** Write a concise "Story of the Day" narrative (2-3 sentences max) explaining what's driving **{ticker}** today. Focus on the main theme connecting the articles and market implications.
 
 **Output:** Respond with ONLY a JSON object:
 {{
@@ -193,10 +193,12 @@ def build_news_narrative_prompt(
 }}
 
 **Instructions:**
+- **ONLY discuss {ticker}** - ignore mentions of other companies unless directly relevant to {ticker}'s story
 - Be concise and actionable
-- Connect themes across articles
+- Connect themes across articles that relate to {ticker}
 - Ground claims in provided article content
 - No speculation beyond article content
+- If articles don't contain meaningful {ticker}-specific information, provide a brief factual summary
 """
     return prompt
 
