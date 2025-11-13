@@ -14,6 +14,8 @@ from app.core.ai import (
     LLMError,
     SummaryResponse,
     build_cache_key,
+    build_narrative_cache_key,
+    build_news_narrative_prompt,
     build_single_ticker_prompt,
     create_fallback_summary,
     get_llm_client,
@@ -158,3 +160,121 @@ async def generate_ai_summary(
             ticker, articles, sentiment_data, reason="Unexpected error"
         )
         return fallback_summary, True, False
+
+
+async def generate_news_narrative(
+    db: AsyncSession, ticker: str, force_refresh: bool = False
+) -> tuple[str | None, bool]:
+    """
+    Generate AI-powered "Story of the Day" narrative for /news command (Phase 2.2).
+
+    Args:
+        db: Database session.
+        ticker: Ticker symbol.
+        force_refresh: Skip cache and regenerate.
+
+    Returns:
+        Tuple of (narrative_text, cache_hit).
+        Returns (None, False) if feature disabled or error occurs.
+    """
+    # Check if feature is enabled
+    if not settings.LLM_NEWS_NARRATIVE_ENABLED:
+        return None, False
+
+    ticker = ticker.upper()
+
+    # Get top 10 recent articles (more than summary's top 5 for richer context)
+    articles = await get_recent_news(db, ticker, limit=10, days=7)
+
+    if not articles or len(articles) < 2:
+        app_logger.info(f"Insufficient articles for narrative generation: {ticker}")
+        return None, False
+
+    # Build cache key
+    article_urls = [art.url for art in articles]
+    cache_key = build_narrative_cache_key(ticker, article_urls)
+
+    # Check cache (unless force_refresh)
+    if not force_refresh:
+        cached = await cache.get(cache_key)
+        if cached:
+            try:
+                cached_data = json.loads(cached)
+                narrative = cached_data.get("narrative")
+                if narrative:
+                    app_logger.info(
+                        f"News narrative cache hit for {ticker}", extra={"cache_key": cache_key}
+                    )
+                    return narrative, True
+            except json.JSONDecodeError as e:
+                app_logger.warning(
+                    f"Invalid cached narrative for {ticker}",
+                    extra={"error": str(e), "cache_key": cache_key},
+                )
+
+    # Get sentiment data
+    sentiment_data = await get_ticker_sentiment(db, ticker)
+
+    # Try LLM generation
+    llm_client = get_llm_client()
+
+    if not llm_client:
+        app_logger.info(f"LLM not configured, skipping narrative for {ticker}")
+        return None, False
+
+    try:
+        # Build prompt
+        prompt = build_news_narrative_prompt(ticker, articles, sentiment_data)
+
+        # Call LLM
+        app_logger.info(
+            f"Generating news narrative for {ticker}",
+            extra={
+                "model": settings.LLM_MODEL,
+                "provider": settings.LLM_PROVIDER,
+                "article_count": len(articles),
+            },
+        )
+
+        llm_response = await llm_client.summarize(
+            prompt=prompt,
+            model=settings.LLM_MODEL,
+            max_tokens=200,  # 2-3 sentences only
+            temperature=settings.LLM_TEMPERATURE,
+        )
+
+        # Extract narrative from response
+        narrative = llm_response.get("narrative")
+
+        if not narrative or not isinstance(narrative, str):
+            app_logger.warning(
+                f"Invalid narrative response for {ticker}",
+                extra={"response": llm_response},
+            )
+            return None, False
+
+        # Cache the result
+        ttl_seconds = settings.LLM_NEWS_NARRATIVE_TTL_MINUTES * 60
+        await cache.set(cache_key, json.dumps({"narrative": narrative}), ttl_seconds)
+
+        app_logger.info(
+            f"News narrative generated and cached for {ticker}",
+            extra={"cache_key": cache_key, "ttl_seconds": ttl_seconds},
+        )
+
+        return narrative, False
+
+    except LLMError as e:
+        app_logger.error(
+            f"LLM error generating narrative for {ticker}: {str(e)[:200]}",
+            extra={"error": str(e), "error_type": type(e).__name__},
+        )
+        return None, False
+
+    except Exception as e:
+        app_logger.error(
+            f"Unexpected error generating narrative for {ticker}",
+            extra={"error": str(e)},
+            exc_info=True,
+        )
+        return None, False

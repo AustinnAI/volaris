@@ -62,13 +62,15 @@ class NewsCog(commands.Cog):
         # Try to get AI narrative (Phase 2.2)
         narrative = None
         try:
-            from app.services.news_service import generate_news_narrative
+            from app.services.ai_summary_service import generate_news_narrative
             from app.db.session import get_db
 
             async for db in get_db():
-                narrative, fallback_used = await generate_news_narrative(db, symbol)
-                if fallback_used and narrative is None:
-                    self.bot.logger.debug(f"AI narrative disabled or unavailable for {symbol}")
+                narrative, cache_hit = await generate_news_narrative(db, symbol)
+                if narrative:
+                    self.bot.logger.info(
+                        f"AI narrative {'(cached)' if cache_hit else '(fresh)'} for {symbol}"
+                    )
                 break
         except Exception as e:
             # Silently fail - narrative is optional enhancement
