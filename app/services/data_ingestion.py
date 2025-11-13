@@ -207,7 +207,7 @@ async def sync_eod_prices(
     session: AsyncSession,
     symbols: Sequence[str] | None = None,
     provider: object | None = None,
-    max_concurrent: int = 10,
+    max_concurrent: int = 5,
 ) -> int:
     """
     Sync end-of-day prices with concurrent processing.
@@ -216,7 +216,7 @@ async def sync_eod_prices(
         session: Database session
         symbols: Symbols to sync (None = all)
         provider: Data provider (None = use default)
-        max_concurrent: Maximum concurrent API requests (default: 10)
+        max_concurrent: Maximum concurrent API requests (default: 5)
 
     Returns:
         Number of price bars added
