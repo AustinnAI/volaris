@@ -161,22 +161,31 @@ def build_news_narrative_prompt(
     Returns:
         Prompt for generating 2-3 sentence "Story of the Day" narrative.
     """
-    # Format recent headlines (top 5 only for brevity)
-    headlines_text = ""
+    # Format recent articles with summaries (top 5 for richer context)
+    articles_text = ""
     for idx, article in enumerate(articles[:5], start=1):
-        headlines_text += f"{idx}. {article.headline}\n"
+        articles_text += f"{idx}. {article.headline}\n"
+
+        # Include article summary if available (truncate to ~400 chars for cost control)
+        if article.summary:
+            summary_text = article.summary[:400].strip()
+            if len(article.summary) > 400:
+                summary_text += "..."
+            articles_text += f"   Summary: {summary_text}\n"
+
+        articles_text += "\n"
 
     compound = sentiment_data.get("compound", 0.0)
     trend = sentiment_data.get("trend", "stable")
 
     prompt = f"""You are analyzing news for **{ticker}**.
 
-**Recent Headlines:**
-{headlines_text}
+**Recent Articles:**
+{articles_text}
 
 **Sentiment:** {compound:.2f} (compound score), Trend: {trend}
 
-**Task:** Write a concise "Story of the Day" narrative (2-3 sentences max) explaining what's driving {ticker} today. Focus on the main theme connecting the headlines and market implications.
+**Task:** Write a concise "Story of the Day" narrative (2-3 sentences max) explaining what's driving {ticker} today. Focus on the main theme connecting the articles and market implications.
 
 **Output:** Respond with ONLY a JSON object:
 {{
@@ -185,8 +194,8 @@ def build_news_narrative_prompt(
 
 **Instructions:**
 - Be concise and actionable
-- Connect themes across headlines
-- Ground claims in provided headlines
+- Connect themes across articles
+- Ground claims in provided article content
 - No speculation beyond article content
 """
     return prompt

@@ -239,7 +239,7 @@ async def generate_news_narrative(
         llm_response = await llm_client.summarize(
             prompt=prompt,
             model=settings.LLM_MODEL,
-            max_tokens=200,  # 2-3 sentences only
+            max_tokens=300,  # 2-3 sentences with richer context
             temperature=settings.LLM_TEMPERATURE,
         )
 
